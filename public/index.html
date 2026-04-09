@@ -25,50 +25,85 @@
   </nav>
 
   <!-- ===== HERO ===== -->
-  <header class="hero">
+  <header class="hero hero-enhanced">
+    <div class="hero-particles" id="heroParticles"></div>
     <div class="hero-content">
+      <div class="hero-badge"><i class="fas fa-shield-halved"></i> Plagiarism Detection Platform</div>
       <h1>Academic Repository</h1>
       <p>Design and Development of a Web-Based Academic Repository with Algorithmic Plagiarism Detection Using TF-IDF and Cosine Similarity</p>
-      <div style="margin-top:1.5rem;">
-        <a href="login.html" class="btn btn-primary" id="heroUploadBtn">
+      <div class="hero-stats-row">
+        <div class="hero-stat" id="heroStatDocs">
+          <span class="hero-stat-num">—</span>
+          <span class="hero-stat-label">Documents</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-num"><i class="fas fa-brain"></i></span>
+          <span class="hero-stat-label">AI-Powered</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-num"><i class="fas fa-globe"></i></span>
+          <span class="hero-stat-label">Internet Check</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <a href="login.html" class="btn btn-primary btn-glow" id="heroUploadBtn">
           <i class="fas fa-upload"></i> Upload File
+        </a>
+        <a href="#browseSection" class="btn btn-outline">
+          <i class="fas fa-book-open"></i> Browse Papers
         </a>
       </div>
     </div>
   </header>
 
   <!-- ===== MAIN CONTENT ===== -->
-  <main class="container" style="max-width:1200px;">
+  <main class="container" style="max-width:1200px;" id="browseSection">
+
+    <!-- Section Header -->
+    <div class="section-header">
+      <h2><i class="fas fa-book"></i> Repository Documents</h2>
+      <p class="text-muted">Browse approved academic papers with less than 20% similarity</p>
+    </div>
 
     <!-- Search -->
-    <section class="card">
-      <div class="dashboard-toolbar">
-        <div class="search-wrap">
-          <i class="fas fa-search search-icon"></i>
-          <input type="text" id="searchInput" placeholder="Search documents…" />
-        </div>
-      </div>
+    <section class="search-bar-enhanced">
+      <i class="fas fa-search search-icon-lg"></i>
+      <input type="text" id="searchInput" placeholder="Search by title, author, or keyword…" />
+      <span class="search-shortcut">Ctrl+K</span>
     </section>
 
     <!-- Document Grid -->
     <section class="doc-grid" id="docGrid">
       <div class="loading-state">
-        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <div class="loading-spinner"></div>
         <p>Loading documents…</p>
       </div>
     </section>
 
     <!-- Empty State -->
     <section class="card empty-state hidden" id="emptyState">
-      <i class="fas fa-folder-open fa-3x" style="color:var(--text-muted);"></i>
+      <div class="empty-icon-wrap">
+        <i class="fas fa-folder-open fa-3x"></i>
+      </div>
       <h3>No Documents Available</h3>
       <p class="text-muted">There are no approved documents in the repository yet.</p>
     </section>
 
   </main>
 
-  <footer class="footer">
-    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  <footer class="footer footer-enhanced">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <i class="fas fa-graduation-cap"></i> AcadRepo
+      </div>
+      <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+      <div class="footer-links">
+        <span><i class="fas fa-code"></i> Built with Node.js</span>
+        <span><i class="fas fa-database"></i> Supabase</span>
+      </div>
+    </div>
   </footer>
 
   <script src="js/nav-auth.js"></script>
