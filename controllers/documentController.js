@@ -9,7 +9,7 @@ async function listDocuments(req, res) {
     const { search, mine, approved } = req.query;
     let query = supabase
       .from('documents')
-      .select('id, title, original_filename, created_at, user_id, thumbnail_url, users!user_id(full_name)')
+      .select('id, title, original_filename, created_at, user_id, thumbnail_url')
       .order('created_at', { ascending: false });
 
     if (search && search.trim()) {
@@ -24,9 +24,13 @@ async function listDocuments(req, res) {
     const { data, error } = await query;
     if (error) throw new Error(error.message);
 
-    // Fetch similarity scores for each document
+    // Fetch similarity scores and user names
     const docIds = (data || []).map(d => d.id);
+    const userIds = [...new Set((data || []).map(d => d.user_id).filter(Boolean))];
+
     let scoresMap = {};
+    let usersMap = {};
+
     if (docIds.length > 0) {
       const { data: results } = await supabase
         .from('plagiarism_results')
@@ -44,13 +48,24 @@ async function listDocuments(req, res) {
       }
     }
 
+    if (userIds.length > 0) {
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      if (users) {
+        for (const u of users) {
+          usersMap[u.id] = u.full_name;
+        }
+      }
+    }
+
     let documents = (data || []).map(d => ({
       ...d,
-      uploaded_by: d.users?.full_name || 'Unknown',
+      uploaded_by: usersMap[d.user_id] || 'Unknown',
       similarity_score: scoresMap[d.id] || 0
     }));
-    // Remove nested users object
-    documents.forEach(d => delete d.users);
 
     // For public client view: only show documents with < 20% similarity
     if (approved === 'true') {
