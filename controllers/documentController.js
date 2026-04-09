@@ -9,7 +9,7 @@ async function listDocuments(req, res) {
     const { search, mine, approved } = req.query;
     let query = supabase
       .from('documents')
-      .select('id, title, original_filename, created_at, user_id, thumbnail_url')
+      .select('id, title, original_filename, created_at, user_id, thumbnail_url, users!user_id(full_name)')
       .order('created_at', { ascending: false });
 
     if (search && search.trim()) {
@@ -46,8 +46,11 @@ async function listDocuments(req, res) {
 
     let documents = (data || []).map(d => ({
       ...d,
+      uploaded_by: d.users?.full_name || 'Unknown',
       similarity_score: scoresMap[d.id] || 0
     }));
+    // Remove nested users object
+    documents.forEach(d => delete d.users);
 
     // For public client view: only show documents with < 20% similarity
     if (approved === 'true') {

@@ -57,6 +57,7 @@ function renderGrid(docs) {
         <div class="doc-card-meta">
           <h3 class="doc-card-title" title="${escapeHtml(doc.title)}">${escapeHtml(doc.title)}</h3>
           <p class="doc-card-file">${escapeHtml(doc.original_filename)}</p>
+          <p class="doc-card-file"><i class="fas fa-user"></i> ${escapeHtml(doc.uploaded_by || 'Unknown')}</p>
           <p class="doc-card-file"><i class="fas fa-calendar"></i> ${formatDate(doc.created_at)}</p>
         </div>
         <div class="doc-card-actions">
