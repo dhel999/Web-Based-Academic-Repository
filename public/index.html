@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Repository — Browse Documents</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-graduation-cap"></i>
+      <span>AcadRepo</span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="active"><i class="fas fa-home"></i> Home</a></li>
+      <li id="navAuthLinks"></li>
+    </ul>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Academic Repository</h1>
+      <p>Design and Development of a Web-Based Academic Repository with Algorithmic Plagiarism Detection Using TF-IDF and Cosine Similarity</p>
+      <div style="margin-top:1.5rem;">
+        <a href="login.html" class="btn btn-primary" id="heroUploadBtn">
+          <i class="fas fa-upload"></i> Upload File
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="container" style="max-width:1200px;">
+
+    <!-- Search -->
+    <section class="card">
+      <div class="dashboard-toolbar">
+        <div class="search-wrap">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Search documents…" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Document Grid -->
+    <section class="doc-grid" id="docGrid">
+      <div class="loading-state">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p>Loading documents…</p>
+      </div>
+    </section>
+
+    <!-- Empty State -->
+    <section class="card empty-state hidden" id="emptyState">
+      <i class="fas fa-folder-open fa-3x" style="color:var(--text-muted);"></i>
+      <h3>No Documents Available</h3>
+      <p class="text-muted">There are no approved documents in the repository yet.</p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  </footer>
+
+  <script src="js/nav-auth.js"></script>
+  <script src="js/client-browse.js"></script>
+</body>
+</html>

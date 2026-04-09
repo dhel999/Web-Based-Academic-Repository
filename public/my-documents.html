@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Repository — My Documents</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-graduation-cap"></i>
+      <span>AcadRepo</span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="my-documents.html" class="active"><i class="fas fa-folder-open"></i> My Documents</a></li>
+      <li><a href="upload.html"><i class="fas fa-upload"></i> Upload</a></li>
+      <li id="navUser" class="nav-user-item"></li>
+    </ul>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero" style="padding:1.5rem 0;">
+    <div class="hero-content">
+      <h1><i class="fas fa-folder-open"></i> My Documents</h1>
+      <p id="heroSubtitle">Your uploaded research papers and similarity reports</p>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="container">
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-file-lines"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="statTotal">0</span>
+          <span class="stat-label">Documents</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:var(--green);"><i class="fas fa-circle-check"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="statClean">0</span>
+          <span class="stat-label">Clean (< 30%)</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:var(--yellow);"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="statMedium">0</span>
+          <span class="stat-label">Medium (30-60%)</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:var(--red);"><i class="fas fa-flag"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="statHigh">0</span>
+          <span class="stat-label">High (> 60%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <section class="card">
+      <div class="input-row" style="margin-bottom:0;">
+        <input type="text" id="searchInput" placeholder="Search your documents by title…" />
+        <button class="btn btn-secondary" id="btnSearch">
+          <i class="fas fa-magnifying-glass"></i> Search
+        </button>
+      </div>
+    </section>
+
+    <!-- Document Grid -->
+    <section class="doc-grid" id="docGrid">
+      <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading your documents…</p></div>
+    </section>
+
+    <!-- Empty State -->
+    <section class="card empty-state hidden" id="emptyState">
+      <i class="fas fa-folder-open fa-3x" style="color:var(--text-muted);"></i>
+      <h3>No documents yet</h3>
+      <p class="text-muted">Upload your first research document to get started.</p>
+      <a href="upload.html" class="btn btn-primary"><i class="fas fa-upload"></i> Upload Document</a>
+    </section>
+  </main>
+
+  <script src="js/auth-guard.js"></script>
+  <script src="js/my-documents.js"></script>
+</body>
+</html>

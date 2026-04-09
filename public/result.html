@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Repository — Plagiarism Report</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-graduation-cap"></i>
+      <span>AcadRepo</span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li id="navAuthLinks"></li>
+    </ul>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero hero-sm">
+    <div class="hero-content">
+      <h1 id="docTitleHero"><i class="fas fa-shield-halved"></i> Plagiarism Report</h1>
+      <p id="docSubtitle">Detailed analysis of document similarity</p>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="container">
+
+    <!-- Loading -->
+    <div id="loadingState" class="loading-state card">
+      <i class="fas fa-spinner fa-spin fa-2x"></i>
+      <p>Fetching report…</p>
+    </div>
+
+    <!-- Error -->
+    <div id="errorState" class="empty-state card hidden">
+      <i class="fas fa-triangle-exclamation fa-3x text-danger"></i>
+      <h3>Document Not Found</h3>
+      <p>The requested document could not be loaded.</p>
+      <a href="dashboard.html" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+
+    <!-- Report Content -->
+    <div id="reportContent" class="hidden">
+
+      <!-- Gauge + Overall Score -->
+      <section class="card score-overview">
+        <div class="score-gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="18" stroke-linecap="round"/>
+            <path class="gauge-fill" id="gaugeFill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="18" stroke-linecap="round"
+              stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+            <text x="100" y="105" text-anchor="middle" class="gauge-text" id="gaugeText">0%</text>
+            <text x="100" y="118" text-anchor="middle" class="gauge-label">Similarity</text>
+          </svg>
+          <div class="risk-badge" id="riskBadge">—</div>
+        </div>
+        <div class="score-details">
+          <h2 id="reportDocTitle">Document Report</h2>
+          <p id="reportFilename" class="text-muted"></p>
+          <div class="score-pills" id="scorePills"></div>
+          <div class="report-actions">
+            <button class="btn btn-primary" id="btnRecheck">
+              <i class="fas fa-rotate"></i> Re-run Analysis
+            </button>
+            <button class="btn btn-secondary" id="btnRecheckAI">
+              <i class="fas fa-robot"></i> Run AI Analysis
+            </button>
+            <button class="btn btn-internet" id="btnInternet">
+              <i class="fas fa-globe"></i> Search Internet
+            </button>
+            <button class="btn btn-outline" id="btnPrint">
+              <i class="fas fa-print"></i> Print Report
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Matched Documents -->
+      <section class="card" id="localMatchSection">
+        <h2><i class="fas fa-files"></i> Similar Documents (TF-IDF)</h2>
+        <p class="card-subtitle">Documents found in repository with algorithmic similarity scores.</p>
+        <div id="localMatchList" class="match-list"></div>
+      </section>
+
+      <!-- Highlighted Paragraph Matches -->
+      <section class="card" id="paragraphMatchSection">
+        <h2><i class="fas fa-paragraph"></i> Document Content — Similarity Highlights</h2>
+        <p class="card-subtitle">Full document text with highlighted matches. Sources are color-coded by type.</p>
+        <div class="para-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#ffe066;"></span> Local Match (Yellow)</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ff6b6b;"></span> AI Flagged (Red)</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#74b9ff;"></span> Internet Match (Blue)</span>
+          <span class="legend-item"><span class="legend-dot" style="background:transparent;border:1px solid var(--border);"></span> Original</span>
+        </div>
+        <div class="doc-paper-view" id="paragraphMatchList">
+          <!-- Paragraphs rendered here as a white paper-like document -->
+        </div>
+      </section>
+
+      <!-- Internet Search Results -->
+      <section class="card" id="internetMatchSection">
+        <h2><i class="fas fa-globe"></i> Internet Sources Found</h2>
+        <p class="card-subtitle">External web sources that contain similar content.</p>
+        <div id="internetMatchList">
+          <div class="internet-placeholder">
+            <i class="fas fa-globe fa-2x"></i>
+            <p>Click <strong>Search Internet</strong> to find matching content online.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Summary (only shows after running AI check) -->
+      <section class="card hidden" id="aiAnalysisSection">
+        <h2><i class="fas fa-robot"></i> AI Semantic Analysis — Summary</h2>
+        <div id="aiContent"></div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  </footer>
+
+  <script src="js/nav-auth.js"></script>
+  <script src="js/result.js"></script>
+</body>
+</html>

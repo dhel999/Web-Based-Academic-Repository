@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Repository — Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-graduation-cap"></i>
+      <span>AcadRepo <span style="font-size:.7rem;color:var(--red);font-weight:700;">ADMIN</span></span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="admin.html" class="active"><i class="fas fa-gauge-high"></i> Admin</a></li>
+      <li id="navUser" class="nav-user-item"></li>
+    </ul>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero" style="padding:1.5rem 0;">
+    <div class="hero-content">
+      <h1><i class="fas fa-gauge-high"></i> Admin Dashboard</h1>
+      <p>Manage documents, users, and system settings</p>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="container">
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-file-lines"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="statDocs">—</span>
+          <span class="stat-label">Total Documents</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:var(--teal);"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="statUsers">—</span>
+          <span class="stat-label">Total Users</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color:var(--green);"><i class="fas fa-paragraph"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="statParas">—</span>
+          <span class="stat-label">Stored Paragraphs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="documents">
+        <i class="fas fa-file-lines"></i> Documents
+      </button>
+      <button class="admin-tab" data-tab="users">
+        <i class="fas fa-users"></i> Users
+      </button>
+    </div>
+
+    <!-- Documents Tab -->
+    <section class="card admin-section active" id="documentsTab">
+      <div class="input-row" style="margin-bottom:1rem;">
+        <input type="text" id="docSearch" placeholder="Search documents…" />
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="docTable">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Uploader</th>
+              <th>Similarity</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="docTableBody">
+            <tr><td colspan="5" class="text-muted" style="text-align:center;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Users Tab -->
+    <section class="card admin-section" id="usersTab">
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Documents</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="6" class="text-muted" style="text-align:center;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay hidden" id="deleteModal">
+      <div class="modal-card">
+        <h3><i class="fas fa-triangle-exclamation" style="color:var(--red);"></i> Confirm Delete</h3>
+        <p id="deleteMessage">Are you sure you want to delete this item?</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="btnCancelDelete">Cancel</button>
+          <button class="btn btn-danger" id="btnConfirmDelete">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/auth-guard.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
