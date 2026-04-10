@@ -138,6 +138,19 @@ function splitIntoParagraphs(text) {
 }
 
 /**
+ * Split extracted text into display blocks for document-style viewing.
+ * Unlike splitIntoParagraphs(), this preserves headings and shorter blocks.
+ * @param {string} text
+ * @returns {string[]}
+ */
+function splitIntoDisplayParagraphs(text) {
+  return String(text || '')
+    .split(/\n{2,}/)
+    .map(block => block.trim())
+    .filter(block => block.length > 0);
+}
+
+/**
  * Delete a file from disk (used to clean up temp uploads).
  * @param {string} filePath
  */
@@ -151,4 +164,4 @@ function deleteFile(filePath) {
   }
 }
 
-module.exports = { extractText, splitIntoParagraphs, deleteFile };
+module.exports = { extractText, splitIntoParagraphs, splitIntoDisplayParagraphs, deleteFile };

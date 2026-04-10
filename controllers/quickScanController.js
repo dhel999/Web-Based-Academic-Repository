@@ -1,5 +1,5 @@
 const supabase = require('../utils/supabase');
-const { extractText, splitIntoParagraphs, deleteFile } = require('../services/fileService');
+const { extractText, splitIntoParagraphs, splitIntoDisplayParagraphs, deleteFile } = require('../services/fileService');
 const { compareDocuments, compareParagraphs } = require('../utils/tfidf');
 const { analyzeWithOpenAI } = require('../services/openaiService');
 const { searchInternetPlagiarism } = require('../services/internetSearchService');
@@ -37,6 +37,7 @@ async function quickScan(req, res) {
     }
 
     const paragraphs = splitIntoParagraphs(extractedText);
+    const displayParagraphs = splitIntoDisplayParagraphs(extractedText);
 
     // 2. Local TF-IDF check against all existing documents
     const { data: existingDocs } = await supabase
@@ -119,7 +120,8 @@ async function quickScan(req, res) {
         paragraph_matches: paragraphMatches.slice(0, 30),
         flagged_paragraphs: paragraphMatches.length,
         total_paragraphs: paragraphs.length,
-        all_paragraphs: paragraphs
+        all_paragraphs: displayParagraphs,
+        analysis_paragraphs: paragraphs
       },
       ai_check: null,
       internet_check: {

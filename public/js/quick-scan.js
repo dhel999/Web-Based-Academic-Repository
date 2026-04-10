@@ -143,7 +143,7 @@ async function runQuickScan() {
 }
 
 async function runOptionalQuickScanChecks(useAI, useInternet) {
-  const paragraphs = currentQuickScanData?.local_check?.all_paragraphs || [];
+  const paragraphs = currentQuickScanData?.local_check?.analysis_paragraphs || currentQuickScanData?.local_check?.all_paragraphs || [];
   if (paragraphs.length === 0) return;
 
   if (useAI) {
