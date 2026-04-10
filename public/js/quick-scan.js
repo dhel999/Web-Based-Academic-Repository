@@ -420,6 +420,18 @@ function renderDocumentStyleView(local, ai, internet) {
   }
 
   const localMap = new Map();
+  const normalizeParagraphText = (text) => String(text || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+  const paragraphIndexByText = new Map();
+  paragraphs.forEach((paragraph, index) => {
+    const normalized = normalizeParagraphText(paragraph).slice(0, 180);
+    if (normalized && !paragraphIndexByText.has(normalized)) {
+      paragraphIndexByText.set(normalized, index);
+    }
+  });
+
   for (const m of (local.paragraph_matches || [])) {
     const idx = Number(m.paragraph_index);
     if (!Number.isFinite(idx)) continue;
@@ -434,8 +446,18 @@ function renderDocumentStyleView(local, ai, internet) {
 
   const aiMap = new Map();
   for (const f of (ai?.flaggedParagraphs || [])) {
-    const idx = Number(f.paragraph_index);
-    if (!Number.isFinite(idx)) continue;
+    let idx = Number(f.paragraph_index);
+    if (!Number.isFinite(idx)) {
+      const normalizedText = normalizeParagraphText(f.text).slice(0, 180);
+      idx = paragraphIndexByText.has(normalizedText) ? paragraphIndexByText.get(normalizedText) : -1;
+    }
+    if (!Number.isFinite(idx) || idx < 0 || idx >= paragraphs.length) {
+      const normalizedText = normalizeParagraphText(f.text).slice(0, 120);
+      if (normalizedText) {
+        idx = paragraphs.findIndex(p => normalizeParagraphText(p).includes(normalizedText) || normalizedText.includes(normalizeParagraphText(p).slice(0, 120)));
+      }
+    }
+    if (!Number.isFinite(idx) || idx < 0) continue;
     aiMap.set(idx, {
       score: f.score || (f.risk === 'high' ? 80 : f.risk === 'medium' ? 50 : 20),
       risk: f.risk || 'low',
@@ -445,8 +467,14 @@ function renderDocumentStyleView(local, ai, internet) {
 
   const internetMap = new Map();
   for (const m of (internet.matches || [])) {
-    const idx = Number(m.paragraph_index);
-    if (!Number.isFinite(idx)) continue;
+    let idx = Number(m.paragraph_index);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= paragraphs.length) {
+      const normalizedText = normalizeParagraphText(m.paragraph_text).slice(0, 120);
+      if (normalizedText) {
+        idx = paragraphs.findIndex(p => normalizeParagraphText(p).includes(normalizedText) || normalizedText.includes(normalizeParagraphText(p).slice(0, 120)));
+      }
+    }
+    if (!Number.isFinite(idx) || idx < 0) continue;
     const old = internetMap.get(idx);
     const score = m.similarity_score || 0;
     if (!old || score > old.score) {
@@ -492,7 +520,7 @@ function renderDocumentStyleView(local, ai, internet) {
       sourceInfo += `<div class="paper-source-info source-internet"><strong><i class="fas fa-globe"></i> Internet Match:</strong> ${(webHit.score || 0).toFixed(1)}% from ${webSource}</div>`;
     }
 
-    html += `<div class="${cls}">${esc(text)}${badges}</div>${sourceInfo}`;
+    html += `<div class="${cls}">${esc(text).replace(/\n/g, '<br>')}${badges}</div>${sourceInfo}`;
   }
 
   qsDocPaper.innerHTML = html || `<p style="color:#666;text-align:center;padding:2rem;"><i class="fas fa-circle-info"></i> No paragraph content to display.</p>`;
