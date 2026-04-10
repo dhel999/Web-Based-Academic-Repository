@@ -455,7 +455,7 @@ function buildPaperStyleRejection(data) {
     });
   }
 
-  // Sidebar items — flagged paragraph details
+  // Sidebar items — flagged paragraph details with content
   let sidebarItems = '';
   const detailSource = allParas.length > 0 ? allParas.filter(p => p.is_flagged) : flaggedParas;
   detailSource.forEach((fp, i) => {
@@ -464,22 +464,60 @@ function buildPaperStyleRejection(data) {
     const riskLabel = score >= 70 ? 'HIGH' : score >= 40 ? 'MEDIUM' : 'LOW';
     const title = String(fp.matched_title || 'Unknown').trim();
     const pIdx = fp.index != null ? fp.index + 1 : (fp.paragraph_index != null ? fp.paragraph_index + 1 : i + 1);
+    const barWidth = Math.min(score, 100);
+    const docId = fp.matched_document_id || '';
+
+    // Get text snippets (truncate to 120 chars for sidebar)
+    const yourText = String(fp.text || fp.paragraph_snippet || fp.paragraph_text || '').trim();
+    const yourSnippet = yourText.length > 120 ? yourText.slice(0, 120) + '…' : yourText;
+    const matchedText = String(fp.matched_snippet || '').trim();
+    const matchedSnippet = matchedText.length > 120 ? matchedText.slice(0, 120) + '…' : matchedText;
 
     sidebarItems += `
-      <table style="width:100%;border-collapse:collapse;margin-bottom:8px;border:1px solid #1e293b;border-radius:6px;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;border:1px solid #1e293b;border-radius:6px;overflow:hidden;">
+        <!-- Header: paragraph number + score -->
         <tr style="background:#0f172a;">
-          <td style="padding:6px 10px;font-size:11px;color:#94a3b8;">
+          <td style="padding:7px 10px;font-size:11px;color:#94a3b8;">
             <strong style="color:#e2e8f0;">¶ ${pIdx}</strong>
-            <span style="float:right;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;
+            <span style="float:right;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;
               background:${score >= 70 ? 'rgba(239,68,68,.15)' : score >= 40 ? 'rgba(245,158,11,.15)' : 'rgba(34,197,94,.15)'};
               color:${scoreCol};">${riskLabel} ${score.toFixed(1)}%</span>
           </td>
         </tr>
+        <!-- Score bar -->
+        <tr><td style="padding:0 10px;">
+          <table style="width:100%;height:3px;border-collapse:collapse;"><tr>
+            <td style="width:${barWidth}%;background:${scoreCol};height:3px;padding:0;"></td>
+            <td style="background:#1e293b;height:3px;padding:0;"></td>
+          </tr></table>
+        </td></tr>
+        <!-- Matched document -->
         <tr>
-          <td style="padding:5px 10px;font-size:11px;color:#64748b;border-top:1px solid #1e293b;">
-            Matched: <span style="color:#38bdf8;">${escapeHtml(title)}</span>
+          <td style="padding:5px 10px;font-size:10px;color:#64748b;border-top:1px solid #1e293b;">
+            <i class="fas fa-link" style="margin-right:3px;font-size:9px;"></i>
+            Matched: ${docId ? `<a href="result.html?id=${docId}" style="color:#38bdf8;text-decoration:none;">${escapeHtml(title)}</a>` : `<span style="color:#38bdf8;">${escapeHtml(title)}</span>`}
           </td>
         </tr>
+        <!-- Your text snippet -->
+        ${yourSnippet ? `
+        <tr>
+          <td style="padding:6px 10px;font-size:10.5px;line-height:1.5;color:#e2e8f0;border-top:1px solid #1e293b;">
+            <span style="display:block;font-size:9px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">
+              <i class="fas fa-file-arrow-up" style="margin-right:3px;"></i>Your Text
+            </span>
+            <span style="background:rgba(255,235,59,.2);padding:1px 2px;">${escapeHtml(yourSnippet)}</span>
+          </td>
+        </tr>` : ''}
+        <!-- Matched text snippet -->
+        ${matchedSnippet ? `
+        <tr>
+          <td style="padding:6px 10px;font-size:10.5px;line-height:1.5;color:#94a3b8;border-top:1px solid #1e293b;">
+            <span style="display:block;font-size:9px;font-weight:700;color:#0ea5e9;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">
+              <i class="fas fa-database" style="margin-right:3px;"></i>Repository Match
+            </span>
+            ${escapeHtml(matchedSnippet)}
+          </td>
+        </tr>` : ''}
       </table>`;
   });
 
