@@ -24,26 +24,58 @@
     </ul>
   </nav>
 
-  <!-- ===== HERO ===== -->
-  <header class="hero" style="padding:2.5rem 1.5rem 1.5rem;">
-    <h1><i class="fas fa-bolt"></i> Quick Scan</h1>
-    <p>Upload your document to instantly check for plagiarism — local similarity, AI analysis, and internet search. No account needed.</p>
+  <!-- ===== HERO with particles & floating icons ===== -->
+  <header class="hero hero-enhanced qs-hero">
+    <div class="hero-particles" id="heroParticles"></div>
+    <div class="qs-floating-icons">
+      <i class="fas fa-file-lines qs-float-icon"></i>
+      <i class="fas fa-magnifying-glass qs-float-icon"></i>
+      <i class="fas fa-shield-halved qs-float-icon"></i>
+      <i class="fas fa-brain qs-float-icon"></i>
+      <i class="fas fa-globe qs-float-icon"></i>
+      <i class="fas fa-chart-pie qs-float-icon"></i>
+    </div>
+    <div class="hero-content" style="text-align:center;">
+      <div class="hero-badge"><i class="fas fa-bolt"></i> Instant Plagiarism Check</div>
+      <h1 class="qs-hero-title">Quick Scan</h1>
+      <p>Upload your document to instantly check for plagiarism — local similarity, AI analysis, and internet search. <strong>No account needed.</strong></p>
+      <div class="qs-hero-features">
+        <div class="qs-hero-feat"><i class="fas fa-database"></i><span>TF-IDF Check</span></div>
+        <div class="qs-hero-feat"><i class="fas fa-robot"></i><span>AI Analysis</span></div>
+        <div class="qs-hero-feat"><i class="fas fa-globe"></i><span>Web Search</span></div>
+        <div class="qs-hero-feat"><i class="fas fa-trash-can"></i><span>Auto-Delete</span></div>
+      </div>
+    </div>
   </header>
 
   <!-- ===== MAIN ===== -->
   <main class="container" style="max-width:900px;">
 
     <!-- Upload Card -->
-    <section class="card scan-upload-card" id="uploadSection">
-      <h2><i class="fas fa-file-search"></i> Scan Document</h2>
-      <p class="text-muted" style="margin-bottom:1.25rem;">Upload a PDF, DOCX, or TXT file. The document will NOT be saved — it's only scanned temporarily.</p>
+    <section class="card scan-upload-card qs-card-animate" id="uploadSection">
+      <div class="qs-card-header">
+        <div class="qs-card-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+        <div>
+          <h2>Scan Document</h2>
+          <p class="text-muted">Upload a PDF, DOCX, or TXT file. The document will <strong>NOT</strong> be saved — it's only scanned temporarily.</p>
+        </div>
+      </div>
 
-      <div class="drop-zone" id="dropZone">
+      <div class="drop-zone qs-drop-zone" id="dropZone">
         <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden />
         <div class="drop-zone-inner">
-          <i class="fas fa-cloud-arrow-up fa-2x" style="color:var(--primary);margin-bottom:.5rem;"></i>
-          <p><strong>Drag & drop</strong> or <span class="link-style" onclick="document.getElementById('fileInput').click()">browse</span></p>
-          <span class="text-muted" style="font-size:.78rem;">PDF, DOCX, TXT — max 20 MB</span>
+          <div class="qs-upload-icon-wrap">
+            <i class="fas fa-cloud-arrow-up fa-3x"></i>
+            <div class="qs-upload-pulse"></div>
+          </div>
+          <p style="margin-top:.75rem;"><strong>Drag & drop your file here</strong></p>
+          <p class="text-muted" style="font-size:.85rem;">or <span class="link-style" onclick="document.getElementById('fileInput').click()">browse from computer</span></p>
+          <div class="qs-file-types">
+            <span class="qs-file-badge"><i class="fas fa-file-pdf"></i> PDF</span>
+            <span class="qs-file-badge"><i class="fas fa-file-word"></i> DOCX</span>
+            <span class="qs-file-badge"><i class="fas fa-file-lines"></i> TXT</span>
+          </div>
+          <span class="text-muted" style="font-size:.72rem;">Maximum file size: 20 MB</span>
         </div>
       </div>
       <div class="file-preview hidden" id="filePreview">
@@ -53,6 +85,7 @@
       </div>
 
       <!-- Scan Options -->
+      <h4 style="margin-top:1.25rem;margin-bottom:.5rem;font-size:.9rem;"><i class="fas fa-sliders"></i> Scan Options</h4>
       <div class="scan-options">
         <label class="scan-option">
           <input type="checkbox" id="chkLocal" checked disabled />
@@ -69,7 +102,7 @@
         </label>
       </div>
 
-      <button class="btn btn-primary btn-glow" id="btnScan" disabled style="width:100%;margin-top:1rem;">
+      <button class="btn btn-primary btn-glow qs-btn-scan" id="btnScan" disabled>
         <i class="fas fa-search"></i> Scan Now
       </button>
     </section>
@@ -77,9 +110,20 @@
     <!-- Scanning Animation -->
     <section class="card scan-progress hidden" id="scanProgress">
       <div class="scan-animation">
-        <div class="scan-spinner"></div>
+        <div class="qs-scan-orbit">
+          <div class="scan-spinner"></div>
+          <div class="qs-orbit-dot qs-od-1"></div>
+          <div class="qs-orbit-dot qs-od-2"></div>
+          <div class="qs-orbit-dot qs-od-3"></div>
+        </div>
         <h3 id="scanStatusText">Analyzing your document…</h3>
-        <p class="text-muted" id="scanSubtext">Running TF-IDF & Cosine Similarity checks</p>
+        <p class="text-muted" id="scanSubtext">Running TF-IDF & Cosine Similarity against repository</p>
+        <div class="qs-progress-steps">
+          <div class="qs-pstep active" id="pstep1"><i class="fas fa-file-import"></i> Extracting</div>
+          <div class="qs-pstep" id="pstep2"><i class="fas fa-database"></i> Comparing</div>
+          <div class="qs-pstep" id="pstep3"><i class="fas fa-brain"></i> AI Check</div>
+          <div class="qs-pstep" id="pstep4"><i class="fas fa-globe"></i> Web Search</div>
+        </div>
       </div>
     </section>
 
@@ -87,7 +131,7 @@
     <section class="hidden" id="scanResults">
 
       <!-- Overall Score Card -->
-      <div class="card scan-score-card">
+      <div class="card scan-score-card qs-card-animate">
         <div class="scan-score-left">
           <svg class="scan-gauge" viewBox="0 0 180 100">
             <path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12" stroke-linecap="round"/>
@@ -109,30 +153,50 @@
       </div>
 
       <!-- Local Matches -->
-      <div class="card" id="localSection">
-        <h3><i class="fas fa-database"></i> Similar Documents (TF-IDF)</h3>
-        <p class="text-muted" style="font-size:.85rem;">Documents found in repository with algorithmic similarity scores.</p>
+      <div class="card qs-card-animate" id="localSection">
+        <div class="qs-section-header">
+          <div class="qs-section-icon" style="background:rgba(14,165,233,.12);color:#0ea5e9;"><i class="fas fa-database"></i></div>
+          <div>
+            <h3>Similar Documents (TF-IDF)</h3>
+            <p class="text-muted" style="font-size:.85rem;">Documents found in repository with algorithmic similarity scores.</p>
+          </div>
+        </div>
         <div id="localMatchList"></div>
       </div>
 
       <!-- Paragraph Matches -->
-      <div class="card" id="paraSection">
-        <h3><i class="fas fa-paragraph"></i> Flagged Paragraphs</h3>
-        <p class="text-muted" style="font-size:.85rem;">Paragraphs with significant text overlap against existing documents.</p>
+      <div class="card qs-card-animate" id="paraSection">
+        <div class="qs-section-header">
+          <div class="qs-section-icon" style="background:rgba(251,191,36,.12);color:#fbbf24;"><i class="fas fa-paragraph"></i></div>
+          <div>
+            <h3>Flagged Paragraphs</h3>
+            <p class="text-muted" style="font-size:.85rem;">Paragraphs with significant text overlap against existing documents.</p>
+          </div>
+        </div>
         <div id="paraMatchList"></div>
       </div>
 
       <!-- AI Analysis -->
-      <div class="card hidden" id="aiSection">
-        <h3><i class="fas fa-robot"></i> AI Semantic Analysis</h3>
-        <p class="text-muted" style="font-size:.85rem;">OpenAI GPT analysis for paraphrased or restructured content.</p>
+      <div class="card qs-card-animate hidden" id="aiSection">
+        <div class="qs-section-header">
+          <div class="qs-section-icon" style="background:rgba(168,85,247,.12);color:#a855f7;"><i class="fas fa-robot"></i></div>
+          <div>
+            <h3>AI Semantic Analysis</h3>
+            <p class="text-muted" style="font-size:.85rem;">OpenAI GPT analysis for paraphrased or restructured content.</p>
+          </div>
+        </div>
         <div id="aiResultContent"></div>
       </div>
 
       <!-- Internet Results -->
-      <div class="card hidden" id="internetSection">
-        <h3><i class="fas fa-globe"></i> Internet Sources Found</h3>
-        <p class="text-muted" style="font-size:.85rem;">Web sources with matching or similar content.</p>
+      <div class="card qs-card-animate hidden" id="internetSection">
+        <div class="qs-section-header">
+          <div class="qs-section-icon" style="background:rgba(34,211,238,.12);color:#22d3ee;"><i class="fas fa-globe"></i></div>
+          <div>
+            <h3>Internet Sources Found</h3>
+            <p class="text-muted" style="font-size:.85rem;">Web sources with matching or similar content.</p>
+          </div>
+        </div>
         <div id="internetResultList"></div>
       </div>
 
@@ -146,5 +210,21 @@
 
   <script src="js/nav-auth.js"></script>
   <script src="js/quick-scan.js"></script>
+  <script>
+    // Particles
+    (function(){
+      const c = document.getElementById('heroParticles');
+      if(!c) return;
+      for(let i=0;i<25;i++){
+        const p=document.createElement('div');
+        p.className='hero-particle';
+        p.style.left=Math.random()*100+'%';
+        p.style.animationDuration=(6+Math.random()*8)+'s';
+        p.style.animationDelay=(Math.random()*6)+'s';
+        p.style.width=p.style.height=(2+Math.random()*3)+'px';
+        c.appendChild(p);
+      }
+    })();
+  </script>
 </body>
 </html>

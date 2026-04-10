@@ -86,6 +86,10 @@ async function runQuickScan() {
   scanProgress.classList.remove('hidden');
   scanResults.classList.add('hidden');
 
+  // Reset progress steps
+  document.querySelectorAll('.qs-pstep').forEach(el => { el.classList.remove('active','done'); });
+  setStep(1);
+
   updateStatus('Extracting text from document…', 'Parsing file content');
 
   const formData = new FormData();
@@ -94,6 +98,7 @@ async function runQuickScan() {
   formData.append('use_internet', useInternet);
 
   try {
+    setStep(2);
     updateStatus('Analyzing your document…', 'Running TF-IDF & Cosine Similarity against repository');
 
     const res = await fetch(`${API}/quick-scan`, {
@@ -104,6 +109,11 @@ async function runQuickScan() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Scan failed');
 
+    // Mark remaining steps done
+    if (useAI) setStep(3);
+    if (useInternet) setStep(4);
+    document.querySelectorAll('.qs-pstep').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
+
     scanProgress.classList.add('hidden');
     renderResults(data);
 
@@ -112,6 +122,15 @@ async function runQuickScan() {
     uploadSection.classList.remove('hidden');
     alert('Scan failed: ' + err.message);
   }
+}
+
+function setStep(n) {
+  for (let i = 1; i < n; i++) {
+    const el = document.getElementById('pstep' + i);
+    if (el) { el.classList.remove('active'); el.classList.add('done'); }
+  }
+  const cur = document.getElementById('pstep' + n);
+  if (cur) { cur.classList.add('active'); cur.classList.remove('done'); }
 }
 
 function updateStatus(title, sub) {
