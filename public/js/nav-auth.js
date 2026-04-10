@@ -27,6 +27,7 @@
     } catch { renderLoggedOut(); return; }
 
     let links = '';
+    links += '<li><a href="quick-scan.html"><i class="fas fa-bolt"></i> Quick Scan</a></li>';
     if (user.role === 'admin') {
       links += '<li><a href="admin.html"><i class="fas fa-shield-halved"></i> Admin</a></li>';
     } else {
@@ -55,7 +56,7 @@
   }
 
   function renderLoggedOut() {
-    container.innerHTML = '<a href="login.html"><i class="fas fa-right-to-bracket"></i> Login</a>';
+    container.innerHTML = '<li><a href="quick-scan.html"><i class="fas fa-bolt"></i> Quick Scan</a></li><a href="login.html"><i class="fas fa-right-to-bracket"></i> Login</a>';
   }
 
   // Hamburger toggle

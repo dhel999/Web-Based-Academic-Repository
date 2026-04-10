@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Scan — AcadRepo</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-graduation-cap"></i>
+      <span>AcadRepo</span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li id="navAuthLinks"></li>
+    </ul>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero" style="padding:2.5rem 1.5rem 1.5rem;">
+    <h1><i class="fas fa-bolt"></i> Quick Scan</h1>
+    <p>Upload your document to instantly check for plagiarism — local similarity, AI analysis, and internet search. No account needed.</p>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="container" style="max-width:900px;">
+
+    <!-- Upload Card -->
+    <section class="card scan-upload-card" id="uploadSection">
+      <h2><i class="fas fa-file-search"></i> Scan Document</h2>
+      <p class="text-muted" style="margin-bottom:1.25rem;">Upload a PDF, DOCX, or TXT file. The document will NOT be saved — it's only scanned temporarily.</p>
+
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden />
+        <div class="drop-zone-inner">
+          <i class="fas fa-cloud-arrow-up fa-2x" style="color:var(--primary);margin-bottom:.5rem;"></i>
+          <p><strong>Drag & drop</strong> or <span class="link-style" onclick="document.getElementById('fileInput').click()">browse</span></p>
+          <span class="text-muted" style="font-size:.78rem;">PDF, DOCX, TXT — max 20 MB</span>
+        </div>
+      </div>
+      <div class="file-preview hidden" id="filePreview">
+        <i class="fas fa-file"></i>
+        <span id="fileName"></span>
+        <button class="btn-icon" id="removeFile" title="Remove"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Scan Options -->
+      <div class="scan-options">
+        <label class="scan-option">
+          <input type="checkbox" id="chkLocal" checked disabled />
+          <i class="fas fa-database"></i> Local Repository Check
+          <span class="badge-auto">Auto</span>
+        </label>
+        <label class="scan-option">
+          <input type="checkbox" id="chkAI" />
+          <i class="fas fa-robot"></i> AI Semantic Analysis
+        </label>
+        <label class="scan-option">
+          <input type="checkbox" id="chkInternet" />
+          <i class="fas fa-globe"></i> Internet Search
+        </label>
+      </div>
+
+      <button class="btn btn-primary btn-glow" id="btnScan" disabled style="width:100%;margin-top:1rem;">
+        <i class="fas fa-search"></i> Scan Now
+      </button>
+    </section>
+
+    <!-- Scanning Animation -->
+    <section class="card scan-progress hidden" id="scanProgress">
+      <div class="scan-animation">
+        <div class="scan-spinner"></div>
+        <h3 id="scanStatusText">Analyzing your document…</h3>
+        <p class="text-muted" id="scanSubtext">Running TF-IDF & Cosine Similarity checks</p>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="hidden" id="scanResults">
+
+      <!-- Overall Score Card -->
+      <div class="card scan-score-card">
+        <div class="scan-score-left">
+          <svg class="scan-gauge" viewBox="0 0 180 100">
+            <path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12" stroke-linecap="round"/>
+            <path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" id="scanGaugeFill" stroke="var(--green)" stroke-width="12" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="125.6"/>
+          </svg>
+          <div class="scan-gauge-text">
+            <span id="scanScoreNum">0%</span>
+            <span class="scan-gauge-sub">Similarity</span>
+          </div>
+          <span class="risk-badge risk-low" id="scanRiskBadge">Low Risk</span>
+        </div>
+        <div class="scan-score-right">
+          <h3 id="scanFileName">document.pdf</h3>
+          <div class="scan-pills" id="scanPills"></div>
+          <button class="btn btn-outline" id="btnScanAgain" style="margin-top:.75rem;">
+            <i class="fas fa-redo"></i> Scan Another
+          </button>
+        </div>
+      </div>
+
+      <!-- Local Matches -->
+      <div class="card" id="localSection">
+        <h3><i class="fas fa-database"></i> Similar Documents (TF-IDF)</h3>
+        <p class="text-muted" style="font-size:.85rem;">Documents found in repository with algorithmic similarity scores.</p>
+        <div id="localMatchList"></div>
+      </div>
+
+      <!-- Paragraph Matches -->
+      <div class="card" id="paraSection">
+        <h3><i class="fas fa-paragraph"></i> Flagged Paragraphs</h3>
+        <p class="text-muted" style="font-size:.85rem;">Paragraphs with significant text overlap against existing documents.</p>
+        <div id="paraMatchList"></div>
+      </div>
+
+      <!-- AI Analysis -->
+      <div class="card hidden" id="aiSection">
+        <h3><i class="fas fa-robot"></i> AI Semantic Analysis</h3>
+        <p class="text-muted" style="font-size:.85rem;">OpenAI GPT analysis for paraphrased or restructured content.</p>
+        <div id="aiResultContent"></div>
+      </div>
+
+      <!-- Internet Results -->
+      <div class="card hidden" id="internetSection">
+        <h3><i class="fas fa-globe"></i> Internet Sources Found</h3>
+        <p class="text-muted" style="font-size:.85rem;">Web sources with matching or similar content.</p>
+        <div id="internetResultList"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  </footer>
+
+  <script src="js/nav-auth.js"></script>
+  <script src="js/quick-scan.js"></script>
+</body>
+</html>

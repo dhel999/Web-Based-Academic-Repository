@@ -2269,3 +2269,232 @@ img { max-width: 100%; }
   .step-connector { transform: rotate(90deg); }
   .step-card { max-width: 100%; width: 100%; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   QUICK SCAN PAGE
+   ══════════════════════════════════════════════════════════════ */
+.scan-upload-card h2 { margin-bottom: .25rem; }
+
+/* File preview */
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: rgba(0,206,209,.06);
+  border: 1px solid rgba(0,206,209,.2);
+  border-radius: 10px;
+  padding: .65rem 1rem;
+  margin-top: .75rem;
+}
+.file-preview i { color: var(--primary); }
+.file-preview span { flex: 1; font-size: .9rem; font-weight: 500; }
+.btn-icon {
+  background: none; border: none; color: rgba(255,255,255,.4); cursor: pointer;
+  font-size: .9rem; padding: .25rem;
+}
+.btn-icon:hover { color: #f87171; }
+.link-style { color: var(--primary); cursor: pointer; text-decoration: underline; }
+
+/* Scan options */
+.scan-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: 1rem;
+}
+.scan-option {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  padding: .5rem .85rem;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.scan-option:hover { border-color: rgba(0,206,209,.25); }
+.scan-option input { accent-color: var(--primary); }
+.badge-auto {
+  background: rgba(0,206,209,.15);
+  color: #00ced1;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .15rem .4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+/* Scan progress animation */
+.scan-progress {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+.scan-animation { display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+.scan-spinner {
+  width: 56px; height: 56px;
+  border: 4px solid rgba(255,255,255,.08);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.scan-animation h3 { font-size: 1.1rem; }
+
+/* Score card */
+.scan-score-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem 2rem;
+}
+.scan-score-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 140px;
+}
+.scan-gauge { width: 140px; }
+.scan-gauge-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -10%);
+  text-align: center;
+}
+.scan-gauge-text span:first-child { display: block; font-size: 1.6rem; font-weight: 800; }
+.scan-gauge-sub { font-size: .7rem; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .5px; }
+.scan-score-right { flex: 1; }
+.scan-score-right h3 { font-size: 1.1rem; margin-bottom: .5rem; }
+.scan-pills { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* Paragraph matches */
+.scan-para-match {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: .75rem;
+}
+.scan-para-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+.scan-para-num {
+  font-weight: 700;
+  font-size: .8rem;
+  color: rgba(255,255,255,.5);
+}
+.scan-para-score { font-weight: 700; font-size: .85rem; }
+.scan-para-text {
+  font-size: .85rem;
+  line-height: 1.6;
+  color: rgba(255,255,255,.8);
+  background: rgba(255,255,255,.02);
+  padding: .6rem .8rem;
+  border-radius: 6px;
+  border-left: 3px solid rgba(255,193,7,.4);
+  margin-bottom: .5rem;
+}
+.scan-para-source {
+  font-size: .8rem;
+  color: rgba(255,255,255,.55);
+  padding-left: .5rem;
+}
+.scan-para-source strong { color: rgba(255,255,255,.7); }
+
+/* AI results */
+.scan-ai-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.scan-ai-score {
+  font-size: 2rem;
+  font-weight: 800;
+  min-width: 70px;
+  text-align: center;
+}
+.scan-ai-flags { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+.scan-ai-flag-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  background: rgba(231,76,60,.05);
+  border: 1px solid rgba(231,76,60,.15);
+  border-radius: 8px;
+  padding: .75rem;
+}
+.scan-ai-flag-badge {
+  background: rgba(231,76,60,.15);
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: .8rem;
+  padding: .25rem .5rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.scan-ai-suggestion {
+  background: rgba(255,193,7,.06);
+  border: 1px solid rgba(255,193,7,.2);
+  border-radius: 8px;
+  padding: .75rem 1rem;
+  font-size: .85rem;
+  color: rgba(255,255,255,.7);
+}
+.scan-ai-suggestion i { color: #fbbf24; margin-right: .4rem; }
+
+/* Internet results */
+.scan-internet-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: .75rem;
+}
+.scan-internet-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .5rem;
+}
+.scan-internet-score { font-weight: 800; font-size: 1.1rem; flex-shrink: 0; }
+.scan-internet-url {
+  color: #74b9ff;
+  text-decoration: none;
+  font-size: .85rem;
+  word-break: break-all;
+}
+.scan-internet-url:hover { text-decoration: underline; }
+.scan-internet-sources { font-size: .75rem; margin-top: .25rem; }
+.scan-internet-sources a { color: #74b9ff; text-decoration: none; }
+.scan-internet-sources a:hover { text-decoration: underline; }
+.scan-internet-para {
+  font-size: .82rem;
+  color: rgba(255,255,255,.6);
+  padding: .4rem .6rem;
+  border-left: 3px solid rgba(116,185,255,.3);
+  margin-bottom: .4rem;
+}
+.scan-internet-snippet {
+  font-size: .8rem;
+  color: rgba(255,255,255,.5);
+  font-style: italic;
+}
+
+/* Drop zone drag-over state */
+.drop-zone.drag-over {
+  border-color: var(--primary);
+  background: rgba(0,206,209,.06);
+}
+
+@media (max-width: 640px) {
+  .scan-score-card { flex-direction: column; text-align: center; }
+  .scan-options { flex-direction: column; }
+}

@@ -37,8 +37,12 @@ const upload = multer({
 });
 
 const { requireAuth } = require('../middleware/auth');
+const { quickScan } = require('../controllers/quickScanController');
 
 // POST /api/upload
 router.post('/upload', requireAuth, upload.single('file'), uploadDocument);
+
+// POST /api/quick-scan (no auth required)
+router.post('/quick-scan', upload.single('file'), quickScan);
 
 module.exports = router;
