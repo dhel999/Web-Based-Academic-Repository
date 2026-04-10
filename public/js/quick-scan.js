@@ -106,8 +106,16 @@ async function runQuickScan() {
       body: formData
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Scan failed');
+    const raw = await res.text();
+    let data = null;
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      data = { error: raw && raw.startsWith('<!DOCTYPE')
+        ? `Server returned HTML error (HTTP ${res.status}).`
+        : `Unexpected server response (HTTP ${res.status}).` };
+    }
+    if (!res.ok) throw new Error(data.error || `Scan failed (HTTP ${res.status})`);
 
     // Mark remaining steps done
     if (useAI) setStep(3);

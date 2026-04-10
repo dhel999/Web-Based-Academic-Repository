@@ -29,7 +29,9 @@ function computeHeuristicSignals(paragraphs) {
     };
   }
 
-  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const sentences = (text.match(/[^.!?]+[.!?]?/g) || [text])
+    .map(s => s.trim())
+    .filter(Boolean);
   const words = text.toLowerCase().match(/[a-z']+/g) || [];
   const uniqueWords = new Set(words);
   const lexicalDiversity = words.length ? uniqueWords.size / words.length : 0;
