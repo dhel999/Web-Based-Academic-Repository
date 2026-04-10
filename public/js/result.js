@@ -188,19 +188,35 @@ function renderResultsFromDB(results) {
   const aiResults       = results.filter(r => r.source === 'openai');
   const internetResults = results.filter(r => r.source === 'internet');
 
-  // Compute overall score: sum of paragraph match scores / total paragraphs
-  let overallScore = 0;
+  // Compute overall score: combine local, AI, and internet scores
+  let localScore = 0;
   const paragraphResults = localResults.filter(r => r.matched_paragraph);
   const docLevelResults  = localResults.filter(r => !r.matched_paragraph);
   if (paragraphResults.length > 0 && currentParagraphs.length > 0) {
     const totalParaScore = paragraphResults.reduce((sum, r) => sum + r.similarity_score, 0);
-    overallScore = totalParaScore / currentParagraphs.length;
-    overallScore = parseFloat(Math.min(overallScore, 100).toFixed(1));
+    localScore = totalParaScore / currentParagraphs.length;
   } else if (docLevelResults.length > 0) {
     const topDocs = docLevelResults.slice(0, 3);
-    const docScore = topDocs.reduce((s, r) => s + r.similarity_score, 0) / topDocs.length;
-    overallScore = parseFloat(Math.min(docScore * 0.3, 30).toFixed(1));
+    localScore = topDocs.reduce((s, r) => s + r.similarity_score, 0) / topDocs.length * 0.3;
   }
+
+  // AI score: ratio of AI-flagged paragraphs × average AI confidence
+  let aiScore = 0;
+  if (aiResults.length > 0 && currentParagraphs.length > 0) {
+    const avgAiConf = aiResults.reduce((s, r) => s + (r.similarity_score || 80), 0) / aiResults.length;
+    aiScore = (aiResults.length / currentParagraphs.length) * avgAiConf;
+  }
+
+  // Internet score: ratio of internet-matched paragraphs × average score
+  let internetScore = 0;
+  if (internetResults.length > 0 && currentParagraphs.length > 0) {
+    const avgIntConf = internetResults.reduce((s, r) => s + r.similarity_score, 0) / internetResults.length;
+    internetScore = (internetResults.length / currentParagraphs.length) * avgIntConf;
+  }
+
+  // Combined: take the highest signal among all sources
+  let overallScore = Math.max(localScore, aiScore, internetScore);
+  overallScore = parseFloat(Math.min(overallScore, 100).toFixed(1));
 
   renderGauge(overallScore);
   renderScorePills(localResults.length, aiResults.length, internetResults.length, overallScore);
