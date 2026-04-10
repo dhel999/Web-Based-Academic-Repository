@@ -26,10 +26,18 @@
     </ul>
   </nav>
 
-  <!-- ===== HERO ===== -->
-  <header class="hero" style="padding:1.5rem 0;">
-    <div class="hero-content">
-      <h1><i class="fas fa-folder-open"></i> My Documents</h1>
+  <!-- ===== HERO with particles ===== -->
+  <header class="hero hero-enhanced" style="padding:2.5rem 2rem 1.5rem;">
+    <div class="hero-particles" id="heroParticles"></div>
+    <div class="enh-floating-icons">
+      <i class="fas fa-folder-open enh-float-icon"></i>
+      <i class="fas fa-file-lines enh-float-icon"></i>
+      <i class="fas fa-chart-pie enh-float-icon"></i>
+      <i class="fas fa-clipboard-check enh-float-icon"></i>
+    </div>
+    <div class="hero-content" style="text-align:center;">
+      <div class="hero-badge"><i class="fas fa-folder-open"></i> My Library</div>
+      <h1 class="enh-page-title">My Documents</h1>
       <p id="heroSubtitle">Your uploaded research papers and similarity reports</p>
     </div>
   </header>
@@ -39,28 +47,28 @@
 
     <!-- Stats Row -->
     <div class="stats-row" id="statsRow">
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <div class="stat-icon"><i class="fas fa-file-lines"></i></div>
         <div class="stat-info">
           <span class="stat-value" id="statTotal">0</span>
           <span class="stat-label">Documents</span>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <div class="stat-icon" style="color:var(--green);"><i class="fas fa-circle-check"></i></div>
         <div class="stat-info">
           <span class="stat-value" id="statClean">0</span>
           <span class="stat-label">Clean (< 30%)</span>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <div class="stat-icon" style="color:var(--yellow);"><i class="fas fa-triangle-exclamation"></i></div>
         <div class="stat-info">
           <span class="stat-value" id="statMedium">0</span>
           <span class="stat-label">Medium (30-60%)</span>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <div class="stat-icon" style="color:var(--red);"><i class="fas fa-flag"></i></div>
         <div class="stat-info">
           <span class="stat-value" id="statHigh">0</span>
@@ -70,7 +78,7 @@
     </div>
 
     <!-- Search -->
-    <section class="card">
+    <section class="card enh-card-animate">
       <div class="input-row" style="margin-bottom:0;">
         <input type="text" id="searchInput" placeholder="Search your documents by title…" />
         <button class="btn btn-secondary" id="btnSearch">
@@ -93,7 +101,14 @@
     </section>
   </main>
 
+  <footer class="footer">
+    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  </footer>
+
   <script src="js/auth-guard.js"></script>
   <script src="js/my-documents.js"></script>
+  <script>
+    (function(){const c=document.getElementById('heroParticles');if(!c)return;for(let i=0;i<20;i++){const p=document.createElement('div');p.className='hero-particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(6+Math.random()*8)+'s';p.style.animationDelay=(Math.random()*6)+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p);}})();
+  </script>
 </body>
 </html>

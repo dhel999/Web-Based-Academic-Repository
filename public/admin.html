@@ -25,10 +25,18 @@
     </ul>
   </nav>
 
-  <!-- ===== HERO ===== -->
-  <header class="hero" style="padding:1.5rem 0;">
-    <div class="hero-content">
-      <h1><i class="fas fa-gauge-high"></i> Admin Dashboard</h1>
+  <!-- ===== HERO with particles ===== -->
+  <header class="hero hero-enhanced" style="padding:2.5rem 2rem 1.5rem;">
+    <div class="hero-particles" id="heroParticles"></div>
+    <div class="enh-floating-icons">
+      <i class="fas fa-gauge-high enh-float-icon"></i>
+      <i class="fas fa-users-gear enh-float-icon"></i>
+      <i class="fas fa-shield-halved enh-float-icon"></i>
+      <i class="fas fa-chart-line enh-float-icon"></i>
+    </div>
+    <div class="hero-content" style="text-align:center;">
+      <div class="hero-badge"><i class="fas fa-crown"></i> Administration</div>
+      <h1 class="enh-page-title">Admin Dashboard</h1>
       <p>Manage documents, users, and system settings</p>
     </div>
   </header>
@@ -38,21 +46,21 @@
 
     <!-- Stats -->
     <div class="stats-row" id="statsRow">
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <div class="stat-icon"><i class="fas fa-file-lines"></i></div>
         <div class="stat-info">
           <span class="stat-value" id="statDocs">—</span>
           <span class="stat-label">Total Documents</span>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <div class="stat-icon" style="color:var(--teal);"><i class="fas fa-users"></i></div>
         <div class="stat-info">
           <span class="stat-value" id="statUsers">—</span>
           <span class="stat-label">Total Users</span>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <div class="stat-icon" style="color:var(--green);"><i class="fas fa-paragraph"></i></div>
         <div class="stat-info">
           <span class="stat-value" id="statParas">—</span>
@@ -62,7 +70,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="admin-tabs">
+    <div class="admin-tabs enh-tabs">
       <button class="admin-tab active" data-tab="documents">
         <i class="fas fa-file-lines"></i> Documents
       </button>
@@ -72,12 +80,12 @@
     </div>
 
     <!-- Documents Tab -->
-    <section class="card admin-section active" id="documentsTab">
+    <section class="card admin-section active enh-card-animate" id="documentsTab">
       <div class="input-row" style="margin-bottom:1rem;">
         <input type="text" id="docSearch" placeholder="Search documents…" />
       </div>
       <div class="admin-table-wrap">
-        <table class="admin-table" id="docTable">
+        <table class="admin-table enh-table" id="docTable">
           <thead>
             <tr>
               <th>Title</th>
@@ -95,9 +103,9 @@
     </section>
 
     <!-- Users Tab -->
-    <section class="card admin-section" id="usersTab">
+    <section class="card admin-section enh-card-animate" id="usersTab">
       <div class="admin-table-wrap">
-        <table class="admin-table" id="usersTable">
+        <table class="admin-table enh-table" id="usersTable">
           <thead>
             <tr>
               <th>Name</th>
@@ -130,7 +138,14 @@
     </div>
   </main>
 
+  <footer class="footer">
+    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  </footer>
+
   <script src="js/auth-guard.js"></script>
   <script src="js/admin.js"></script>
+  <script>
+    (function(){const c=document.getElementById('heroParticles');if(!c)return;for(let i=0;i<20;i++){const p=document.createElement('div');p.className='hero-particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(6+Math.random()*8)+'s';p.style.animationDelay=(Math.random()*6)+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p);}})();
+  </script>
 </body>
 </html>

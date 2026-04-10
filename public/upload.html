@@ -26,10 +26,18 @@
     </ul>
   </nav>
 
-  <!-- ===== HERO ===== -->
-  <header class="hero hero-sm">
-    <div class="hero-content">
-      <h1><i class="fas fa-file-arrow-up"></i> Upload Document</h1>
+  <!-- ===== HERO with particles ===== -->
+  <header class="hero hero-enhanced" style="padding:2.5rem 2rem 1.5rem;">
+    <div class="hero-particles" id="heroParticles"></div>
+    <div class="enh-floating-icons">
+      <i class="fas fa-file-arrow-up enh-float-icon"></i>
+      <i class="fas fa-cloud-arrow-up enh-float-icon"></i>
+      <i class="fas fa-magnifying-glass-chart enh-float-icon"></i>
+      <i class="fas fa-file-circle-check enh-float-icon"></i>
+    </div>
+    <div class="hero-content" style="text-align:center;">
+      <div class="hero-badge"><i class="fas fa-upload"></i> Upload &amp; Analyze</div>
+      <h1 class="enh-page-title">Upload Document</h1>
       <p>Upload your research paper for plagiarism analysis</p>
     </div>
   </header>
@@ -38,7 +46,7 @@
   <main class="container">
 
     <!-- Title Check Banner -->
-    <section class="card title-check-card">
+    <section class="card title-check-card enh-card-animate">
       <h2><i class="fas fa-search"></i> Quick Title Check</h2>
       <p class="card-subtitle">Check if a similar research title already exists before uploading.</p>
       <div class="input-row">
@@ -51,7 +59,7 @@
     </section>
 
     <!-- Upload Form -->
-    <section class="card upload-card">
+    <section class="card upload-card enh-card-animate">
       <h2><i class="fas fa-file-arrow-up"></i> Upload Document</h2>
       <p class="card-subtitle">Supports PDF, DOCX, and TXT files up to 20 MB.</p>
 
@@ -72,7 +80,7 @@
           </div>
           <div class="form-group" style="width:120px;">
             <label for="docYear">Year</label>
-            <input type="text" id="docYear" name="year" placeholder="2025" />
+            <input type="text" id="docYear" name="year" placeholder="2026" />
           </div>
         </div>
 
@@ -83,7 +91,7 @@
 
         <div class="form-group">
           <label>Document File <span class="required">*</span></label>
-          <div class="drop-zone" id="dropZone">
+          <div class="drop-zone enh-drop" id="dropZone">
             <input type="file" id="fileInput" name="file" accept=".pdf,.docx,.txt" hidden />
             <div class="drop-zone-prompt" id="dropPrompt">
               <i class="fas fa-cloud-arrow-up fa-2x"></i>
@@ -140,10 +148,13 @@
   </main>
 
   <footer class="footer">
-    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+    <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
   </footer>
 
   <script src="js/auth-guard.js"></script>
   <script src="js/upload.js"></script>
+  <script>
+    (function(){const c=document.getElementById('heroParticles');if(!c)return;for(let i=0;i<20;i++){const p=document.createElement('div');p.className='hero-particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(6+Math.random()*8)+'s';p.style.animationDelay=(Math.random()*6)+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p);}})();
+  </script>
 </body>
 </html>

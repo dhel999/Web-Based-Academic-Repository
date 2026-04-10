@@ -2772,3 +2772,160 @@ img { max-width: 100%; }
   .qs-section-header { flex-direction: column; gap: .5rem; }
   .qs-floating-icons { display: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ENHANCED PAGE STYLES — shared across all pages
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Floating Icons (generic) ──────────────────────────────── */
+.enh-floating-icons {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.enh-float-icon {
+  position: absolute;
+  font-size: 1.4rem;
+  color: rgba(14,165,233,.10);
+  animation: enhFloatIcon 14s ease-in-out infinite;
+}
+
+.enh-float-icon:nth-child(1) { top:15%; left:8%;  animation-delay:0s;   font-size:1.5rem; }
+.enh-float-icon:nth-child(2) { top:25%; right:12%; animation-delay:2s;   font-size:1.2rem; }
+.enh-float-icon:nth-child(3) { top:60%; left:5%;   animation-delay:4s;   font-size:1.6rem; }
+.enh-float-icon:nth-child(4) { top:50%; right:8%;  animation-delay:6s;   font-size:1.3rem; }
+.enh-float-icon:nth-child(5) { top:80%; left:15%;  animation-delay:8s;   font-size:1.1rem; }
+.enh-float-icon:nth-child(6) { top:70%; right:18%; animation-delay:10s;  font-size:1.4rem; }
+
+@keyframes enhFloatIcon {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: .08; }
+  50%      { transform: translateY(-18px) rotate(12deg); opacity: .18; }
+}
+
+/* ── Enhanced Page Title ───────────────────────────────────── */
+.enh-page-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 50%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: .5rem;
+  animation: fadeInDown .6s ease-out .1s both;
+}
+
+/* ── Card Animate (slide up) ───────────────────────────────── */
+.enh-card-animate {
+  animation: enhSlideUp .5s ease-out both;
+}
+
+@keyframes enhSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered card animations */
+.enh-card-animate:nth-child(1) { animation-delay: 0s; }
+.enh-card-animate:nth-child(2) { animation-delay: .08s; }
+.enh-card-animate:nth-child(3) { animation-delay: .16s; }
+.enh-card-animate:nth-child(4) { animation-delay: .24s; }
+.enh-card-animate:nth-child(5) { animation-delay: .32s; }
+
+/* ── Enhanced Stat Cards ───────────────────────────────────── */
+.stat-card.enh-stat {
+  border: 1px solid rgba(14,165,233,.12);
+  background: linear-gradient(135deg, rgba(14,165,233,.04) 0%, rgba(15,23,42,.6) 100%);
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+
+.stat-card.enh-stat:hover {
+  transform: translateY(-4px);
+  border-color: rgba(14,165,233,.3);
+  box-shadow: 0 8px 25px rgba(14,165,233,.12);
+}
+
+/* ── Section Heading with Icon ─────────────────────────────── */
+.enh-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  margin-right: .6rem;
+  font-size: .95rem;
+}
+
+.enh-section-icon.teal    { background: rgba(14,165,233,.12); color: var(--teal); }
+.enh-section-icon.green   { background: rgba(16,185,129,.12); color: var(--green); }
+.enh-section-icon.red     { background: rgba(239,68,68,.12);  color: var(--red); }
+.enh-section-icon.yellow  { background: rgba(245,158,11,.12); color: var(--yellow); }
+.enh-section-icon.purple  { background: rgba(168,85,247,.12); color: #a855f7; }
+
+/* ── Enhanced Drop Zone ────────────────────────────────────── */
+.drop-zone.enh-drop {
+  border: 2px dashed rgba(14,165,233,.25);
+  background: rgba(14,165,233,.02);
+  transition: border-color .3s, background .3s, transform .2s;
+}
+
+.drop-zone.enh-drop:hover {
+  border-color: rgba(14,165,233,.45);
+  background: rgba(14,165,233,.06);
+  transform: scale(1.01);
+}
+
+/* ── Enhanced Table ────────────────────────────────────────── */
+.admin-table.enh-table tbody tr {
+  transition: background .2s, transform .15s;
+}
+
+.admin-table.enh-table tbody tr:hover {
+  background: rgba(14,165,233,.06);
+}
+
+/* ── Enhanced Admin Tabs ───────────────────────────────────── */
+.admin-tabs.enh-tabs {
+  background: rgba(15,23,42,.5);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid rgba(14,165,233,.1);
+}
+
+.admin-tabs.enh-tabs .admin-tab {
+  border-radius: 10px;
+  transition: all .25s;
+}
+
+.admin-tabs.enh-tabs .admin-tab.active {
+  box-shadow: 0 2px 10px rgba(14,165,233,.2);
+}
+
+/* ── Enhanced Gauge Section ────────────────────────────────── */
+.score-overview.enh-score {
+  border: 1px solid rgba(14,165,233,.12);
+  background: linear-gradient(135deg, rgba(14,165,233,.03) 0%, rgba(15,23,42,.8) 100%);
+}
+
+/* ── Footer (ensured on all pages) ─────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  margin-top: 3rem;
+  color: var(--text-muted);
+  font-size: .82rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Responsive for enhanced elements ──────────────────────── */
+@media (max-width: 768px) {
+  .enh-floating-icons { display: none; }
+  .enh-page-title { font-size: 1.8rem; }
+}
+
+@media (max-width: 640px) {
+  .enh-page-title { font-size: 1.5rem; }
+}

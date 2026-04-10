@@ -25,10 +25,18 @@
     </ul>
   </nav>
 
-  <!-- ===== HERO ===== -->
-  <header class="hero hero-sm">
-    <div class="hero-content">
-      <h1><i class="fas fa-database"></i> Document Repository</h1>
+  <!-- ===== HERO with particles ===== -->
+  <header class="hero hero-enhanced" style="padding:2.5rem 2rem 1.5rem;">
+    <div class="hero-particles" id="heroParticles"></div>
+    <div class="enh-floating-icons">
+      <i class="fas fa-database enh-float-icon"></i>
+      <i class="fas fa-book-open enh-float-icon"></i>
+      <i class="fas fa-search enh-float-icon"></i>
+      <i class="fas fa-graduation-cap enh-float-icon"></i>
+    </div>
+    <div class="hero-content" style="text-align:center;">
+      <div class="hero-badge"><i class="fas fa-database"></i> Repository</div>
+      <h1 class="enh-page-title">Document Repository</h1>
       <p>Browse, search, and manage all uploaded academic documents.</p>
     </div>
   </header>
@@ -38,14 +46,14 @@
 
     <!-- Stats Row -->
     <div class="stats-row" id="statsRow">
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <i class="fas fa-file-lines fa-2x"></i>
         <div>
           <span class="stat-num" id="totalDocs">—</span>
           <span class="stat-label">Total Documents</span>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card enh-stat enh-card-animate">
         <i class="fas fa-paragraph fa-2x"></i>
         <div>
           <span class="stat-num" id="totalPlagiarism">—</span>
@@ -55,7 +63,7 @@
     </div>
 
     <!-- Search + Controls -->
-    <section class="card">
+    <section class="card enh-card-animate">
       <div class="dashboard-toolbar">
         <div class="search-wrap">
           <i class="fas fa-search search-icon"></i>
@@ -68,7 +76,7 @@
     </section>
 
     <!-- Documents Table -->
-    <section class="card">
+    <section class="card enh-card-animate">
       <div id="loadingDocs" class="loading-state">
         <i class="fas fa-spinner fa-spin fa-2x"></i>
         <p>Loading documents…</p>
@@ -98,10 +106,13 @@
   </main>
 
   <footer class="footer">
-    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+    <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
   </footer>
 
   <script src="js/nav-auth.js"></script>
   <script src="js/dashboard.js"></script>
+  <script>
+    (function(){const c=document.getElementById('heroParticles');if(!c)return;for(let i=0;i<20;i++){const p=document.createElement('div');p.className='hero-particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(6+Math.random()*8)+'s';p.style.animationDelay=(Math.random()*6)+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p);}})();
+  </script>
 </body>
 </html>

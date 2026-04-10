@@ -12,22 +12,32 @@
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar">
     <div class="nav-brand">
-      <i class="fas fa-graduation-cap"></i>
-      <span>AcadRepo</span>
+      <a href="index.html" style="display:flex;align-items:center;gap:.5rem;text-decoration:none;color:inherit;">
+        <i class="fas fa-graduation-cap"></i>
+        <span>AcadRepo</span>
+      </a>
     </div>
   </nav>
 
-  <!-- ===== HERO ===== -->
-  <header class="hero" style="padding:2rem 0;">
-    <div class="hero-content">
-      <h1><i class="fas fa-shield-halved"></i> Academic Repository</h1>
+  <!-- ===== HERO with particles ===== -->
+  <header class="hero hero-enhanced" style="padding:3rem 2rem 2rem;">
+    <div class="hero-particles" id="heroParticles"></div>
+    <div class="enh-floating-icons">
+      <i class="fas fa-lock enh-float-icon"></i>
+      <i class="fas fa-user-shield enh-float-icon"></i>
+      <i class="fas fa-key enh-float-icon"></i>
+      <i class="fas fa-shield-halved enh-float-icon"></i>
+    </div>
+    <div class="hero-content" style="text-align:center;">
+      <div class="hero-badge"><i class="fas fa-shield-halved"></i> Secure Access</div>
+      <h1 class="enh-page-title">Academic Repository</h1>
       <p>Plagiarism Detection Using TF-IDF and Cosine Similarity</p>
     </div>
   </header>
 
   <!-- ===== AUTH CARD ===== -->
   <main class="container" style="max-width:480px;">
-    <section class="card" id="authCard">
+    <section class="card enh-card-animate" id="authCard">
       <!-- Tab Switcher -->
       <div class="auth-tabs">
         <button class="auth-tab active" id="tabLogin" data-tab="login">
@@ -54,7 +64,7 @@
           </div>
         </div>
         <div id="loginError" class="auth-error hidden"></div>
-        <button type="submit" class="btn btn-primary btn-block" id="btnLogin">
+        <button type="submit" class="btn btn-primary btn-block btn-glow" id="btnLogin">
           <i class="fas fa-right-to-bracket"></i> Sign In
         </button>
       </form>
@@ -88,13 +98,23 @@
           </div>
         </div>
         <div id="registerError" class="auth-error hidden"></div>
-        <button type="submit" class="btn btn-primary btn-block" id="btnRegister">
+        <button type="submit" class="btn btn-primary btn-block btn-glow" id="btnRegister">
           <i class="fas fa-user-plus"></i> Create Account
         </button>
       </form>
     </section>
   </main>
 
+  <footer class="footer">
+    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  </footer>
+
   <script src="js/auth.js"></script>
+  <script>
+    (function(){
+      const c=document.getElementById('heroParticles');if(!c)return;
+      for(let i=0;i<20;i++){const p=document.createElement('div');p.className='hero-particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(6+Math.random()*8)+'s';p.style.animationDelay=(Math.random()*6)+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p);}
+    })();
+  </script>
 </body>
 </html>
