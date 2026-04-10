@@ -106,7 +106,7 @@ async function quickScan(req, res) {
         if (aiResult.flaggedParagraphs) {
           aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
             ...fp,
-            text: paragraphs[fp.paragraph_index - 1] || '',
+            text: paragraphs[fp.paragraph_index] || '',
             score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
           }));
         }

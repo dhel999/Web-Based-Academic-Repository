@@ -27,9 +27,15 @@ async function analyzeWithOpenAI(documentId, paragraphs) {
     throw new Error('OPENAI_API_KEY is not configured');
   }
 
+  // Keep original indices so AI flags can be mapped back to full document paragraphs
+  const paragraphEntries = (paragraphs || []).map((p, index) => ({
+    text: String(p || '').trim(),
+    index
+  }));
+
   // Filter to likely prose paragraphs (less strict to avoid dropping valid student text)
-  const substantialParagraphs = (paragraphs || []).filter(p => {
-    const text = String(p || '').trim();
+  const substantialParagraphs = paragraphEntries.filter(entry => {
+    const text = entry.text;
     if (!text) return false;
     const words = text.split(/\s+/).length;
     if (words < 8) return false;
@@ -41,7 +47,7 @@ async function analyzeWithOpenAI(documentId, paragraphs) {
   // Fallback: if extraction produced short chunks, still analyze available text
   const sourceParagraphs = substantialParagraphs.length > 0
     ? substantialParagraphs
-    : (paragraphs || []).map(p => String(p || '').trim()).filter(p => p.length > 20);
+    : paragraphEntries.filter(entry => entry.text.length > 20);
 
   // Spread-sample paragraphs (not just first N) to improve detection across long files
   const maxSamples = 20;
@@ -66,7 +72,7 @@ async function analyzeWithOpenAI(documentId, paragraphs) {
   }
 
   const combinedText = sampleParagraphs
-    .map((p, i) => `[Paragraph ${i + 1}]: ${p}`)
+    .map((entry, i) => `[Paragraph ${i + 1}]: ${entry.text}`)
     .join('\n\n');
 
   const systemPrompt = `You are an expert academic plagiarism detection assistant. 
@@ -137,8 +143,10 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
       if (!Number.isFinite(idx)) return null;
       if (!hasZeroIndex && idx > 0) idx -= 1;
       if (idx < 0 || idx >= sampleParagraphs.length) return null;
+      const mapped = sampleParagraphs[idx];
+      if (!mapped) return null;
       return {
-        paragraph_index: idx,
+        paragraph_index: mapped.index,
         risk: normalizeRisk(fp?.risk),
         reason: String(fp?.reason || 'Potential AI-assisted or plagiarized writing pattern')
       };
@@ -158,7 +166,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
   if (result.flaggedParagraphs.length === 0 && (result.riskLevel === 'medium' || result.riskLevel === 'high')) {
     const fallbackCount = result.riskLevel === 'high' ? 3 : 1;
     result.flaggedParagraphs = sampleParagraphs.slice(0, fallbackCount).map((_, i) => ({
-      paragraph_index: i,
+      paragraph_index: sampleParagraphs[i].index,
       risk: result.riskLevel,
       reason: 'Overall text pattern indicates probable AI-generated or non-original writing.'
     }));
@@ -169,7 +177,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
   const insertRows = result.flaggedParagraphs
     .filter(fp => fp.risk === 'high' || fp.risk === 'medium')
     .filter(fp => {
-      const para = sampleParagraphs[fp.paragraph_index];
+      const para = paragraphEntries[fp.paragraph_index]?.text;
       // Double-check: only save flags for substantial paragraphs
       return para && para.split(/\s+/).length >= 20;
     })
@@ -177,7 +185,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
       document_id: documentId,
       matched_document_id: null,
       similarity_score: fp.risk === 'high' ? 80 : 50,
-      matched_paragraph: sampleParagraphs[fp.paragraph_index] || null,
+      matched_paragraph: paragraphEntries[fp.paragraph_index]?.text || null,
       source: 'openai'
     }));
 

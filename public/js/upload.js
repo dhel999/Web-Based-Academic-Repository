@@ -260,6 +260,7 @@ function renderResultsPreview(data, documentId) {
       <span class="pill">${matchCount} matched document${matchCount !== 1 ? 's' : ''}</span>
       <span class="pill">${paraCount} flagged paragraph${paraCount !== 1 ? 's' : ''}</span>
       ${data.openai_check && !data.openai_check.error ? `<span class="pill"><i class="fas fa-robot"></i> AI: ${data.openai_check.plagiarismPercentage}%</span>` : ''}
+      ${data.openai_check?.error ? `<span class="pill" style="border-color:var(--red);color:var(--red);"><i class="fas fa-triangle-exclamation"></i> AI Error: ${escapeHtml(data.openai_check.error)}</span>` : ''}
     </div>
   `;
 
