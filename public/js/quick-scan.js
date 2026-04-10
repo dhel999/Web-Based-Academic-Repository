@@ -88,8 +88,17 @@ async function runQuickScan() {
   scanResults.classList.add('hidden');
 
   // Reset progress steps
-  document.querySelectorAll('.qs-pstep').forEach(el => { el.classList.remove('active','done'); });
+  document.querySelectorAll('.qs-pstep').forEach(el => { el.classList.remove('active','done','queued'); });
   setStep(1);
+
+  if (useAI) {
+    const aiStep = document.getElementById('pstep3');
+    if (aiStep) aiStep.classList.add('queued');
+  }
+  if (useInternet) {
+    const webStep = document.getElementById('pstep4');
+    if (webStep) webStep.classList.add('queued');
+  }
 
   updateStatus('Extracting text from document…', 'Parsing file content');
 
@@ -107,6 +116,15 @@ async function runQuickScan() {
       body: formData
     });
 
+    if (useAI) {
+      setStep(3);
+      updateStatus('Running AI semantic analysis…', 'Evaluating AI-generated or paraphrased writing patterns');
+    }
+    if (useInternet) {
+      setStep(4);
+      updateStatus('Searching internet sources…', 'Checking selected paragraphs against public web results');
+    }
+
     const raw = await res.text();
     let data = null;
     try {
@@ -119,8 +137,6 @@ async function runQuickScan() {
     if (!res.ok) throw new Error(data.error || `Scan failed (HTTP ${res.status})`);
 
     // Mark remaining steps done
-    if (useAI) setStep(3);
-    if (useInternet) setStep(4);
     document.querySelectorAll('.qs-pstep').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
 
     scanProgress.classList.add('hidden');

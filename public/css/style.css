@@ -2729,6 +2729,11 @@ img { max-width: 100%; }
   background: rgba(14,165,233,.1);
   border-color: rgba(14,165,233,.25);
 }
+.qs-pstep.queued {
+  color: rgba(255,255,255,.7);
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.12);
+}
 .qs-pstep.done {
   color: var(--green);
   background: rgba(16,185,129,.1);

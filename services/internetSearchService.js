@@ -190,8 +190,8 @@ async function searchInternetPlagiarism(paragraphs, maxParagraphs = 12) {
         }
       }
 
-      // Rate limit: wait between searches
-      await new Promise(r => setTimeout(r, 1000));
+      // Small delay between searches to avoid hammering the engine while keeping quick scan responsive
+      await new Promise(r => setTimeout(r, 250));
     } catch (err) {
       console.error(`Internet search error for paragraph ${candidate.index}:`, err.message);
     }

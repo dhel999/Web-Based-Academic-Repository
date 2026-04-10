@@ -97,33 +97,31 @@ async function quickScan(req, res) {
       }
     }
 
-    // 3. AI Analysis (optional)
-    let aiResult = null;
-    if (runAI) {
-      try {
-        aiResult = await analyzeWithOpenAI('quick-scan', paragraphs);
-        // Enrich flagged paragraphs with text and numeric score
-        if (aiResult.flaggedParagraphs) {
-          aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
-            ...fp,
-            text: paragraphs[fp.paragraph_index] || '',
-            score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
-          }));
-        }
-      } catch (err) {
-        aiResult = { error: err.message };
-      }
-    }
+    // 3-4. Optional checks in parallel to reduce request timeouts
+    const aiPromise = runAI
+      ? analyzeWithOpenAI('quick-scan', paragraphs)
+          .then(aiResult => {
+            if (aiResult.flaggedParagraphs) {
+              aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
+                ...fp,
+                text: paragraphs[fp.paragraph_index] || '',
+                score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
+              }));
+            }
+            return aiResult;
+          })
+          .catch(err => ({ error: err.message }))
+      : Promise.resolve(null);
 
-    // 4. Internet Search (optional)
-    let internetMatches = [];
-    if (runInternet) {
-      try {
-        internetMatches = await searchInternetPlagiarism(paragraphs, 8);
-      } catch (err) {
-        console.error('Internet search error:', err.message);
-      }
-    }
+    const internetPromise = runInternet
+      ? searchInternetPlagiarism(paragraphs, 4)
+          .catch(err => {
+            console.error('Internet search error:', err.message);
+            return [];
+          })
+      : Promise.resolve([]);
+
+    const [aiResult, internetMatches] = await Promise.all([aiPromise, internetPromise]);
 
     // Clean up — delete temp file
     deleteFile(filePath);
