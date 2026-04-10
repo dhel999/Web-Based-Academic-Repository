@@ -123,10 +123,11 @@ async function getDocument(req, res) {
       similarityScore = Math.max(...simResults.map(r => r.similarity_score));
     }
 
-    // Only the document OWNER sees full analysis
+    // Only the document OWNER or ADMIN sees full analysis
+    const isAdmin = isAuthenticated && req.user.role === 'admin';
     const isOwner = isAuthenticated && req.user.id === doc.user_id;
 
-    if (!isOwner) {
+    if (!isOwner && !isAdmin) {
       const limitedDoc = {
         id: doc.id,
         title: doc.title,

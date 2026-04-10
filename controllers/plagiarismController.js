@@ -27,8 +27,8 @@ async function checkPlagiarism(req, res) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Only the document owner can run analysis
-    if (!req.user || req.user.id !== doc.user_id) {
+    // Only the document owner or admin can run analysis
+    if (!req.user || (req.user.id !== doc.user_id && req.user.role !== 'admin')) {
       return res.status(403).json({ error: 'Only the document owner can run analysis' });
     }
 
@@ -124,7 +124,7 @@ async function getResults(req, res) {
 
     if (!doc) return res.status(404).json({ error: 'Document not found' });
 
-    const isOwner = req.user && req.user.id === doc.user_id;
+    const isOwner = req.user && (req.user.id === doc.user_id || req.user.role === 'admin');
     if (!isOwner) {
       return res.json({ results: [] });
     }
@@ -157,7 +157,7 @@ async function checkInternet(req, res) {
       .single();
 
     if (!doc) return res.status(404).json({ error: 'Document not found' });
-    if (!req.user || req.user.id !== doc.user_id) {
+    if (!req.user || (req.user.id !== doc.user_id && req.user.role !== 'admin')) {
       return res.status(403).json({ error: 'Only the document owner can run analysis' });
     }
 
