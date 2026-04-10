@@ -4,6 +4,18 @@ const { compareDocuments, compareParagraphs } = require('../utils/tfidf');
 const { analyzeWithOpenAI } = require('../services/openaiService');
 const { searchInternetPlagiarism } = require('../services/internetSearchService');
 
+function normalizeAiResult(aiResult, paragraphs) {
+  if (!aiResult || aiResult.error) return aiResult;
+  if (aiResult.flaggedParagraphs) {
+    aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
+      ...fp,
+      text: paragraphs[fp.paragraph_index] || '',
+      score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
+    }));
+  }
+  return aiResult;
+}
+
 /**
  * POST /api/quick-scan
  * Temporarily uploads a file, runs all plagiarism checks, returns results, deletes file.
@@ -16,9 +28,6 @@ async function quickScan(req, res) {
 
   const filePath = req.file.path;
   const originalFilename = req.file.originalname;
-  const runAI = req.body.use_openai === 'true' || req.body.use_openai === true;
-  const runInternet = req.body.use_internet === 'true' || req.body.use_internet === true;
-
   try {
     // 1. Extract text
     const extractedText = await extractText(filePath, originalFilename);
@@ -97,32 +106,6 @@ async function quickScan(req, res) {
       }
     }
 
-    // 3-4. Optional checks in parallel to reduce request timeouts
-    const aiPromise = runAI
-      ? analyzeWithOpenAI('quick-scan', paragraphs)
-          .then(aiResult => {
-            if (aiResult.flaggedParagraphs) {
-              aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
-                ...fp,
-                text: paragraphs[fp.paragraph_index] || '',
-                score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
-              }));
-            }
-            return aiResult;
-          })
-          .catch(err => ({ error: err.message }))
-      : Promise.resolve(null);
-
-    const internetPromise = runInternet
-      ? searchInternetPlagiarism(paragraphs, 4)
-          .catch(err => {
-            console.error('Internet search error:', err.message);
-            return [];
-          })
-      : Promise.resolve([]);
-
-    const [aiResult, internetMatches] = await Promise.all([aiPromise, internetPromise]);
-
     // Clean up — delete temp file
     deleteFile(filePath);
 
@@ -138,10 +121,10 @@ async function quickScan(req, res) {
         total_paragraphs: paragraphs.length,
         all_paragraphs: paragraphs
       },
-      ai_check: aiResult,
+      ai_check: null,
       internet_check: {
-        matches: internetMatches,
-        total_found: internetMatches.length
+        matches: [],
+        total_found: 0
       }
     });
 
@@ -152,4 +135,39 @@ async function quickScan(req, res) {
   }
 }
 
-module.exports = { quickScan };
+async function quickScanAI(req, res) {
+  try {
+    const paragraphs = Array.isArray(req.body?.paragraphs) ? req.body.paragraphs : [];
+    if (paragraphs.length === 0) {
+      return res.status(400).json({ error: 'paragraphs are required' });
+    }
+
+    const aiResult = await analyzeWithOpenAI('quick-scan', paragraphs);
+    return res.json({ ai_check: normalizeAiResult(aiResult, paragraphs) });
+  } catch (err) {
+    console.error('Quick scan AI error:', err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+async function quickScanInternet(req, res) {
+  try {
+    const paragraphs = Array.isArray(req.body?.paragraphs) ? req.body.paragraphs : [];
+    if (paragraphs.length === 0) {
+      return res.status(400).json({ error: 'paragraphs are required' });
+    }
+
+    const matches = await searchInternetPlagiarism(paragraphs, 4);
+    return res.json({
+      internet_check: {
+        matches,
+        total_found: matches.length
+      }
+    });
+  } catch (err) {
+    console.error('Quick scan internet error:', err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { quickScan, quickScanAI, quickScanInternet };

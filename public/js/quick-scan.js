@@ -20,6 +20,7 @@ const btnScanAgain   = document.getElementById('btnScanAgain');
 const qsDocPaper     = document.getElementById('qsDocPaper');
 
 let selectedFile = null;
+let currentQuickScanData = null;
 
 // ── File handling ────────────────────────────────────────────
 dropZone.addEventListener('click', () => fileInput.click());
@@ -104,8 +105,6 @@ async function runQuickScan() {
 
   const formData = new FormData();
   formData.append('file', selectedFile);
-  formData.append('use_openai', useAI);
-  formData.append('use_internet', useInternet);
 
   try {
     setStep(2);
@@ -115,15 +114,6 @@ async function runQuickScan() {
       method: 'POST',
       body: formData
     });
-
-    if (useAI) {
-      setStep(3);
-      updateStatus('Running AI semantic analysis…', 'Evaluating AI-generated or paraphrased writing patterns');
-    }
-    if (useInternet) {
-      setStep(4);
-      updateStatus('Searching internet sources…', 'Checking selected paragraphs against public web results');
-    }
 
     const raw = await res.text();
     let data = null;
@@ -137,15 +127,77 @@ async function runQuickScan() {
     if (!res.ok) throw new Error(data.error || `Scan failed (HTTP ${res.status})`);
 
     // Mark remaining steps done
-    document.querySelectorAll('.qs-pstep').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
+    const step2 = document.getElementById('pstep2');
+    if (step2) { step2.classList.remove('active', 'queued'); step2.classList.add('done'); }
 
     scanProgress.classList.add('hidden');
-    renderResults(data);
+    currentQuickScanData = data;
+    renderResults(currentQuickScanData);
+    runOptionalQuickScanChecks(useAI, useInternet);
 
   } catch (err) {
     scanProgress.classList.add('hidden');
     uploadSection.classList.remove('hidden');
     alert('Scan failed: ' + err.message);
+  }
+}
+
+async function runOptionalQuickScanChecks(useAI, useInternet) {
+  const paragraphs = currentQuickScanData?.local_check?.all_paragraphs || [];
+  if (paragraphs.length === 0) return;
+
+  if (useAI) {
+    const aiSection = document.getElementById('aiSection');
+    aiSection.classList.remove('hidden');
+    document.getElementById('aiResultContent').innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Running AI semantic analysis...</p>';
+    const aiStep = document.getElementById('pstep3');
+    if (aiStep) { aiStep.classList.remove('queued'); aiStep.classList.add('active'); }
+
+    try {
+      const res = await fetch(`${API}/quick-scan-ai`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paragraphs })
+      });
+      const raw = await res.text();
+      let data = {};
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = { error: `Unexpected server response (HTTP ${res.status})` }; }
+      if (!res.ok) throw new Error(data.error || 'AI analysis failed');
+      currentQuickScanData.ai_check = data.ai_check || null;
+      renderResults(currentQuickScanData);
+      if (aiStep) { aiStep.classList.remove('active'); aiStep.classList.add('done'); }
+    } catch (err) {
+      currentQuickScanData.ai_check = { error: err.message };
+      renderResults(currentQuickScanData);
+      if (aiStep) aiStep.classList.remove('active');
+    }
+  }
+
+  if (useInternet) {
+    const internetSection = document.getElementById('internetSection');
+    internetSection.classList.remove('hidden');
+    document.getElementById('internetResultList').innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Searching internet sources...</p>';
+    const webStep = document.getElementById('pstep4');
+    if (webStep) { webStep.classList.remove('queued'); webStep.classList.add('active'); }
+
+    try {
+      const res = await fetch(`${API}/quick-scan-internet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paragraphs })
+      });
+      const raw = await res.text();
+      let data = {};
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = { error: `Unexpected server response (HTTP ${res.status})` }; }
+      if (!res.ok) throw new Error(data.error || 'Internet search failed');
+      currentQuickScanData.internet_check = data.internet_check || { matches: [], total_found: 0 };
+      renderResults(currentQuickScanData);
+      if (webStep) { webStep.classList.remove('active'); webStep.classList.add('done'); }
+    } catch (err) {
+      currentQuickScanData.internet_check = { matches: [], total_found: 0, error: err.message };
+      renderResults(currentQuickScanData);
+      if (webStep) webStep.classList.remove('active');
+    }
   }
 }
 
