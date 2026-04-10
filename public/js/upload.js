@@ -204,9 +204,11 @@ uploadForm.addEventListener('submit', async (e) => {
 
     // Step 2: Check plagiarism
     const useAI = runOpenAI.checked;
+    const checkHeaders = { 'Content-Type': 'application/json' };
+    if (token) checkHeaders['Authorization'] = `Bearer ${token}`;
     const checkRes = await fetch(`${API}/check-plagiarism`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: checkHeaders,
       body: JSON.stringify({ document_id: documentId, use_openai: useAI })
     });
     const checkData = await checkRes.json();
