@@ -19,12 +19,17 @@ async function checkPlagiarism(req, res) {
     // Fetch the document
     const { data: doc, error: docError } = await supabase
       .from('documents')
-      .select('id, title, extracted_text')
+      .select('id, title, extracted_text, user_id')
       .eq('id', document_id)
       .single();
 
     if (docError || !doc) {
       return res.status(404).json({ error: 'Document not found' });
+    }
+
+    // Only the document owner can run analysis
+    if (!req.user || req.user.id !== doc.user_id) {
+      return res.status(403).json({ error: 'Only the document owner can run analysis' });
     }
 
     // Fetch paragraphs of this document
@@ -109,6 +114,21 @@ async function checkTitle(req, res) {
 async function getResults(req, res) {
   try {
     const { document_id } = req.params;
+
+    // Check ownership — only the document owner can see results
+    const { data: doc } = await supabase
+      .from('documents')
+      .select('user_id')
+      .eq('id', document_id)
+      .single();
+
+    if (!doc) return res.status(404).json({ error: 'Document not found' });
+
+    const isOwner = req.user && req.user.id === doc.user_id;
+    if (!isOwner) {
+      return res.json({ results: [] });
+    }
+
     const results = await getResultsByDocument(document_id);
     return res.json({ results });
   } catch (err) {
@@ -127,6 +147,18 @@ async function checkInternet(req, res) {
     const { document_id } = req.body;
     if (!document_id) {
       return res.status(400).json({ error: 'document_id is required' });
+    }
+
+    // Check ownership
+    const { data: doc } = await supabase
+      .from('documents')
+      .select('user_id')
+      .eq('id', document_id)
+      .single();
+
+    if (!doc) return res.status(404).json({ error: 'Document not found' });
+    if (!req.user || req.user.id !== doc.user_id) {
+      return res.status(403).json({ error: 'Only the document owner can run analysis' });
     }
 
     // Fetch paragraphs

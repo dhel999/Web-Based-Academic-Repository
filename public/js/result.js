@@ -62,7 +62,7 @@ async function loadReport() {
 
     const [docRes, resultsRes] = await Promise.all([
       fetch(`${API}/documents/${documentId}`, { headers }),
-      fetch(`${API}/results/${documentId}`)
+      fetch(`${API}/results/${documentId}`, { headers })
     ]);
 
     const docData    = await docRes.json();
@@ -490,9 +490,10 @@ async function runAnalysis(useAI) {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing…';
 
   try {
+    const token = localStorage.getItem('token');
     const res = await fetch(`${API}/check-plagiarism`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
       body: JSON.stringify({ document_id: documentId, use_openai: useAI })
     });
     const data = await res.json();
@@ -613,9 +614,10 @@ async function runInternetSearch() {
   btnInternet.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching Internet…';
 
   try {
+    const token = localStorage.getItem('token');
     const res = await fetch(`${API}/check-internet`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
       body: JSON.stringify({ document_id: documentId })
     });
     const data = await res.json();
