@@ -1,0 +1,116 @@
+SYSTEM DETAILS (for documentation generation)
+
+Project Title:
+Web-Based Academic Repository with Algorithmic Plagiarism Detection Using TF-IDF and Cosine Similarity
+
+Project Type:
+Web application for academic document storage, plagiarism checking, and report generation.
+
+Target Users:
+1. Guest User
+- Can browse limited/public document information.
+- Cannot access protected analysis actions.
+
+2. Registered User (Student/Researcher)
+- Can register/login.
+- Can upload PDF, DOCX, TXT files.
+- Can enter metadata (title, authors, course/program, year, abstract).
+- Can run plagiarism analysis for own documents.
+- Can view own complete reports.
+- Can use quick scan (temporary analysis).
+
+3. Admin User
+- Can access admin dashboard.
+- Can manage users and documents.
+- Can view full reports across users for monitoring.
+
+Core Features:
+- JWT authentication and role-based access control.
+- Document upload and metadata collection.
+- TF-IDF + cosine similarity checking.
+- Paragraph-level similarity highlighting.
+- Similar title checking before upload.
+- Optional AI semantic analysis (OpenAI).
+- Internet source match checking.
+- Quick Scan without permanent save.
+- Owner-only report visibility (with admin override).
+
+Technology Stack:
+- Frontend: HTML, CSS, JavaScript (vanilla)
+- Backend: Node.js, Express.js
+- Database: Supabase PostgreSQL
+- Security: JWT, bcryptjs, protected endpoints
+- File processing: Multer, PDF parser, DOCX parser
+- Deployment: Render + GitHub
+
+
+READY-TO-SEND CHATGPT PROMPT
+
+Create a complete academic project documentation draft for our capstone/thesis system using formal academic writing. Use clear, realistic, and defendable content as if written by student researchers.
+
+Project details:
+- Title: Web-Based Academic Repository with Algorithmic Plagiarism Detection Using TF-IDF and Cosine Similarity
+- Domain: Academic document management and plagiarism detection
+- Users: Guest, Registered User, Admin
+- Features: user authentication, upload and metadata entry, TF-IDF + cosine similarity detection, paragraph-level highlight, title checking, optional AI semantic analysis, internet match checking, quick scan, owner-only report access, admin full monitoring
+- Tech stack: Node.js, Express.js, Supabase PostgreSQL, JWT, bcryptjs, HTML/CSS/JavaScript
+- Deployment: Render
+- Purpose: improve originality checking, reduce manual checking burden, and provide structured digital repository management
+
+Required format and output structure:
+
+CHAPTER I - INTRODUCTION
+
+1.1 Project Context
+- Paragraph 1: broad technology context related to digital transformation in education and document checking
+- Paragraph 2: connect this technology to current workflow/practice in schools
+- Paragraph 3: discuss identified gaps/problems based on survey-style observations (manual checking delays, missed plagiarism, poor repository organization, weak access control)
+- Paragraph 4: motivation/rationale for conducting the study
+
+1.2 Purpose and Description
+- Paragraph 1: purpose of the study
+- Paragraph 2: system description including user accounts, access controls/policies, and who serves as admin
+
+1.3 Objectives
+- Write a short lead paragraph explaining objective alignment with the problem
+- 1.3.1 General Objective: one formal broad objective
+- 1.3.2 Specific Objectives: at least 6 measurable objectives using action verbs (analyze, design, develop, implement, test, evaluate, deploy)
+
+1.4 Significance of the Project
+- Explain benefits to school/organization, students, faculty/research advisers, administrators, and student-developers
+- Include SDG alignment (Quality Education, Industry/Innovation/Infrastructure, Reduced Inequalities through fair assessment, Responsible Institutions)
+
+1.5 Scope and Delimitation
+- Scope: what the system includes (modules, supported files, users, reports, admin tools)
+- Delimitation: what is not included (no multilingual NLP, no advanced paraphrase detection beyond defined methods, internet source limitations, dependency on external APIs)
+
+Also generate additional documentation sections after Chapter I:
+
+A. System Details and Description
+- System overview
+- Modules and functions
+- User roles and permissions matrix
+- Functional requirements (at least 12)
+- Non-functional requirements (at least 10)
+
+B. Technical Documentation
+- System architecture narrative
+- Database entities and relationships narrative
+- API endpoint summary (auth, upload, analysis, results, admin)
+- Security mechanisms
+- Deployment and maintenance overview
+
+C. Testing Documentation
+- Testing strategy (unit, integration, functional, usability)
+- At least 12 test cases in table format: test ID, objective, input, expected result, actual result placeholder, status placeholder
+
+D. Conclusion and Recommendation Draft
+- 2 to 3 pages worth of content in formal style
+
+Writing rules:
+- Use formal academic tone suitable for undergraduate thesis/capstone.
+- Do not use placeholders like "insert here".
+- Make it realistic and specific to this system.
+- Keep terminology consistent.
+- Use numbered headings exactly as requested.
+- Generate complete, ready-to-edit text.

@@ -97,7 +97,7 @@ async function uploadDocument(req, res) {
         if (matches.length > 0 && matches[0].similarity_score >= PARAGRAPH_BLOCK_PCT) {
           flaggedCount++;
           flaggedDetails.push({
-            paragraph_snippet: para.slice(0, 120) + (para.length > 120 ? '…' : ''),
+            paragraph_snippet: para.slice(0, 200) + (para.length > 200 ? '…' : ''),
             similarity_score: matches[0].similarity_score,
             matched_document_id: matches[0].document_id
           });
