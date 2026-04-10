@@ -123,9 +123,11 @@ async function getDocument(req, res) {
       similarityScore = Math.max(...simResults.map(r => r.similarity_score));
     }
 
-    // Guest view — return limited info only (no full text, no paragraphs)
-    if (!isAuthenticated) {
-      const guestDoc = {
+    // Only the document OWNER sees full analysis
+    const isOwner = isAuthenticated && req.user.id === doc.user_id;
+
+    if (!isOwner) {
+      const limitedDoc = {
         id: doc.id,
         title: doc.title,
         original_filename: doc.original_filename,
@@ -137,10 +139,15 @@ async function getDocument(req, res) {
         uploaded_by: uploaderName,
         similarity_score: similarityScore
       };
-      return res.json({ document: guestDoc, paragraphs: [], guest: true });
+      return res.json({
+        document: limitedDoc,
+        paragraphs: [],
+        guest: !isAuthenticated,
+        restricted: isAuthenticated   // logged in but not owner
+      });
     }
 
-    // Authenticated — full data
+    // Owner — full data
     doc.uploaded_by = uploaderName;
     doc.similarity_score = similarityScore;
 

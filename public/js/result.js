@@ -70,10 +70,10 @@ async function loadReport() {
 
     if (!docRes.ok || !docData.document) { showError(); return; }
 
-    // Guest mode — show limited info
-    if (docData.guest) {
+    // Non-owner view — show limited info (guest or logged-in non-owner)
+    if (docData.guest || docData.restricted) {
       loadingState.classList.add('hidden');
-      renderGuestView(docData.document);
+      renderGuestView(docData.document, docData.restricted);
       return;
     }
 
@@ -99,13 +99,32 @@ async function loadReport() {
   }
 }
 
-function renderGuestView(doc) {
-  // Hide full report, show guest-only detail view
+function renderGuestView(doc, isRestricted) {
+  // Hide full report, show limited detail view
   reportContent.classList.add('hidden');
 
   const score = doc.similarity_score || 0;
   const color = score >= 70 ? 'var(--red)' : score >= 40 ? 'var(--yellow)' : 'var(--green)';
   const label = score >= 70 ? 'High Risk' : score >= 40 ? 'Medium Risk' : 'Low Risk';
+
+  // Prompt section differs: guest sees login button, non-owner sees info message
+  const promptSection = isRestricted
+    ? `<div class="guest-login-prompt restricted">
+        <i class="fas fa-user-lock"></i>
+        <div>
+          <strong>Owner Access Only</strong>
+          <p>Only the document owner can view the full plagiarism analysis, highlighted matches, and detailed paragraph comparisons.</p>
+        </div>
+        <a href="index.html" class="btn btn-primary"><i class="fas fa-home"></i> Back to Home</a>
+      </div>`
+    : `<div class="guest-login-prompt">
+        <i class="fas fa-lock"></i>
+        <div>
+          <strong>Full report requires login</strong>
+          <p>Sign in to view the complete plagiarism analysis, highlighted matches, and detailed paragraph comparisons.</p>
+        </div>
+        <a href="login.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login to View Full Report</a>
+      </div>`;
 
   const guestDiv = document.createElement('div');
   guestDiv.className = 'guest-detail-view';
@@ -147,14 +166,7 @@ function renderGuestView(doc) {
         </div>
       ` : ''}
 
-      <div class="guest-login-prompt">
-        <i class="fas fa-lock"></i>
-        <div>
-          <strong>Full report requires login</strong>
-          <p>Sign in to view the complete plagiarism analysis, highlighted matches, and detailed paragraph comparisons.</p>
-        </div>
-        <a href="login.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login to View Full Report</a>
-      </div>
+      ${promptSection}
     </div>
   `;
 

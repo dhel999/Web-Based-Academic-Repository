@@ -44,9 +44,10 @@
     const logoutBtn = document.getElementById('btnLogoutNav');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
+        if (!confirm('Are you sure you want to logout?')) return;
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
       });
     }
   } else {
