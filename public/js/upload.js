@@ -271,7 +271,11 @@ function renderResultsPreview(data, documentId) {
 
 // ── Utility ───────────────────────────────────────────────────
 function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
 
 /**
@@ -326,13 +330,16 @@ function renderRejection(data) {
         details += `<div class="paragraph-list" style="max-height:300px;overflow-y:auto;">`;
         data.flagged_paragraphs.forEach((fp, i) => {
           const col = fp.similarity_score >= 70 ? 'var(--red)' : 'var(--yellow)';
+          const snippet = fp.paragraph_snippet || fp.paragraph_text || fp.snippet || '';
+          const title = fp.matched_title || fp.title || 'Unknown';
+          const displaySnippet = snippet.trim() || '(No paragraph preview available)';
           details += `
             <div class="para-match-item" style="margin-bottom:.5rem;">
               <div class="para-header">
-                <span>Paragraph ${i + 1} — matched "${escapeHtml(fp.matched_title || 'Unknown')}"</span>
-                <span style="color:${col};font-weight:700;">${fp.similarity_score}%</span>
+                <span>Paragraph ${i + 1} — matched "${escapeHtml(title)}"</span>
+                <span style="color:${col};font-weight:700;">${Number(fp.similarity_score || 0).toFixed(1)}%</span>
               </div>
-              <div class="para-text highlighted" style="font-size:.82rem;">${escapeHtml(fp.paragraph_snippet)}</div>
+              <div class="para-text highlighted" style="font-size:.82rem;">${escapeHtml(displaySnippet)}</div>
             </div>`;
         });
         details += `</div>`;
