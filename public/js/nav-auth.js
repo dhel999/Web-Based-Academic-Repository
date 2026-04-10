@@ -56,7 +56,7 @@
   }
 
   function renderLoggedOut() {
-    container.innerHTML = '<li><a href="quick-scan.html"><i class="fas fa-bolt"></i> Quick Scan</a></li><a href="login.html"><i class="fas fa-right-to-bracket"></i> Login</a>';
+    container.innerHTML = '<li><a href="quick-scan.html"><i class="fas fa-bolt"></i> Quick Scan</a></li><li><a href="login.html"><i class="fas fa-right-to-bracket"></i> Login</a></li>';
   }
 
   // Hamburger toggle
