@@ -79,6 +79,8 @@ function renderGrid(docs) {
     const ext = (doc.original_filename || '').split('.').pop().toUpperCase();
     const icon = ext === 'PDF' ? 'fa-file-pdf' : ext === 'DOCX' ? 'fa-file-word' : 'fa-file-lines';
     const extLabel = ext === 'DOCX' ? 'DOCX' : ext === 'PDF' ? 'PDF' : 'TXT';
+    const score = doc.similarity_score || 0;
+    const scoreColor = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
 
     return `
       <div class="doc-card-enhanced">
@@ -101,6 +103,17 @@ function renderGrid(docs) {
           <div class="doc-card-info-row">
             <i class="fas fa-calendar"></i>
             <span>${formatDate(doc.created_at)}</span>
+          </div>
+          <div class="doc-card-similarity">
+            <div class="doc-sim-label">
+              <i class="fas fa-shield-halved"></i> Similarity
+            </div>
+            <div class="doc-sim-bar-wrap">
+              <div class="bar-track" style="height:6px;flex:1;">
+                <div class="bar-fill ${scoreColor}" style="width:${Math.min(score, 100)}%;"></div>
+              </div>
+              <span class="doc-sim-score ${scoreColor}">${score.toFixed(1)}%</span>
+            </div>
           </div>
         </div>
         <div class="doc-card-actions">

@@ -9,7 +9,7 @@ async function listDocuments(req, res) {
     const { search, mine, approved } = req.query;
     let query = supabase
       .from('documents')
-      .select('id, title, original_filename, created_at, user_id, thumbnail_url')
+      .select('id, title, original_filename, created_at, user_id, thumbnail_url, authors, course, year, abstract')
       .order('created_at', { ascending: false });
 
     if (search && search.trim()) {
@@ -82,20 +82,67 @@ async function listDocuments(req, res) {
 /**
  * GET /api/documents/:id
  * Returns a single document with its paragraphs.
+ * Guests (no auth) get limited data — no full text, no paragraphs.
  */
 async function getDocument(req, res) {
   try {
     const { id } = req.params;
+    const isAuthenticated = !!req.user;
 
     const { data: doc, error: docError } = await supabase
       .from('documents')
-      .select('id, title, original_filename, extracted_text, created_at')
+      .select('id, title, original_filename, extracted_text, created_at, authors, course, year, abstract, user_id')
       .eq('id', id)
       .single();
 
     if (docError || !doc) {
       return res.status(404).json({ error: 'Document not found' });
     }
+
+    // Fetch uploader name
+    let uploaderName = 'Unknown';
+    if (doc.user_id) {
+      const { data: user } = await supabase
+        .from('users')
+        .select('full_name')
+        .eq('id', doc.user_id)
+        .single();
+      if (user) uploaderName = user.full_name;
+    }
+
+    // Fetch similarity score
+    const { data: simResults } = await supabase
+      .from('plagiarism_results')
+      .select('similarity_score')
+      .eq('document_id', id)
+      .eq('source', 'local')
+      .is('matched_paragraph', null);
+
+    let similarityScore = 0;
+    if (simResults && simResults.length > 0) {
+      similarityScore = Math.max(...simResults.map(r => r.similarity_score));
+    }
+
+    // Guest view — return limited info only (no full text, no paragraphs)
+    if (!isAuthenticated) {
+      const guestDoc = {
+        id: doc.id,
+        title: doc.title,
+        original_filename: doc.original_filename,
+        created_at: doc.created_at,
+        authors: doc.authors,
+        course: doc.course,
+        year: doc.year,
+        abstract: doc.abstract,
+        uploaded_by: uploaderName,
+        similarity_score: similarityScore
+      };
+      return res.json({ document: guestDoc, paragraphs: [], guest: true });
+    }
+
+    // Authenticated — full data
+    doc.uploaded_by = uploaderName;
+    doc.similarity_score = similarityScore;
 
     const { data: paragraphs, error: paraError } = await supabase
       .from('paragraphs')

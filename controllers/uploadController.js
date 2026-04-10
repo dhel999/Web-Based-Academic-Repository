@@ -27,6 +27,11 @@ async function uploadDocument(req, res) {
     return res.status(400).json({ error: 'Document title is required' });
   }
 
+  const authors  = (req.body.authors || '').trim();
+  const course   = (req.body.course || '').trim();
+  const year     = (req.body.year || '').trim();
+  const abstract = (req.body.abstract || '').trim();
+
   const filePath = req.file.path;
   const originalFilename = req.file.originalname;
 
@@ -135,7 +140,11 @@ async function uploadDocument(req, res) {
         user_id: req.user.id,
         title,
         original_filename: originalFilename,
-        extracted_text: extractedText
+        extracted_text: extractedText,
+        authors: authors || null,
+        course: course || null,
+        year: year || null,
+        abstract: abstract || null
       })
       .select()
       .single();

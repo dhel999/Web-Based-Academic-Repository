@@ -165,6 +165,10 @@ uploadForm.addEventListener('submit', async (e) => {
   const formData = new FormData();
   formData.append('title', title);
   formData.append('file', file);
+  formData.append('authors', (document.getElementById('docAuthors')?.value || '').trim());
+  formData.append('course', (document.getElementById('docCourse')?.value || '').trim());
+  formData.append('year', (document.getElementById('docYear')?.value || '').trim());
+  formData.append('abstract', (document.getElementById('docAbstract')?.value || '').trim());
 
   uploadStatus.classList.remove('hidden');
   updateProgress(10, 'Uploading file…');

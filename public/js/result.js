@@ -56,8 +56,12 @@ let internetMatchMap = new Map(); // paragraph_index -> { score, snippet, url, d
 // ── Load existing results + document info ─────────────────────
 async function loadReport() {
   try {
+    const headers = {};
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const [docRes, resultsRes] = await Promise.all([
-      fetch(`${API}/documents/${documentId}`),
+      fetch(`${API}/documents/${documentId}`, { headers }),
       fetch(`${API}/results/${documentId}`)
     ]);
 
@@ -65,6 +69,13 @@ async function loadReport() {
     const resultData = await resultsRes.json();
 
     if (!docRes.ok || !docData.document) { showError(); return; }
+
+    // Guest mode — show limited info
+    if (docData.guest) {
+      loadingState.classList.add('hidden');
+      renderGuestView(docData.document);
+      return;
+    }
 
     currentDoc        = docData.document;
     currentParagraphs = (docData.paragraphs || []).map(p => p.paragraph_text);
@@ -86,6 +97,68 @@ async function loadReport() {
   } catch (err) {
     showError();
   }
+}
+
+function renderGuestView(doc) {
+  // Hide full report, show guest-only detail view
+  reportContent.classList.add('hidden');
+
+  const score = doc.similarity_score || 0;
+  const color = score >= 70 ? 'var(--red)' : score >= 40 ? 'var(--yellow)' : 'var(--green)';
+  const label = score >= 70 ? 'High Risk' : score >= 40 ? 'Medium Risk' : 'Low Risk';
+
+  const guestDiv = document.createElement('div');
+  guestDiv.className = 'guest-detail-view';
+  guestDiv.innerHTML = `
+    <div class="card guest-detail-card">
+      <div class="guest-detail-header">
+        <div class="guest-detail-icon-wrap">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <div>
+          <h2 class="guest-detail-title">${escapeHtml(doc.title)}</h2>
+          <p class="text-muted" style="font-size:.88rem;">${escapeHtml(doc.original_filename)}</p>
+        </div>
+      </div>
+
+      <div class="guest-detail-meta-grid">
+        ${doc.authors ? `<div class="guest-meta-item"><i class="fas fa-users"></i><div><span class="guest-meta-label">Author(s)</span><span>${escapeHtml(doc.authors)}</span></div></div>` : ''}
+        ${doc.course ? `<div class="guest-meta-item"><i class="fas fa-graduation-cap"></i><div><span class="guest-meta-label">Course</span><span>${escapeHtml(doc.course)}</span></div></div>` : ''}
+        ${doc.year ? `<div class="guest-meta-item"><i class="fas fa-calendar-alt"></i><div><span class="guest-meta-label">Year</span><span>${escapeHtml(doc.year)}</span></div></div>` : ''}
+        ${doc.uploaded_by ? `<div class="guest-meta-item"><i class="fas fa-user"></i><div><span class="guest-meta-label">Uploaded by</span><span>${escapeHtml(doc.uploaded_by)}</span></div></div>` : ''}
+        <div class="guest-meta-item"><i class="fas fa-clock"></i><div><span class="guest-meta-label">Date</span><span>${formatDate(doc.created_at)}</span></div></div>
+      </div>
+
+      <div class="guest-similarity-bar">
+        <div class="guest-sim-header">
+          <span><i class="fas fa-shield-halved"></i> Plagiarism Similarity</span>
+          <span style="color:${color};font-weight:800;font-size:1.3rem;">${score.toFixed(1)}%</span>
+        </div>
+        <div class="bar-track" style="height:10px;">
+          <div class="bar-fill ${score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low'}" style="width:${Math.min(score, 100)}%;"></div>
+        </div>
+        <span style="font-size:.82rem;font-weight:600;color:${color};">${label}</span>
+      </div>
+
+      ${doc.abstract ? `
+        <div class="guest-abstract">
+          <h3><i class="fas fa-align-left"></i> Abstract</h3>
+          <p>${escapeHtml(doc.abstract)}</p>
+        </div>
+      ` : ''}
+
+      <div class="guest-login-prompt">
+        <i class="fas fa-lock"></i>
+        <div>
+          <strong>Full report requires login</strong>
+          <p>Sign in to view the complete plagiarism analysis, highlighted matches, and detailed paragraph comparisons.</p>
+        </div>
+        <a href="login.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login to View Full Report</a>
+      </div>
+    </div>
+  `;
+
+  document.querySelector('.container').appendChild(guestDiv);
 }
 
 function renderDocumentInfo(doc) {

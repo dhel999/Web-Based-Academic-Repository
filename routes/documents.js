@@ -8,6 +8,6 @@ const router = express.Router();
 router.get('/documents', optionalAuth, listDocuments);
 
 // GET /api/documents/:id
-router.get('/documents/:id', getDocument);
+router.get('/documents/:id', optionalAuth, getDocument);
 
 module.exports = router;

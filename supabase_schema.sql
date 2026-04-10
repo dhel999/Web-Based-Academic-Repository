@@ -33,8 +33,18 @@ CREATE TABLE IF NOT EXISTS documents (
   original_filename TEXT NOT NULL,
   extracted_text   TEXT,
   thumbnail_url    TEXT,
+  authors          TEXT,
+  course           TEXT,
+  year             TEXT,
+  abstract         TEXT,
   created_at       TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add metadata columns if table already exists
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS authors TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS course TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS year TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS abstract TEXT;
 
 -- 2. Paragraphs table
 CREATE TABLE IF NOT EXISTS paragraphs (
