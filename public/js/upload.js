@@ -19,6 +19,8 @@ const resultsContent= document.getElementById('resultsContent');
 const btnViewFull   = document.getElementById('btnViewFull');
 const runOpenAI     = document.getElementById('runOpenAI');
 
+let lastRejectionData = null; // stored for PDF export
+
 // Title check
 const titleCheckInput   = document.getElementById('titleCheckInput');
 const btnCheckTitle     = document.getElementById('btnCheckTitle');
@@ -382,6 +384,7 @@ function renderRejection(data) {
       </div>`;
 
   } else if (data.reason === 'similar_paragraphs') {
+    lastRejectionData = data;
     html = buildPaperStyleRejection(data);
 
   } else {
@@ -549,6 +552,11 @@ function buildPaperStyleRejection(data) {
               Yellow highlighted text below indicates paragraphs detected with high similarity to existing documents in the repository.
             </div>
           </td>
+          <td style="padding:14px 12px;text-align:right;vertical-align:middle;white-space:nowrap;">
+            <button onclick="downloadReportPDF()" style="background:#0ea5e9;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">
+              <i class="fas fa-file-pdf" style="margin-right:5px;"></i> Download PDF
+            </button>
+          </td>
         </tr>
       </table>
 
@@ -588,4 +596,106 @@ function buildPaperStyleRejection(data) {
       </table>
 
     </div>`;
+}
+
+/* ── Download plagiarism report as printable PDF ──────────────── */
+function downloadReportPDF() {
+  const data = lastRejectionData;
+  if (!data) { alert('No report data available.'); return; }
+
+  const s = data.stats || {};
+  const avgScore = (s.avg_score || 0).toFixed(1);
+  const flaggedCount = data.flagged_count || 0;
+  const totalParas = data.total_paragraphs || 0;
+  const ratio = data.flagged_ratio || 0;
+  const allParas = data.all_paragraphs || [];
+  const flaggedParas = data.flagged_paragraphs || [];
+  const detailSource = allParas.length > 0 ? allParas.filter(p => p.is_flagged) : flaggedParas;
+
+  // Build paper body
+  const source = allParas.length > 0 ? allParas : flaggedParas;
+  let paperRows = '';
+  source.forEach(p => {
+    const text = String(p.text || p.paragraph_snippet || p.paragraph_text || '').trim();
+    if (!text) return;
+    const isFlagged = allParas.length > 0 ? p.is_flagged : true;
+    const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    paperRows += isFlagged
+      ? '<tr><td style="padding:2px 0;"><span style="background:rgba(255,235,59,.45);padding:1px 2px;">' + escaped + '</span></td></tr>'
+      : '<tr><td style="padding:2px 0;">' + escaped + '</td></tr>';
+  });
+
+  // Build detail rows
+  let detailCards = '';
+  detailSource.forEach((fp, i) => {
+    const score = parseFloat(fp.similarity_score ?? 0);
+    const scoreCol = score >= 70 ? '#ef4444' : score >= 40 ? '#f59e0b' : '#22c55e';
+    const riskLabel = score >= 70 ? 'HIGH' : score >= 40 ? 'MEDIUM' : 'LOW';
+    const pIdx = fp.index != null ? fp.index + 1 : (fp.paragraph_index != null ? fp.paragraph_index + 1 : i + 1);
+    const title = String(fp.matched_title || 'Unknown').trim().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const yourText = String(fp.text || fp.paragraph_snippet || fp.paragraph_text || '').trim();
+    const yr = (yourText.length > 200 ? yourText.slice(0,200) + '…' : yourText).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const matchedText = String(fp.matched_snippet || '').trim();
+    const mr = (matchedText.length > 200 ? matchedText.slice(0,200) + '…' : matchedText).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    detailCards += `
+      <div style="border:1px solid #d1d5db;border-radius:6px;margin-bottom:10px;page-break-inside:avoid;overflow:hidden;">
+        <div style="background:#f3f4f6;padding:6px 10px;font-size:11px;font-weight:700;border-bottom:1px solid #d1d5db;display:flex;justify-content:space-between;">
+          <span>¶ ${pIdx}</span>
+          <span style="padding:1px 8px;border-radius:8px;font-size:10px;font-weight:700;color:${scoreCol};background:${scoreCol}15;">${riskLabel} ${score.toFixed(1)}%</span>
+        </div>
+        <div style="height:3px;background:#e5e7eb;"><div style="width:${Math.min(score,100)}%;height:3px;background:${scoreCol};"></div></div>
+        <div style="padding:6px 10px;font-size:10px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Matched: <strong>${title}</strong></div>
+        ${yr ? '<div style="padding:6px 10px;font-size:11px;line-height:1.5;color:#1f2937;border-bottom:1px solid #e5e7eb;"><div style="font-size:9px;font-weight:700;color:#ef4444;text-transform:uppercase;margin-bottom:2px;">YOUR TEXT</div><span style="background:rgba(255,235,59,.3);padding:1px 2px;">' + yr + '</span></div>' : ''}
+        ${mr ? '<div style="padding:6px 10px;font-size:11px;line-height:1.5;color:#4b5563;"><div style="font-size:9px;font-weight:700;color:#0ea5e9;text-transform:uppercase;margin-bottom:2px;">REPOSITORY MATCH</div>' + mr + '</div>' : ''}
+      </div>`;
+  });
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  const printHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Plagiarism Report</title>
+<style>
+@media print{@page{margin:18mm 14mm;}}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;padding:24px 28px;font-size:12px;}
+</style></head><body>
+
+<div style="text-align:center;border-bottom:2px solid #e5e7eb;padding-bottom:14px;margin-bottom:14px;">
+  <div style="display:inline-block;padding:3px 14px;border-radius:14px;background:#fef2f2;color:#ef4444;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border:1px solid #fecaca;margin-bottom:8px;">Plagiarism Shield Report</div>
+  <h1 style="font-size:18px;color:#1e293b;margin:6px 0 4px;">Similarity Analysis — Upload Blocked</h1>
+  <div style="font-size:11px;color:#9ca3af;">Generated on ${dateStr} at ${timeStr}</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:16px;border:1px solid #e5e7eb;border-radius:8px;padding:14px 18px;margin-bottom:16px;">
+  <div style="font-size:28px;font-weight:900;color:${parseFloat(avgScore) >= 70 ? '#ef4444' : parseFloat(avgScore) >= 40 ? '#f59e0b' : '#22c55e'};min-width:80px;text-align:center;">${avgScore}%</div>
+  <div style="font-size:12px;color:#4b5563;line-height:1.5;">
+    <strong style="color:#1e293b;">Upload Rejected</strong> — ${flaggedCount}/${totalParas} paragraphs flagged (${ratio}%)<br>
+    Yellow highlighted text indicates paragraphs with high similarity to existing repository documents.
+  </div>
+</div>
+
+<div style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-bottom:10px;">Document Content</div>
+<div style="background:#fff;border:1px solid #d1d5db;border-radius:4px;padding:20px 24px;margin-bottom:20px;font-family:'Times New Roman',Times,serif;font-size:13px;line-height:1.8;">
+  <table style="width:100%;border-collapse:collapse;">${paperRows}</table>
+</div>
+
+<div style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-bottom:10px;">Detected Paragraphs — Details</div>
+${detailCards}
+
+<div style="font-size:10px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:10px;margin-top:16px;">
+  <span style="background:rgba(255,235,59,.45);padding:1px 5px;">highlighted</span> = detected similarity &nbsp;|&nbsp;
+  <span style="color:#ef4444;">●</span> High ≥70% &nbsp;
+  <span style="color:#f59e0b;">●</span> Medium 40–69% &nbsp;
+  <span style="color:#22c55e;">●</span> Low 30–39%
+</div>
+
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { alert('Please allow pop-ups to download the report.'); return; }
+  w.document.write(printHtml);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 400);
 }
