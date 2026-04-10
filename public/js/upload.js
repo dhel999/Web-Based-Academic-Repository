@@ -428,13 +428,15 @@ function renderRejection(data) {
           const scoreText = hasScore ? score.toFixed(1) + '%' : 'N/A';
 
           details += `
-            <div style="border:1px solid #334155;border-radius:8px;overflow:hidden;margin-bottom:2px;background:#0f172a;">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:13px;color:#cbd5e1;border-bottom:1px solid #1e293b;">
-                <span style="color:#e2e8f0;">Paragraph ${i + 1} — matched "<span style="color:#38bdf8;">${escapeHtml(title)}</span>"</span>
-                <span style="color:${scoreColor};font-weight:700;white-space:nowrap;margin-left:8px;">${scoreText}</span>
-              </div>
-              <p style="margin:0;padding:10px 12px;font-size:12.5px;line-height:1.55;color:#cbd5e1;background:rgba(239,68,68,.06);border-left:3px solid #ef4444;min-height:28px;">${escapeHtml(snippet)}</p>
-            </div>`;
+            <table style="width:100%;border-collapse:collapse;margin-bottom:6px;border:1px solid #334155;border-radius:8px;">
+              <tr style="background:#0f172a;">
+                <td style="padding:8px 12px;font-size:13px;color:#e2e8f0;">Paragraph ${i + 1} — matched "<span style="color:#38bdf8;">${escapeHtml(title)}</span>"</td>
+                <td style="padding:8px 12px;font-size:13px;color:${scoreColor};font-weight:700;text-align:right;white-space:nowrap;">${scoreText}</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="padding:10px 12px;font-size:12.5px;line-height:1.6;color:#cbd5e1;background:rgba(239,68,68,.06);border-left:3px solid #ef4444;">${escapeHtml(snippet)}</td>
+              </tr>
+            </table>`;
         });
         details += `</div>`;
       }
