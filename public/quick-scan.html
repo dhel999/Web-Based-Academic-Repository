@@ -176,6 +176,24 @@
         <div id="paraMatchList"></div>
       </div>
 
+      <!-- Document Style Highlight View -->
+      <div class="card qs-card-animate" id="docViewSection">
+        <div class="qs-section-header">
+          <div class="qs-section-icon" style="background:rgba(14,165,233,.12);color:#0ea5e9;"><i class="fas fa-file-lines"></i></div>
+          <div>
+            <h3>Document View — Highlighted Content</h3>
+            <p class="text-muted" style="font-size:.85rem;">Full extracted text with inline highlights for detected similarities.</p>
+          </div>
+        </div>
+        <div class="para-legend" style="margin-bottom:.8rem;">
+          <span class="legend-item"><span class="legend-dot" style="background:#ffe066;"></span> Local Match</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ff6b6b;"></span> AI Flagged</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#74b9ff;"></span> Internet Match</span>
+          <span class="legend-item"><span class="legend-dot" style="background:transparent;border:1px solid var(--border);"></span> Original</span>
+        </div>
+        <div class="doc-paper-view" id="qsDocPaper"></div>
+      </div>
+
       <!-- AI Analysis -->
       <div class="card qs-card-animate hidden" id="aiSection">
         <div class="qs-section-header">

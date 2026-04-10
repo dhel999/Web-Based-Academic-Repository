@@ -17,6 +17,7 @@ const scanResults    = document.getElementById('scanResults');
 const scanStatusText = document.getElementById('scanStatusText');
 const scanSubtext    = document.getElementById('scanSubtext');
 const btnScanAgain   = document.getElementById('btnScanAgain');
+const qsDocPaper     = document.getElementById('qsDocPaper');
 
 let selectedFile = null;
 
@@ -196,6 +197,9 @@ function renderResults(data) {
   // Paragraph matches
   renderParagraphMatches(local.paragraph_matches || []);
 
+  // Document-style highlight view
+  renderDocumentStyleView(local, ai, internet);
+
   // AI
   if (ai && !ai.error) {
     document.getElementById('aiSection').classList.remove('hidden');
@@ -325,6 +329,94 @@ function renderInternetResults(matches) {
         ${snippet ? `<div class="scan-internet-snippet"><strong>Web match:</strong> "${esc(snippet.slice(0, 250))}"</div>` : ''}
       </div>`;
   }).join('');
+}
+
+function renderDocumentStyleView(local, ai, internet) {
+  const paragraphs = Array.isArray(local.all_paragraphs) ? local.all_paragraphs : [];
+  if (!qsDocPaper) return;
+
+  if (paragraphs.length === 0) {
+    qsDocPaper.innerHTML = `<p style="color:#666;text-align:center;padding:2rem;"><i class="fas fa-circle-info"></i> No extracted document text available for inline view.</p>`;
+    return;
+  }
+
+  const localMap = new Map();
+  for (const m of (local.paragraph_matches || [])) {
+    const idx = Number(m.paragraph_index);
+    if (!Number.isFinite(idx)) continue;
+    const old = localMap.get(idx);
+    if (!old || (m.matched_score || 0) > old.score) {
+      localMap.set(idx, {
+        score: m.matched_score || 0,
+        title: m.matched_title || 'Unknown'
+      });
+    }
+  }
+
+  const aiMap = new Map();
+  for (const f of (ai?.flaggedParagraphs || [])) {
+    const idx = Number(f.paragraph_index);
+    if (!Number.isFinite(idx)) continue;
+    aiMap.set(idx, {
+      score: f.score || (f.risk === 'high' ? 80 : f.risk === 'medium' ? 50 : 20),
+      risk: f.risk || 'low',
+      reason: f.reason || 'AI flagged this paragraph.'
+    });
+  }
+
+  const internetMap = new Map();
+  for (const m of (internet.matches || [])) {
+    const idx = Number(m.paragraph_index);
+    if (!Number.isFinite(idx)) continue;
+    const old = internetMap.get(idx);
+    const score = m.similarity_score || 0;
+    if (!old || score > old.score) {
+      internetMap.set(idx, {
+        score,
+        domain: m.source_domain || '',
+        url: m.source_url || ''
+      });
+    }
+  }
+
+  let html = '';
+  for (let i = 0; i < paragraphs.length; i++) {
+    const text = String(paragraphs[i] || '').trim();
+    if (!text) continue;
+
+    const localHit = localMap.get(i);
+    const aiHit = aiMap.get(i);
+    const webHit = internetMap.get(i);
+
+    let cls = 'paper-paragraph';
+    if (localHit) cls += ' match-local';
+    if (aiHit) cls += ' match-ai';
+    if (webHit) cls += ' match-internet';
+    if (!localHit && !aiHit && !webHit) cls += ' original';
+
+    let badges = '';
+    if (localHit) badges += `<span class="paper-para-badge badge-local">${(localHit.score || 0).toFixed(1)}% Local</span>`;
+    if (aiHit) badges += `<span class="paper-para-badge badge-ai">${Math.round(aiHit.score || 0)}% AI</span>`;
+    if (webHit) badges += `<span class="paper-para-badge badge-internet">${(webHit.score || 0).toFixed(1)}% Web</span>`;
+
+    let sourceInfo = '';
+    if (localHit) {
+      sourceInfo += `<div class="paper-source-info source-local"><strong><i class="fas fa-database"></i> Local Match:</strong> ${esc(localHit.title)} (${(localHit.score || 0).toFixed(1)}%)</div>`;
+    }
+    if (aiHit) {
+      sourceInfo += `<div class="paper-source-info source-ai"><strong><i class="fas fa-robot"></i> AI Flag:</strong> ${esc(aiHit.risk)} risk — ${esc(aiHit.reason)}</div>`;
+    }
+    if (webHit) {
+      const webSource = webHit.url
+        ? `<a href="${esc(webHit.url)}" target="_blank" rel="noopener">${esc(webHit.domain || webHit.url)}</a>`
+        : esc(webHit.domain || 'Web source');
+      sourceInfo += `<div class="paper-source-info source-internet"><strong><i class="fas fa-globe"></i> Internet Match:</strong> ${(webHit.score || 0).toFixed(1)}% from ${webSource}</div>`;
+    }
+
+    html += `<div class="${cls}">${esc(text)}${badges}</div>${sourceInfo}`;
+  }
+
+  qsDocPaper.innerHTML = html || `<p style="color:#666;text-align:center;padding:2rem;"><i class="fas fa-circle-info"></i> No paragraph content to display.</p>`;
 }
 
 function esc(str) {

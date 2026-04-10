@@ -137,7 +137,8 @@ async function quickScan(req, res) {
         document_matches: documentMatches.filter(m => m.similarity_score > 3),
         paragraph_matches: paragraphMatches.slice(0, 30),
         flagged_paragraphs: paragraphMatches.length,
-        total_paragraphs: paragraphs.length
+        total_paragraphs: paragraphs.length,
+        all_paragraphs: paragraphs
       },
       ai_check: aiResult,
       internet_check: {
