@@ -102,6 +102,14 @@ async function quickScan(req, res) {
     if (runAI) {
       try {
         aiResult = await analyzeWithOpenAI('quick-scan', paragraphs);
+        // Enrich flagged paragraphs with text and numeric score
+        if (aiResult.flaggedParagraphs) {
+          aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
+            ...fp,
+            text: paragraphs[fp.paragraph_index - 1] || '',
+            score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
+          }));
+        }
       } catch (err) {
         aiResult = { error: err.message };
       }

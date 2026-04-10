@@ -248,10 +248,10 @@ function renderAIResults(ai) {
     for (const f of flagged) {
       html += `
         <div class="scan-ai-flag-item">
-          <span class="scan-ai-flag-badge">${f.plagiarism_score || f.score || 0}%</span>
+          <span class="scan-ai-flag-badge">${f.score || 0}%</span>
           <div>
-            <p style="margin:0;">${esc((f.text || f.paragraph || '').slice(0, 200))}…</p>
-            <p class="text-muted" style="font-size:.8rem;margin:.25rem 0 0;">${esc(f.reason || f.type || '')}</p>
+            <p style="margin:0;">${esc((f.text || '').slice(0, 200))}${(f.text || '').length > 200 ? '…' : ''}</p>
+            <p class="text-muted" style="font-size:.8rem;margin:.25rem 0 0;"><strong>${esc(f.risk || '')}</strong> — ${esc(f.reason || '')}</p>
           </div>
         </div>`;
     }
