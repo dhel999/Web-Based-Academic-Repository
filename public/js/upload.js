@@ -357,126 +357,197 @@ function renderRejection(data) {
   progressBar.style.width = '100%';
   progressBar.style.background = 'var(--red)';
 
-  let icon, heading, details = '';
+  let html = '';
 
-  switch (data.reason) {
-    case 'exact_title':
-      icon = 'fa-heading';
-      heading = 'Duplicate Title Detected';
-      details = `<p>${escapeHtml(data.message)}</p>`;
-      if (data.existing_document_id) {
-        details += `<a href="result.html?id=${data.existing_document_id}" class="btn btn-outline mt-1">
-          <i class="fas fa-eye"></i> View Existing Document
-        </a>`;
-      }
-      break;
+  if (data.reason === 'exact_title') {
+    html = `
+      <div style="text-align:center;padding:2rem 1rem;">
+        <i class="fas fa-heading fa-3x" style="color:#ef4444;margin-bottom:1rem;"></i>
+        <h3 style="color:#ef4444;margin:0 0 .5rem;">Duplicate Title Detected</h3>
+        <p style="color:#94a3b8;font-size:.9rem;margin:0 0 1rem;">This document was NOT uploaded.</p>
+        <p style="color:#cbd5e1;font-size:.9rem;">${escapeHtml(data.message)}</p>
+        ${data.existing_document_id ? `<a href="result.html?id=${data.existing_document_id}" class="btn btn-outline mt-1"><i class="fas fa-eye"></i> View Existing</a>` : ''}
+      </div>`;
 
-    case 'duplicate_content':
-      icon = 'fa-copy';
-      heading = 'Duplicate Content Detected';
-      details = `<p>${escapeHtml(data.message)}</p>
-        <div style="margin-top:.75rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
-          <div style="font-size:1.6rem;font-weight:800;color:var(--red);">${data.similarity_score}%</div>
-          <div>
-            <div style="font-size:.8rem;color:var(--text-muted);">Similarity with:</div>
-            <div style="font-weight:600;">${escapeHtml(data.matched_title || 'Unknown')}</div>
-          </div>
-        </div>`;
-      if (data.matched_document_id) {
-        details += `<a href="result.html?id=${data.matched_document_id}" class="btn btn-outline mt-1">
-          <i class="fas fa-eye"></i> View Matching Document
-        </a>`;
-      }
-      break;
+  } else if (data.reason === 'duplicate_content') {
+    html = `
+      <div style="text-align:center;padding:2rem 1rem;">
+        <i class="fas fa-copy fa-3x" style="color:#ef4444;margin-bottom:1rem;"></i>
+        <h3 style="color:#ef4444;margin:0 0 .5rem;">Duplicate Content Detected</h3>
+        <p style="color:#94a3b8;font-size:.9rem;margin:0 0 1rem;">This document was NOT uploaded.</p>
+        <p style="color:#cbd5e1;font-size:.9rem;">${escapeHtml(data.message)}</p>
+        <div style="margin:1rem 0;font-size:2rem;font-weight:800;color:#ef4444;">${data.similarity_score}%</div>
+        <p style="color:#94a3b8;font-size:.85rem;margin:0;">Matched: <strong style="color:#e2e8f0;">${escapeHtml(data.matched_title || 'Unknown')}</strong></p>
+        ${data.matched_document_id ? `<a href="result.html?id=${data.matched_document_id}" class="btn btn-outline mt-2"><i class="fas fa-eye"></i> View Matching Document</a>` : ''}
+      </div>`;
 
-    case 'similar_paragraphs':
-      icon = 'fa-paragraph';
-      heading = 'Too Many Similar Paragraphs';
-      details = `<p>${escapeHtml(data.message)}</p>
-        <div style="margin:.75rem 0;">
-          <strong style="color:#ef4444;">${data.flagged_count} / ${data.total_paragraphs}</strong>
-          <span style="color:#94a3b8;"> paragraphs flagged (${data.flagged_ratio}%)</span>
-        </div>`;
+  } else if (data.reason === 'similar_paragraphs') {
+    html = buildPaperStyleRejection(data);
 
-      // Debug: log payload so we can verify data shape
-      console.log('[rejection] flagged_paragraphs payload:', JSON.stringify(data.flagged_paragraphs));
-
-      if (Array.isArray(data.flagged_paragraphs) && data.flagged_paragraphs.length > 0) {
-        details += `<div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">`;
-        data.flagged_paragraphs.forEach((fp, i) => {
-          // Extract fields with broad fallbacks
-          let snippet = '';
-          let title = 'Unknown';
-          let score = NaN;
-
-          let matchedSnippet = '';
-          if (fp && typeof fp === 'object' && !Array.isArray(fp)) {
-            snippet = String(fp.paragraph_snippet || fp.paragraph_text || fp.snippet || fp.text || fp.content || '').trim();
-            matchedSnippet = String(fp.matched_snippet || fp.matched_text || '').trim();
-            title = String(fp.matched_title || fp.title || fp.matched_document_title || 'Unknown').trim() || 'Unknown';
-            score = parseFloat(fp.similarity_score ?? fp.score ?? NaN);
-          } else if (typeof fp === 'string') {
-            snippet = fp.trim();
-          }
-
-          // Fallback: show raw JSON if snippet is still empty
-          if (!snippet && fp != null) {
-            snippet = JSON.stringify(fp).slice(0, 200);
-          }
-          if (!snippet) snippet = '(No preview available)';
-
-          const hasScore = Number.isFinite(score);
-          const scoreColor = hasScore ? (score >= 70 ? '#ef4444' : '#f59e0b') : '#94a3b8';
-          const scoreText = hasScore ? score.toFixed(1) + '%' : 'N/A';
-
-          const matchedRow = matchedSnippet
-            ? `<tr>
-                <td colspan="2" style="padding:8px 12px;font-size:12px;line-height:1.5;color:#94a3b8;background:rgba(14,165,233,.05);border-left:3px solid #0ea5e9;">
-                  <span style="display:block;font-size:11px;font-weight:700;color:#0ea5e9;margin-bottom:4px;text-transform:uppercase;">⬆ Matched text in repository:</span>
-                  ${escapeHtml(matchedSnippet)}
-                </td>
-              </tr>` : '';
-
-          details += `
-            <table style="width:100%;border-collapse:collapse;margin-bottom:6px;border:1px solid #334155;border-radius:8px;">
-              <tr style="background:#0f172a;">
-                <td style="padding:8px 12px;font-size:13px;color:#e2e8f0;">Paragraph ${i + 1} — matched "<span style="color:#38bdf8;">${escapeHtml(title)}</span>"</td>
-                <td style="padding:8px 12px;font-size:13px;color:${scoreColor};font-weight:700;text-align:right;white-space:nowrap;">${scoreText}</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="padding:10px 12px;font-size:12.5px;line-height:1.6;color:#cbd5e1;background:rgba(239,68,68,.06);border-left:3px solid #ef4444;">
-                  <span style="display:block;font-size:11px;font-weight:700;color:#ef4444;margin-bottom:4px;text-transform:uppercase;">⬇ Your uploaded text:</span>
-                  ${escapeHtml(snippet)}
-                </td>
-              </tr>
-              ${matchedRow}
-            </table>`;
-        });
-        details += `</div>`;
-      }
-      break;
-
-    default:
-      icon = 'fa-ban';
-      heading = 'Upload Rejected';
-      details = `<p>${escapeHtml(data.error || data.message || 'Unknown reason')}</p>`;
+  } else {
+    html = `
+      <div style="text-align:center;padding:2rem 1rem;">
+        <i class="fas fa-ban fa-3x" style="color:#ef4444;margin-bottom:1rem;"></i>
+        <h3 style="color:#ef4444;">Upload Rejected</h3>
+        <p style="color:#cbd5e1;">${escapeHtml(data.error || data.message || 'Unknown reason')}</p>
+      </div>`;
   }
 
-  resultsContent.innerHTML = `
-    <div class="rejection-banner">
-      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
-        <i class="fas ${icon} fa-2x" style="color:var(--red);"></i>
-        <div>
-          <h3 style="color:var(--red);margin:0;font-size:1.1rem;">${heading}</h3>
-          <p style="margin:0;font-size:.82rem;color:var(--text-muted);">This document was NOT uploaded.</p>
-        </div>
-      </div>
-      ${details}
-    </div>
-  `;
-
-  statusMsg.textContent = `Upload blocked: ${heading}`;
+  resultsContent.innerHTML = html;
+  statusMsg.textContent = `Upload blocked: ${data.reason === 'similar_paragraphs' ? 'Too Many Similar Paragraphs' : data.reason === 'exact_title' ? 'Duplicate Title' : data.reason === 'duplicate_content' ? 'Duplicate Content' : 'Rejected'}`;
   statusMsg.style.color = 'var(--red)';
   resultsPreview.classList.remove('hidden');
   btnViewFull.classList.add('hidden');
+}
+
+/* ── Paper-style rejection view for similar paragraphs ──────── */
+function buildPaperStyleRejection(data) {
+  const s = data.stats || {};
+  const avgScore = s.avg_score || 0;
+  const maxScore = s.max_score || 0;
+  const flaggedCount = data.flagged_count || 0;
+  const totalParas = data.total_paragraphs || 0;
+  const ratio = data.flagged_ratio || 0;
+  const overallColor = avgScore >= 70 ? '#ef4444' : avgScore >= 40 ? '#f59e0b' : '#22c55e';
+
+  // Build paper paragraphs
+  const allParas = data.all_paragraphs || [];
+  const flaggedParas = data.flagged_paragraphs || [];
+
+  let paperBody = '';
+
+  if (allParas.length > 0) {
+    allParas.forEach((p) => {
+      const text = String(p.text || '').trim();
+      if (!text) return;
+      const isFlagged = p.is_flagged;
+      const score = parseFloat(p.similarity_score ?? 0);
+
+      if (isFlagged) {
+        // Yellow highlighted text — like a marker pen
+        paperBody += `
+          <table style="width:100%;border-collapse:collapse;"><tr>
+            <td style="padding:0;font-size:13px;line-height:1.8;color:#1a1a1a;font-family:'Times New Roman',Times,serif;">
+              <span style="background:rgba(255,235,59,.45);padding:1px 0;">${escapeHtml(text)}</span>
+            </td>
+          </tr></table>`;
+      } else {
+        // Normal text
+        paperBody += `
+          <table style="width:100%;border-collapse:collapse;"><tr>
+            <td style="padding:0;font-size:13px;line-height:1.8;color:#1a1a1a;font-family:'Times New Roman',Times,serif;">
+              ${escapeHtml(text)}
+            </td>
+          </tr></table>`;
+      }
+    });
+  } else {
+    // Fallback: only flagged paragraphs
+    flaggedParas.forEach((fp) => {
+      if (!fp || typeof fp !== 'object') return;
+      const snippet = String(fp.paragraph_snippet || fp.paragraph_text || '').trim() || '(No preview)';
+      paperBody += `
+        <table style="width:100%;border-collapse:collapse;"><tr>
+          <td style="padding:0;font-size:13px;line-height:1.8;color:#1a1a1a;font-family:'Times New Roman',Times,serif;">
+            <span style="background:rgba(255,235,59,.45);padding:1px 0;">${escapeHtml(snippet)}</span>
+          </td>
+        </tr></table>`;
+    });
+  }
+
+  // Sidebar items — flagged paragraph details
+  let sidebarItems = '';
+  const detailSource = allParas.length > 0 ? allParas.filter(p => p.is_flagged) : flaggedParas;
+  detailSource.forEach((fp, i) => {
+    const score = parseFloat(fp.similarity_score ?? 0);
+    const scoreCol = score >= 70 ? '#ef4444' : score >= 40 ? '#f59e0b' : '#22c55e';
+    const riskLabel = score >= 70 ? 'HIGH' : score >= 40 ? 'MEDIUM' : 'LOW';
+    const title = String(fp.matched_title || 'Unknown').trim();
+    const pIdx = fp.index != null ? fp.index + 1 : (fp.paragraph_index != null ? fp.paragraph_index + 1 : i + 1);
+
+    sidebarItems += `
+      <table style="width:100%;border-collapse:collapse;margin-bottom:8px;border:1px solid #1e293b;border-radius:6px;overflow:hidden;">
+        <tr style="background:#0f172a;">
+          <td style="padding:6px 10px;font-size:11px;color:#94a3b8;">
+            <strong style="color:#e2e8f0;">¶ ${pIdx}</strong>
+            <span style="float:right;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;
+              background:${score >= 70 ? 'rgba(239,68,68,.15)' : score >= 40 ? 'rgba(245,158,11,.15)' : 'rgba(34,197,94,.15)'};
+              color:${scoreCol};">${riskLabel} ${score.toFixed(1)}%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:5px 10px;font-size:11px;color:#64748b;border-top:1px solid #1e293b;">
+            Matched: <span style="color:#38bdf8;">${escapeHtml(title)}</span>
+          </td>
+        </tr>
+      </table>`;
+  });
+
+  return `
+    <div style="font-family:inherit;">
+
+      <!-- ═══ REPORT HEADER ═══ -->
+      <div style="text-align:center;padding:1.5rem 1rem .5rem;border-bottom:2px solid #1e293b;margin-bottom:1rem;">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 16px;border-radius:20px;background:rgba(239,68,68,.1);border:1px solid #ef444440;margin-bottom:10px;">
+          <i class="fas fa-shield-halved" style="color:#ef4444;"></i>
+          <span style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:1px;">Plagiarism Shield Report</span>
+        </div>
+        <h2 style="margin:8px 0 4px;font-size:1.2rem;color:#f1f5f9;">Similarity Analysis — Upload Blocked</h2>
+        <p style="margin:0;font-size:.82rem;color:#64748b;">Generated on ${new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})} at ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</p>
+      </div>
+
+      <!-- ═══ VERDICT BANNER ═══ -->
+      <table style="width:100%;border-collapse:collapse;margin-bottom:1rem;border:1px solid ${overallColor}30;border-radius:10px;overflow:hidden;background:${overallColor}08;">
+        <tr>
+          <td style="padding:14px 18px;text-align:center;width:100px;border-right:1px solid ${overallColor}20;">
+            <div style="font-size:2rem;font-weight:900;color:${overallColor};line-height:1;">${avgScore.toFixed(1)}%</div>
+            <div style="font-size:10px;color:#64748b;margin-top:4px;text-transform:uppercase;font-weight:600;">Avg Match</div>
+          </td>
+          <td style="padding:14px 18px;">
+            <div style="font-size:13px;font-weight:700;color:${overallColor};margin-bottom:3px;">
+              <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i> Upload Rejected — ${flaggedCount}/${totalParas} paragraphs flagged (${ratio}%)
+            </div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.4;">
+              Yellow highlighted text below indicates paragraphs detected with high similarity to existing documents in the repository.
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ═══ MAIN LAYOUT: Paper + Sidebar ═══ -->
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <!-- Paper Document -->
+          <td style="vertical-align:top;width:65%;padding-right:12px;">
+            <div style="background:#ffffff;border:1px solid #d1d5db;border-radius:4px;padding:32px 36px;max-height:600px;overflow-y:auto;box-shadow:0 2px 8px rgba(0,0,0,.15);">
+              ${paperBody}
+            </div>
+          </td>
+          <!-- Sidebar: Detected Details -->
+          <td style="vertical-align:top;width:35%;">
+            <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+              <tr><td style="padding:8px 10px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;background:#0f172a;border:1px solid #1e293b;border-radius:6px 6px 0 0;">
+                <i class="fas fa-list-check" style="margin-right:5px;"></i> Detected Paragraphs (${detailSource.length})
+              </td></tr>
+            </table>
+            <div style="max-height:560px;overflow-y:auto;">
+              ${sidebarItems}
+            </div>
+
+            <!-- Legend -->
+            <table style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid #1e293b;border-radius:6px;overflow:hidden;">
+              <tr><td style="padding:8px 10px;font-size:10px;color:#64748b;background:#0f172a;">
+                <span style="background:rgba(255,235,59,.45);color:#1a1a1a;padding:1px 6px;border-radius:2px;margin-right:6px;">highlighted</span> = detected similarity
+              </td></tr>
+              <tr><td style="padding:4px 10px 8px;font-size:10px;color:#64748b;background:#0f172a;">
+                <span style="color:#ef4444;">●</span> High ≥70%
+                <span style="color:#f59e0b;margin-left:8px;">●</span> Med 40–69%
+                <span style="color:#22c55e;margin-left:8px;">●</span> Low 30–39%
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+    </div>`;
 }

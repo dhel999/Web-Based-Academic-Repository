@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const supabase = require('../utils/supabase');
-const { extractText, splitIntoParagraphs, deleteFile } = require('../services/fileService');
+const { extractText, splitIntoParagraphs, splitIntoDisplayParagraphs, deleteFile } = require('../services/fileService');
 const { compareDocuments, compareParagraphs } = require('../utils/tfidf');
 
 // ── Thresholds ────────────────────────────────────────────────
@@ -92,15 +92,17 @@ async function uploadDocument(req, res) {
     const flaggedDetails = [];
 
     if (existingParagraphs && existingParagraphs.length > 0 && paragraphs.length > 0) {
-      for (const para of paragraphs) {
+      for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
+        const para = paragraphs[pIdx];
         const matches = compareParagraphs(para, existingParagraphs);
         if (matches.length > 0 && matches[0].similarity_score >= PARAGRAPH_BLOCK_PCT) {
           flaggedCount++;
           const matchedPara = existingParagraphs.find(ep => ep.id === matches[0].paragraph_id);
           const matchedText = matchedPara ? matchedPara.paragraph_text : '';
           flaggedDetails.push({
-            paragraph_snippet: para.slice(0, 200) + (para.length > 200 ? '…' : ''),
-            matched_snippet: matchedText ? matchedText.slice(0, 200) + (matchedText.length > 200 ? '…' : '') : '',
+            paragraph_index: pIdx,
+            paragraph_snippet: para.slice(0, 300) + (para.length > 300 ? '…' : ''),
+            matched_snippet: matchedText ? matchedText.slice(0, 300) + (matchedText.length > 300 ? '…' : '') : '',
             similarity_score: matches[0].similarity_score,
             matched_document_id: matches[0].document_id
           });
@@ -119,6 +121,45 @@ async function uploadDocument(req, res) {
         const titleMap = {};
         (matchedDocs || []).forEach(d => { titleMap[d.id] = d.title; });
 
+        // Compute summary statistics
+        const scores = flaggedDetails.map(f => f.similarity_score);
+        const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const maxScore = Math.max(...scores);
+        const minScore = Math.min(...scores);
+        const highCount = scores.filter(s => s >= 70).length;
+        const medCount = scores.filter(s => s >= 40 && s < 70).length;
+        const lowCount = scores.filter(s => s < 40).length;
+
+        // Build full display paragraphs (includes headings, short blocks, everything)
+        const displayParas = splitIntoDisplayParagraphs(extractedText);
+
+        // Map flagged analysis paragraphs to display paragraphs by text containment
+        const flaggedMap = {};
+        flaggedDetails.forEach(f => {
+          const analysisTxt = paragraphs[f.paragraph_index];
+          if (!analysisTxt) return;
+          for (let di = 0; di < displayParas.length; di++) {
+            const dTxt = displayParas[di].replace(/\n/g, ' ').trim();
+            if (dTxt.length > 50 && (dTxt.includes(analysisTxt.slice(0, 80)) || analysisTxt.includes(dTxt.slice(0, 80)))) {
+              flaggedMap[di] = f;
+              break;
+            }
+          }
+        });
+
+        const allParagraphs = displayParas.map((text, idx) => {
+          const flagged = flaggedMap[idx];
+          return {
+            index: idx,
+            text: text.replace(/\n/g, ' ').trim(),
+            is_flagged: !!flagged,
+            similarity_score: flagged ? flagged.similarity_score : null,
+            matched_snippet: flagged ? flagged.matched_snippet : null,
+            matched_title: flagged ? (titleMap[flagged.matched_document_id] || 'Unknown') : null,
+            matched_document_id: flagged ? flagged.matched_document_id : null
+          };
+        });
+
         return res.status(409).json({
           error: 'Upload rejected — too many similar paragraphs',
           reason: 'similar_paragraphs',
@@ -126,7 +167,17 @@ async function uploadDocument(req, res) {
           flagged_count: flaggedCount,
           total_paragraphs: paragraphs.length,
           flagged_ratio: parseFloat((flaggedRatio * 100).toFixed(1)),
-          flagged_paragraphs: flaggedDetails.slice(0, 10).map(f => ({
+          stats: {
+            avg_score: parseFloat(avgScore.toFixed(1)),
+            max_score: parseFloat(maxScore.toFixed(1)),
+            min_score: parseFloat(minScore.toFixed(1)),
+            high_risk_count: highCount,
+            medium_risk_count: medCount,
+            low_risk_count: lowCount
+          },
+          matched_documents: matchedIds.map(id => ({ id, title: titleMap[id] || 'Unknown' })),
+          all_paragraphs: allParagraphs,
+          flagged_paragraphs: flaggedDetails.slice(0, 15).map(f => ({
             ...f,
             matched_title: titleMap[f.matched_document_id] || 'Unknown'
           }))
