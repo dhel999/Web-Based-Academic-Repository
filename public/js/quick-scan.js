@@ -175,6 +175,7 @@ function renderResults(data) {
     <span class="pill"><i class="fas fa-database"></i> ${(local.document_matches || []).length} similar docs</span>
     <span class="pill"><i class="fas fa-paragraph"></i> ${local.flagged_paragraphs || 0}/${local.total_paragraphs || 0} paragraphs flagged</span>
     ${ai && !ai.error ? `<span class="pill" style="color:#e74c3c;"><i class="fas fa-robot"></i> AI: ${ai.plagiarismPercentage || 0}%</span>` : ''}
+    ${ai && ai.error ? `<span class="pill" style="color:var(--red);border-color:var(--red);"><i class="fas fa-triangle-exclamation"></i> AI Error: ${esc(ai.error)}</span>` : ''}
     ${(internet.matches || []).length > 0 ? `<span class="pill" style="color:#74b9ff;"><i class="fas fa-globe"></i> ${internet.total_found} web sources</span>` : ''}
     <span class="pill" style="color:${score >= 70 ? 'var(--red)' : score >= 40 ? 'var(--yellow)' : 'var(--green)'};">
       ${score}% overall similarity
@@ -191,6 +192,9 @@ function renderResults(data) {
   if (ai && !ai.error) {
     document.getElementById('aiSection').classList.remove('hidden');
     renderAIResults(ai);
+  } else if (ai && ai.error) {
+    document.getElementById('aiSection').classList.remove('hidden');
+    document.getElementById('aiResultContent').innerHTML = `<p class="text-danger"><i class="fas fa-triangle-exclamation"></i> AI analysis failed: ${esc(ai.error)}</p>`;
   }
 
   // Internet

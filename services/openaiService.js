@@ -15,6 +15,93 @@ function inferRiskFromPercentage(percent) {
   return 'low';
 }
 
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function computeHeuristicSignals(paragraphs) {
+  const text = (paragraphs || []).join(' ').replace(/\s+/g, ' ').trim();
+  if (!text) {
+    return {
+      aiLikelihood: 0,
+      summary: 'No text available for heuristic AI signal analysis.',
+      topIndices: []
+    };
+  }
+
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const words = text.toLowerCase().match(/[a-z']+/g) || [];
+  const uniqueWords = new Set(words);
+  const lexicalDiversity = words.length ? uniqueWords.size / words.length : 0;
+
+  const sentenceWordCounts = sentences.map(s => (s.match(/[a-z']+/gi) || []).length).filter(n => n > 0);
+  const avgSentence = sentenceWordCounts.length
+    ? sentenceWordCounts.reduce((a, b) => a + b, 0) / sentenceWordCounts.length
+    : 0;
+  const variance = sentenceWordCounts.length
+    ? sentenceWordCounts.reduce((sum, n) => sum + Math.pow(n - avgSentence, 2), 0) / sentenceWordCounts.length
+    : 0;
+  const stdevSentence = Math.sqrt(variance);
+
+  const connectors = [
+    'moreover', 'furthermore', 'in addition', 'therefore', 'thus', 'in conclusion',
+    'additionally', 'consequently', 'notably', 'significantly', 'overall', 'however'
+  ];
+  const connectorHits = connectors.reduce((acc, phrase) => {
+    const re = new RegExp(`\\b${phrase.replace(/ /g, '\\s+')}\\b`, 'gi');
+    const m = text.match(re);
+    return acc + (m ? m.length : 0);
+  }, 0);
+
+  const templatedPhrases = [
+    'this study aims to',
+    'based on observations',
+    'in many academic institutions',
+    'digital transformation',
+    'maintaining quality education',
+    'preventing intellectual dishonesty'
+  ];
+  const templatedHits = templatedPhrases.reduce((acc, phrase) => {
+    const re = new RegExp(phrase.replace(/ /g, '\\s+'), 'gi');
+    const m = text.match(re);
+    return acc + (m ? m.length : 0);
+  }, 0);
+
+  const starters = sentences
+    .map(s => s.trim().toLowerCase().split(/\s+/).slice(0, 2).join(' '))
+    .filter(Boolean);
+  const freq = new Map();
+  for (const st of starters) freq.set(st, (freq.get(st) || 0) + 1);
+  const maxStarterFreq = starters.length ? Math.max(...freq.values()) : 0;
+  const repeatedStarterRatio = starters.length ? maxStarterFreq / starters.length : 0;
+
+  let score = 0;
+  if (avgSentence >= 16 && avgSentence <= 36) score += 15;
+  if (stdevSentence > 0 && stdevSentence < 9) score += 15;
+  if (lexicalDiversity >= 0.30 && lexicalDiversity <= 0.58) score += 12;
+  if (connectorHits >= 4) score += 20;
+  if (templatedHits >= 2) score += 20;
+  if (repeatedStarterRatio >= 0.22) score += 18;
+
+  const paraScores = (paragraphs || []).map((p, i) => {
+    const t = String(p || '').toLowerCase();
+    let s = 0;
+    if ((t.match(/\b(moreover|furthermore|additionally|therefore|thus|overall)\b/g) || []).length >= 1) s += 20;
+    if ((t.match(/\b(this study|this system|this research)\b/g) || []).length >= 1) s += 20;
+    const wc = (t.match(/[a-z']+/g) || []).length;
+    if (wc >= 60) s += 20;
+    if (wc >= 100) s += 10;
+    if ((t.match(/\b(quality education|digital transformation|academic integrity|intellectual dishonesty)\b/g) || []).length >= 1) s += 20;
+    return { index: i, score: clamp(s, 0, 100) };
+  }).sort((a, b) => b.score - a.score);
+
+  return {
+    aiLikelihood: clamp(score, 0, 95),
+    summary: `Heuristic AI-style signals: avg sentence=${avgSentence.toFixed(1)} words, connector hits=${connectorHits}, repeated starters=${(repeatedStarterRatio * 100).toFixed(0)}%.`,
+    topIndices: paraScores.filter(p => p.score >= 40).slice(0, 5).map(p => p.index)
+  };
+}
+
 /**
  * Analyze paragraphs for plagiarism using OpenAI GPT.
  *
@@ -129,7 +216,16 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
     }
   }
 
-  const plagiarismPercentage = Number(parsed.plagiarism_percentage || parsed.plagiarismPercentage || 0) || 0;
+  const modelPlagiarismPercentage = Number(parsed.plagiarism_percentage || parsed.plagiarismPercentage || 0) || 0;
+  const modelAiProbability = Number(parsed.ai_generated_probability || parsed.aiGeneratedProbability || 0) || 0;
+  const heuristic = computeHeuristicSignals(paragraphs || []);
+  const blendedAiProbability = clamp(
+    Math.max(modelAiProbability, heuristic.aiLikelihood, modelPlagiarismPercentage),
+    0,
+    100
+  );
+
+  const plagiarismPercentage = blendedAiProbability;
   const rawRiskLevel = parsed.risk_level || parsed.riskLevel || inferRiskFromPercentage(plagiarismPercentage);
   const rawFlags = Array.isArray(parsed.flagged_paragraphs)
     ? parsed.flagged_paragraphs
@@ -157,16 +253,20 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
   const result = {
     plagiarismPercentage: Math.max(0, Math.min(100, plagiarismPercentage)),
     riskLevel,
-    explanation: parsed.explanation || '',
-    suggestions: parsed.suggestions || '',
+    explanation: [parsed.explanation || '', heuristic.summary].filter(Boolean).join(' '),
+    suggestions: parsed.suggestions || 'Revise heavily templated phrasing, add personal analysis, cite sources, and rewrite sections in your own voice.',
     flaggedParagraphs: normalizedFlags
   };
 
   // Fallback if model returns medium/high risk but no paragraph list
   if (result.flaggedParagraphs.length === 0 && (result.riskLevel === 'medium' || result.riskLevel === 'high')) {
     const fallbackCount = result.riskLevel === 'high' ? 3 : 1;
-    result.flaggedParagraphs = sampleParagraphs.slice(0, fallbackCount).map((_, i) => ({
-      paragraph_index: sampleParagraphs[i].index,
+    const fallbackIndices = heuristic.topIndices.length > 0
+      ? heuristic.topIndices.slice(0, fallbackCount)
+      : sampleParagraphs.slice(0, fallbackCount).map(entry => entry.index);
+
+    result.flaggedParagraphs = fallbackIndices.map(idx => ({
+      paragraph_index: idx,
       risk: result.riskLevel,
       reason: 'Overall text pattern indicates probable AI-generated or non-original writing.'
     }));
