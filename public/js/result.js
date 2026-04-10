@@ -48,10 +48,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Store document data globally for re-use
 let currentDoc = null;
 let currentParagraphs = [];
+let currentDisplayParagraphs = [];
 let fullExtractedText = '';
 let localMatchMap = new Map();    // paragraph_index -> { score, matched_text, matched_title }
 let aiMatchMap = new Map();       // paragraph_index -> { score, reason }
 let internetMatchMap = new Map(); // paragraph_index -> { score, snippet, url, domain, all_sources }
+let aiTextHints = [];
 
 // ── Load existing results + document info ─────────────────────
 async function loadReport() {
@@ -80,6 +82,7 @@ async function loadReport() {
     currentDoc        = docData.document;
     currentParagraphs = (docData.paragraphs || []).map(p => p.paragraph_text);
     fullExtractedText = currentDoc.extracted_text || '';
+    currentDisplayParagraphs = Array.isArray(docData.display_paragraphs) ? docData.display_paragraphs : [];
     const results     = resultData.results || [];
 
     renderDocumentInfo(currentDoc);
@@ -361,10 +364,12 @@ function renderPaperView() {
     return;
   }
 
-  // Split full text into display lines/blocks by double newlines
-  const textBlocks = fullExtractedText
-    ? fullExtractedText.split(/\n\s*\n/).map(b => b.trim()).filter(b => b.length > 0)
-    : currentParagraphs;
+  // Prefer explicit display paragraphs from backend; fallback to extracted text split.
+  const textBlocks = currentDisplayParagraphs.length > 0
+    ? currentDisplayParagraphs
+    : (fullExtractedText
+      ? fullExtractedText.split(/\n\s*\n/).map(b => b.trim()).filter(b => b.length > 0)
+      : currentParagraphs);
 
   // For each text block, check if it matches any tracked paragraph
   let html = '';
@@ -378,7 +383,14 @@ function renderPaperView() {
     const matchIdx = (!isShort && findParagraphIndex(block) >= 0) ? findParagraphIndex(block) : -1;
 
     const local = matchIdx >= 0 ? localMatchMap.get(matchIdx) : null;
-    const ai = matchIdx >= 0 ? aiMatchMap.get(matchIdx) : null;
+    let ai = matchIdx >= 0 ? aiMatchMap.get(matchIdx) : null;
+    if (!ai && aiTextHints.length > 0) {
+      const blockNorm = block.replace(/\s+/g, ' ').trim().toLowerCase();
+      const matchedHint = aiTextHints.find(h => blockNorm.includes(h) || h.includes(blockNorm.slice(0, Math.min(100, blockNorm.length))));
+      if (matchedHint) {
+        ai = { score: 50, reason: 'AI flagged by semantic text match' };
+      }
+    }
     const internet = matchIdx >= 0 ? internetMatchMap.get(matchIdx) : null;
 
     let classes = 'paper-paragraph';
@@ -542,6 +554,9 @@ async function runAnalysis(useAI) {
         }).join('');
 
     // Render paragraph matches — show all paragraphs with highlights
+    if (Array.isArray(localCheck.display_paragraphs) && localCheck.display_paragraphs.length > 0) {
+      currentDisplayParagraphs = localCheck.display_paragraphs;
+    }
     renderParagraphsLive(paraMatches, localCheck.all_paragraphs || []);
 
     // Render AI results — merged into paper view
@@ -562,15 +577,23 @@ async function runAnalysis(useAI) {
 
 function renderAIAnalysis(ai) {
   // Merge AI flagged paragraphs into the aiMatchMap
+  aiTextHints = [];
   const flagged = ai.flaggedParagraphs || [];
   for (const fp of flagged) {
-    const idx = fp.paragraph_index != null ? fp.paragraph_index : -1;
+    let idx = fp.paragraph_index != null ? fp.paragraph_index : -1;
+    if ((idx == null || idx < 0 || idx >= currentParagraphs.length) && fp.text) {
+      idx = findParagraphIndex(fp.text);
+    }
     if (idx >= 0) {
       const score = fp.risk === 'high' ? 85 : fp.risk === 'medium' ? 55 : 30;
       aiMatchMap.set(idx, {
         score: score,
         reason: fp.reason || 'AI flagged'
       });
+    }
+    if (fp.text) {
+      const hint = String(fp.text).replace(/\s+/g, ' ').trim().slice(0, 120).toLowerCase();
+      if (hint) aiTextHints.push(hint);
     }
   }
 

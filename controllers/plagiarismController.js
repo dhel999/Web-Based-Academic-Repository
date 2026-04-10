@@ -2,6 +2,7 @@ const supabase = require('../utils/supabase');
 const { runLocalPlagiarismCheck, checkSimilarTitles, getResultsByDocument } = require('../services/plagiarismService');
 const { analyzeWithOpenAI } = require('../services/openaiService');
 const { searchInternetPlagiarism, searchTitleOnline } = require('../services/internetSearchService');
+const { splitIntoDisplayParagraphs } = require('../services/fileService');
 
 /**
  * POST /api/check-plagiarism
@@ -53,7 +54,8 @@ async function checkPlagiarism(req, res) {
         overall_score: localResult.overallScore,
         document_matches: localResult.documentMatches.slice(0, 10),
         paragraph_matches: localResult.paragraphMatches.slice(0, 30),
-        all_paragraphs: paragraphs  // send all document paragraphs for highlighting
+        all_paragraphs: paragraphs,  // analysis paragraphs
+        display_paragraphs: splitIntoDisplayParagraphs(doc.extracted_text || '')
       },
       openai_check: null
     };
@@ -62,6 +64,13 @@ async function checkPlagiarism(req, res) {
     if (use_openai) {
       try {
         const aiResult = await analyzeWithOpenAI(doc.id, paragraphs);
+        if (aiResult.flaggedParagraphs) {
+          aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
+            ...fp,
+            text: paragraphs[fp.paragraph_index] || '',
+            score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
+          }));
+        }
         response.openai_check = aiResult;
       } catch (aiErr) {
         response.openai_check = { error: aiErr.message };

@@ -1,4 +1,5 @@
 const supabase = require('../utils/supabase');
+const { splitIntoDisplayParagraphs } = require('../services/fileService');
 
 /**
  * GET /api/documents
@@ -160,7 +161,11 @@ async function getDocument(req, res) {
 
     if (paraError) console.error('Paragraph fetch error:', paraError.message);
 
-    return res.json({ document: doc, paragraphs: paragraphs || [] });
+    return res.json({
+      document: doc,
+      paragraphs: paragraphs || [],
+      display_paragraphs: splitIntoDisplayParagraphs(doc.extracted_text || '')
+    });
   } catch (err) {
     console.error('Get document error:', err);
     return res.status(500).json({ error: err.message });
