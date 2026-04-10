@@ -38,8 +38,8 @@ async function runLocalPlagiarismCheck(newDocumentId, newText, newParagraphs) {
   // This scales well: instead of loading ALL paragraphs from ALL documents,
   // we only compare against documents that are already flagged at document level
   const topDocIds = documentMatches
-    .filter(m => m.similarity_score > 10)
-    .slice(0, 10)
+    .filter(m => m.similarity_score > 3)
+    .slice(0, 15)
     .map(m => m.document_id);
 
   let existingParagraphs = [];
@@ -59,7 +59,7 @@ async function runLocalPlagiarismCheck(newDocumentId, newText, newParagraphs) {
     for (let idx = 0; idx < newParagraphs.length; idx++) {
       const para = newParagraphs[idx];
       const matches = compareParagraphs(para, existingParagraphs);
-      if (matches.length > 0 && matches[0].similarity_score > 30) {
+      if (matches.length > 0 && matches[0].similarity_score > 10) {
         // Resolve the matched document title
         let matchedTitle = 'Unknown';
         const matchedDocId = matches[0].document_id;
@@ -103,7 +103,7 @@ async function runLocalPlagiarismCheck(newDocumentId, newText, newParagraphs) {
     }));
 
   // Also save top paragraph matches (only those above 25%)
-  for (const pm of paragraphMatches.filter(m => m.best_match.similarity_score >= 25)) {
+  for (const pm of paragraphMatches.filter(m => m.best_match.similarity_score >= 10)) {
     insertRows.push({
       document_id: newDocumentId,
       matched_document_id: pm.best_match.document_id,
@@ -251,7 +251,7 @@ async function updateReverseScores(newDocumentId, newText, newParagraphs, existi
 
         for (const ePara of existingParas) {
           const matches = compareParagraphs(ePara.paragraph_text, newParasAsCorpus);
-          if (matches.length > 0 && matches[0].similarity_score >= 25) {
+          if (matches.length > 0 && matches[0].similarity_score >= 10) {
             await supabase
               .from('plagiarism_results')
               .insert({

@@ -248,7 +248,7 @@ function renderResultsFromDB(results) {
     for (let idx = 0; idx < currentParagraphs.length; idx++) {
       const p = currentParagraphs[idx];
       // Skip short paragraphs — headers, titles, numbered items
-      if (p.split(/\s+/).length < 20 || p.length < 100) continue;
+      if (p.split(/\s+/).length < 8 || p.length < 40) continue;
       if (paraText.includes(p.slice(0, 60)) || p.includes(paraText.slice(0, 60))) {
         if (!aiMatchMap.has(idx) || r.similarity_score > aiMatchMap.get(idx).score) {
           aiMatchMap.set(idx, {
@@ -362,7 +362,7 @@ function renderPaperView() {
   for (const block of textBlocks) {
     // Skip highlighting for short blocks (headers, titles, numbered items)
     const wordCount = block.split(/\s+/).length;
-    const isShort = wordCount < 20 || block.length < 100;
+    const isShort = wordCount < 8 || block.length < 40;
 
     // Try to match this block against our paragraph list
     const matchIdx = (!isShort && findParagraphIndex(block) >= 0) ? findParagraphIndex(block) : -1;
