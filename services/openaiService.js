@@ -3,6 +3,18 @@ const supabase = require('../utils/supabase');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+function normalizeRisk(risk) {
+  const value = String(risk || '').toLowerCase();
+  if (value === 'high' || value === 'medium' || value === 'low') return value;
+  return 'low';
+}
+
+function inferRiskFromPercentage(percent) {
+  if (percent >= 70) return 'high';
+  if (percent >= 40) return 'medium';
+  return 'low';
+}
+
 /**
  * Analyze paragraphs for plagiarism using OpenAI GPT.
  *
@@ -15,18 +27,44 @@ async function analyzeWithOpenAI(documentId, paragraphs) {
     throw new Error('OPENAI_API_KEY is not configured');
   }
 
-  // Filter to only substantial paragraphs (real prose, not headers/short lines)
-  const substantialParagraphs = paragraphs.filter(p => {
-    const words = p.split(/\s+/).length;
-    if (words < 20) return false;          // skip short lines
-    if (p.length < 100) return false;       // skip very short text
-    if (!/[a-z]/.test(p)) return false;     // skip ALL CAPS headers
-    if (/^\d+\.\s/.test(p) && words < 30) return false; // skip numbered list items
+  // Filter to likely prose paragraphs (less strict to avoid dropping valid student text)
+  const substantialParagraphs = (paragraphs || []).filter(p => {
+    const text = String(p || '').trim();
+    if (!text) return false;
+    const words = text.split(/\s+/).length;
+    if (words < 8) return false;
+    if (text.length < 40) return false;
+    if (!/[a-z]/i.test(text)) return false;
     return true;
   });
 
-  // Limit to first 12 substantial paragraphs to stay within token budget
-  const sampleParagraphs = substantialParagraphs.slice(0, 12);
+  // Fallback: if extraction produced short chunks, still analyze available text
+  const sourceParagraphs = substantialParagraphs.length > 0
+    ? substantialParagraphs
+    : (paragraphs || []).map(p => String(p || '').trim()).filter(p => p.length > 20);
+
+  // Spread-sample paragraphs (not just first N) to improve detection across long files
+  const maxSamples = 20;
+  const sampleParagraphs = [];
+  if (sourceParagraphs.length <= maxSamples) {
+    sampleParagraphs.push(...sourceParagraphs);
+  } else {
+    const step = sourceParagraphs.length / maxSamples;
+    for (let i = 0; i < maxSamples; i++) {
+      sampleParagraphs.push(sourceParagraphs[Math.floor(i * step)]);
+    }
+  }
+
+  if (sampleParagraphs.length === 0) {
+    return {
+      plagiarismPercentage: 0,
+      riskLevel: 'low',
+      explanation: 'No substantial paragraph content was available for AI analysis.',
+      suggestions: 'Upload a document with readable paragraph text to run AI analysis.',
+      flaggedParagraphs: []
+    };
+  }
+
   const combinedText = sampleParagraphs
     .map((p, i) => `[Paragraph ${i + 1}]: ${p}`)
     .join('\n\n');
@@ -36,6 +74,12 @@ Analyze the provided academic text paragraphs for:
 1. Direct plagiarism (copy-pasted content)
 2. Paraphrased plagiarism (same ideas with different wording)
 3. Mosaic plagiarism (mixing original and copied text)
+4. Likely AI-generated writing patterns (LLM-style structure, repetitive transitions, generic high-probability phrasing)
+
+Important guidance:
+- Be sensitive to AI-generated or AI-assisted text even when external sources are unavailable.
+- If many paragraphs are likely AI-generated, raise plagiarism_percentage and risk_level accordingly.
+- paragraph_index must reference the numbered paragraph in the input list.
 
 Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON) with this structure:
 {
@@ -79,20 +123,53 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
     }
   }
 
+  const plagiarismPercentage = Number(parsed.plagiarism_percentage || parsed.plagiarismPercentage || 0) || 0;
+  const rawRiskLevel = parsed.risk_level || parsed.riskLevel || inferRiskFromPercentage(plagiarismPercentage);
+  const rawFlags = Array.isArray(parsed.flagged_paragraphs)
+    ? parsed.flagged_paragraphs
+    : (Array.isArray(parsed.flaggedParagraphs) ? parsed.flaggedParagraphs : []);
+
+  // Normalize indexes to 0-based for frontend consistency
+  const hasZeroIndex = rawFlags.some(fp => Number(fp?.paragraph_index) === 0);
+  const normalizedFlags = rawFlags
+    .map(fp => {
+      let idx = Number(fp?.paragraph_index);
+      if (!Number.isFinite(idx)) return null;
+      if (!hasZeroIndex && idx > 0) idx -= 1;
+      if (idx < 0 || idx >= sampleParagraphs.length) return null;
+      return {
+        paragraph_index: idx,
+        risk: normalizeRisk(fp?.risk),
+        reason: String(fp?.reason || 'Potential AI-assisted or plagiarized writing pattern')
+      };
+    })
+    .filter(Boolean);
+
+  const riskLevel = normalizeRisk(rawRiskLevel);
   const result = {
-    plagiarismPercentage: parsed.plagiarism_percentage || 0,
-    riskLevel: parsed.risk_level || 'low',
+    plagiarismPercentage: Math.max(0, Math.min(100, plagiarismPercentage)),
+    riskLevel,
     explanation: parsed.explanation || '',
     suggestions: parsed.suggestions || '',
-    flaggedParagraphs: parsed.flagged_paragraphs || []
+    flaggedParagraphs: normalizedFlags
   };
+
+  // Fallback if model returns medium/high risk but no paragraph list
+  if (result.flaggedParagraphs.length === 0 && (result.riskLevel === 'medium' || result.riskLevel === 'high')) {
+    const fallbackCount = result.riskLevel === 'high' ? 3 : 1;
+    result.flaggedParagraphs = sampleParagraphs.slice(0, fallbackCount).map((_, i) => ({
+      paragraph_index: i,
+      risk: result.riskLevel,
+      reason: 'Overall text pattern indicates probable AI-generated or non-original writing.'
+    }));
+  }
 
   // Map flagged indices back to actual paragraph text
   // Save top flagged paragraphs to plagiarism_results
   const insertRows = result.flaggedParagraphs
     .filter(fp => fp.risk === 'high' || fp.risk === 'medium')
     .filter(fp => {
-      const para = sampleParagraphs[fp.paragraph_index - 1];
+      const para = sampleParagraphs[fp.paragraph_index];
       // Double-check: only save flags for substantial paragraphs
       return para && para.split(/\s+/).length >= 20;
     })
@@ -100,7 +177,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
       document_id: documentId,
       matched_document_id: null,
       similarity_score: fp.risk === 'high' ? 80 : 50,
-      matched_paragraph: sampleParagraphs[fp.paragraph_index - 1] || null,
+      matched_paragraph: sampleParagraphs[fp.paragraph_index] || null,
       source: 'openai'
     }));
 
