@@ -151,8 +151,16 @@ function updateStatus(title, sub) {
 function renderResults(data) {
   scanResults.classList.remove('hidden');
 
+  // Risk gauge uses combined signals, not only local TF-IDF similarity.
+  const localScore = Number(data.overall_score || 0);
+  const ai = data.ai_check;
+  const internet = data.internet_check || {};
+  const aiScore = ai && !ai.error ? Number(ai.plagiarismPercentage || 0) : 0;
+  const webScores = (internet.matches || []).map(m => Number(m.similarity_score || 0));
+  const internetScore = webScores.length > 0 ? Math.max(...webScores) : 0;
+  const score = Math.max(localScore, aiScore, internetScore);
+
   // Score gauge
-  const score = data.overall_score || 0;
   const circumference = 251.2;
   const half = circumference / 2;
   const offset = half - (score / 100) * half;
@@ -174,11 +182,11 @@ function renderResults(data) {
   }
   document.getElementById('scanScoreNum').textContent = score + '%';
   document.getElementById('scanFileName').textContent = data.filename || 'Document';
+  const gaugeSub = document.querySelector('.scan-gauge-sub');
+  if (gaugeSub) gaugeSub.textContent = 'Risk';
 
   // Pills
   const local = data.local_check || {};
-  const ai = data.ai_check;
-  const internet = data.internet_check || {};
   const pills = document.getElementById('scanPills');
   pills.innerHTML = `
     <span class="pill"><i class="fas fa-database"></i> ${(local.document_matches || []).length} similar docs</span>
@@ -186,8 +194,11 @@ function renderResults(data) {
     ${ai && !ai.error ? `<span class="pill" style="color:#e74c3c;"><i class="fas fa-robot"></i> AI: ${ai.plagiarismPercentage || 0}%</span>` : ''}
     ${ai && ai.error ? `<span class="pill" style="color:var(--red);border-color:var(--red);"><i class="fas fa-triangle-exclamation"></i> AI Error: ${esc(ai.error)}</span>` : ''}
     ${(internet.matches || []).length > 0 ? `<span class="pill" style="color:#74b9ff;"><i class="fas fa-globe"></i> ${internet.total_found} web sources</span>` : ''}
+    <span class="pill" style="color:${localScore >= 70 ? 'var(--red)' : localScore >= 40 ? 'var(--yellow)' : 'var(--green)'};">
+      ${localScore}% local similarity
+    </span>
     <span class="pill" style="color:${score >= 70 ? 'var(--red)' : score >= 40 ? 'var(--yellow)' : 'var(--green)'};">
-      ${score}% overall similarity
+      ${score}% overall risk
     </span>
   `;
 
