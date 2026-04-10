@@ -201,7 +201,17 @@ function renderResultsFromDB(results) {
 
   renderGauge(overallScore);
   renderScorePills(localResults.length, aiResults.length, internetResults.length, overallScore);
-  renderLocalMatches(localResults.filter(r => !r.matched_paragraph));
+
+  // Deduplicate document-level matches: keep highest score per matched title
+  const docLevelRaw = localResults.filter(r => !r.matched_paragraph);
+  const seenTitles = new Map();
+  for (const r of docLevelRaw) {
+    const key = (r.matched_document_title || '').trim().toLowerCase();
+    if (!seenTitles.has(key) || r.similarity_score > seenTitles.get(key).similarity_score) {
+      seenTitles.set(key, r);
+    }
+  }
+  renderLocalMatches([...seenTitles.values()].sort((a, b) => b.similarity_score - a.similarity_score));
 
   // Build local match map
   localMatchMap = new Map();
