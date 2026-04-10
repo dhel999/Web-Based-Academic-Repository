@@ -409,8 +409,10 @@ function renderRejection(data) {
           let title = 'Unknown';
           let score = NaN;
 
+          let matchedSnippet = '';
           if (fp && typeof fp === 'object' && !Array.isArray(fp)) {
             snippet = String(fp.paragraph_snippet || fp.paragraph_text || fp.snippet || fp.text || fp.content || '').trim();
+            matchedSnippet = String(fp.matched_snippet || fp.matched_text || '').trim();
             title = String(fp.matched_title || fp.title || fp.matched_document_title || 'Unknown').trim() || 'Unknown';
             score = parseFloat(fp.similarity_score ?? fp.score ?? NaN);
           } else if (typeof fp === 'string') {
@@ -427,6 +429,14 @@ function renderRejection(data) {
           const scoreColor = hasScore ? (score >= 70 ? '#ef4444' : '#f59e0b') : '#94a3b8';
           const scoreText = hasScore ? score.toFixed(1) + '%' : 'N/A';
 
+          const matchedRow = matchedSnippet
+            ? `<tr>
+                <td colspan="2" style="padding:8px 12px;font-size:12px;line-height:1.5;color:#94a3b8;background:rgba(14,165,233,.05);border-left:3px solid #0ea5e9;">
+                  <span style="display:block;font-size:11px;font-weight:700;color:#0ea5e9;margin-bottom:4px;text-transform:uppercase;">⬆ Matched text in repository:</span>
+                  ${escapeHtml(matchedSnippet)}
+                </td>
+              </tr>` : '';
+
           details += `
             <table style="width:100%;border-collapse:collapse;margin-bottom:6px;border:1px solid #334155;border-radius:8px;">
               <tr style="background:#0f172a;">
@@ -434,8 +444,12 @@ function renderRejection(data) {
                 <td style="padding:8px 12px;font-size:13px;color:${scoreColor};font-weight:700;text-align:right;white-space:nowrap;">${scoreText}</td>
               </tr>
               <tr>
-                <td colspan="2" style="padding:10px 12px;font-size:12.5px;line-height:1.6;color:#cbd5e1;background:rgba(239,68,68,.06);border-left:3px solid #ef4444;">${escapeHtml(snippet)}</td>
+                <td colspan="2" style="padding:10px 12px;font-size:12.5px;line-height:1.6;color:#cbd5e1;background:rgba(239,68,68,.06);border-left:3px solid #ef4444;">
+                  <span style="display:block;font-size:11px;font-weight:700;color:#ef4444;margin-bottom:4px;text-transform:uppercase;">⬇ Your uploaded text:</span>
+                  ${escapeHtml(snippet)}
+                </td>
               </tr>
+              ${matchedRow}
             </table>`;
         });
         details += `</div>`;
