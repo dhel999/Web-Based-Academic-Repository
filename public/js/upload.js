@@ -394,36 +394,51 @@ function renderRejection(data) {
       heading = 'Too Many Similar Paragraphs';
       details = `<p>${escapeHtml(data.message)}</p>
         <div style="margin:.75rem 0;">
-          <strong style="color:var(--red);">${data.flagged_count} / ${data.total_paragraphs}</strong>
-          <span class="text-muted"> paragraphs flagged (${data.flagged_ratio}%)</span>
+          <strong style="color:#ef4444;">${data.flagged_count} / ${data.total_paragraphs}</strong>
+          <span style="color:#94a3b8;"> paragraphs flagged (${data.flagged_ratio}%)</span>
         </div>`;
-      if (data.flagged_paragraphs && data.flagged_paragraphs.length > 0) {
-        const normalizedRows = data.flagged_paragraphs
-          .map((fp, i) => normalizeFlaggedParagraph(fp, i))
-          .filter(Boolean);
 
-        if (normalizedRows.length > 0) {
-        details += `<div class="paragraph-list" style="max-height:300px;overflow-y:auto;">`;
-        normalizedRows.forEach((row) => {
-          const hasScore = typeof row.score === 'number' && Number.isFinite(row.score);
-          const col = hasScore
-            ? (row.score >= 70 ? 'var(--red)' : 'var(--yellow)')
-            : 'var(--text-muted)';
+      // Debug: log payload so we can verify data shape
+      console.log('[rejection] flagged_paragraphs payload:', JSON.stringify(data.flagged_paragraphs));
+
+      if (Array.isArray(data.flagged_paragraphs) && data.flagged_paragraphs.length > 0) {
+        details += `<div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">`;
+        data.flagged_paragraphs.forEach((fp, i) => {
+          // Extract fields with broad fallbacks
+          let snippet = '';
+          let title = 'Unknown';
+          let score = NaN;
+
+          if (fp && typeof fp === 'object' && !Array.isArray(fp)) {
+            snippet = String(fp.paragraph_snippet || fp.paragraph_text || fp.snippet || fp.text || fp.content || '').trim();
+            title = String(fp.matched_title || fp.title || fp.matched_document_title || 'Unknown').trim() || 'Unknown';
+            score = parseFloat(fp.similarity_score ?? fp.score ?? NaN);
+          } else if (typeof fp === 'string') {
+            snippet = fp.trim();
+          }
+
+          // Fallback: show raw JSON if snippet is still empty
+          if (!snippet && fp != null) {
+            snippet = JSON.stringify(fp).slice(0, 200);
+          }
+          if (!snippet) snippet = '(No preview available)';
+
+          const hasScore = Number.isFinite(score);
+          const scoreColor = hasScore ? (score >= 70 ? '#ef4444' : '#f59e0b') : '#94a3b8';
+          const scoreText = hasScore ? score.toFixed(1) + '%' : 'N/A';
+
           details += `
-            <div class="para-match-item" style="margin-bottom:.5rem;">
-              <div class="para-header">
-                <span>${escapeHtml(row.label)} — matched "${escapeHtml(row.title)}"</span>
-                <span style="color:${col};font-weight:700;">${hasScore ? `${row.score.toFixed(1)}%` : 'N/A'}</span>
+            <div style="border:1px solid #334155;border-radius:8px;overflow:hidden;margin-bottom:2px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#0f172a;font-size:13px;color:#cbd5e1;">
+                <span style="color:#e2e8f0;">Paragraph ${i + 1} — matched "<span style="color:#38bdf8;">${escapeHtml(title)}</span>"</span>
+                <span style="color:${scoreColor};font-weight:700;white-space:nowrap;margin-left:8px;">${scoreText}</span>
               </div>
-              <div class="para-text highlighted" style="font-size:.82rem;">${escapeHtml(row.snippet)}</div>
+              <div style="padding:10px 12px;font-size:13px;line-height:1.55;color:#e2e8f0;background:rgba(239,68,68,.06);border-left:3px solid #ef4444;">
+                ${escapeHtml(snippet)}
+              </div>
             </div>`;
         });
         details += `</div>`;
-        } else {
-          details += `<div class="para-match-item" style="padding:.75rem 1rem;color:var(--text-muted);">
-            No paragraph preview details were provided by the server.
-          </div>`;
-        }
       }
       break;
 
