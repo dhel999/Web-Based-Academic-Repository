@@ -278,6 +278,77 @@ function escapeHtml(str) {
     .replace(/"/g,'&quot;');
 }
 
+function normalizeFlaggedParagraph(fp, idx) {
+  if (fp == null) return null;
+
+  // Handle plain string responses
+  if (typeof fp === 'string') {
+    const text = fp.trim();
+    if (!text) return null;
+    return {
+      label: `Paragraph ${idx + 1}`,
+      title: 'Unknown',
+      score: null,
+      snippet: text
+    };
+  }
+
+  // Handle array payloads: [snippet, score, title]
+  if (Array.isArray(fp)) {
+    const snippet = String(fp[0] ?? '').trim();
+    const scoreNum = Number(fp[1]);
+    const title = String(fp[2] ?? 'Unknown').trim() || 'Unknown';
+    if (!snippet) return null;
+    return {
+      label: `Paragraph ${idx + 1}`,
+      title,
+      score: Number.isFinite(scoreNum) ? scoreNum : null,
+      snippet
+    };
+  }
+
+  // Object payloads from backend
+  if (typeof fp === 'object') {
+    const snippetRaw =
+      fp.paragraph_snippet ?? fp.paragraph_text ?? fp.snippet ?? fp.text ?? fp.content ?? '';
+    const snippet = String(snippetRaw ?? '').trim();
+
+    const scoreNum = Number(
+      fp.similarity_score ?? fp.score ?? fp.similarity ?? fp.match_score ?? NaN
+    );
+
+    const titleRaw =
+      fp.matched_title ?? fp.title ?? fp.matched_document_title ?? fp.document_title ?? 'Unknown';
+    const title = String(titleRaw ?? 'Unknown').trim() || 'Unknown';
+
+    const paraIndexNum = Number(fp.paragraph_index ?? fp.index ?? NaN);
+    const label = Number.isFinite(paraIndexNum)
+      ? `Paragraph ${paraIndexNum + 1}`
+      : `Paragraph ${idx + 1}`;
+
+    if (!snippet) {
+      // Last-resort diagnostic preview to avoid blank rows.
+      const rawPreview = JSON.stringify(fp);
+      if (!rawPreview || rawPreview === '{}' || rawPreview === '[]') return null;
+      return {
+        label,
+        title,
+        score: Number.isFinite(scoreNum) ? scoreNum : null,
+        snippet: rawPreview.slice(0, 220)
+      };
+    }
+
+    return {
+      label,
+      title,
+      score: Number.isFinite(scoreNum) ? scoreNum : null,
+      snippet
+    };
+  }
+
+  return null;
+}
+
 /**
  * Render a rejection notice when the server blocks an upload (HTTP 409).
  */
@@ -327,22 +398,32 @@ function renderRejection(data) {
           <span class="text-muted"> paragraphs flagged (${data.flagged_ratio}%)</span>
         </div>`;
       if (data.flagged_paragraphs && data.flagged_paragraphs.length > 0) {
+        const normalizedRows = data.flagged_paragraphs
+          .map((fp, i) => normalizeFlaggedParagraph(fp, i))
+          .filter(Boolean);
+
+        if (normalizedRows.length > 0) {
         details += `<div class="paragraph-list" style="max-height:300px;overflow-y:auto;">`;
-        data.flagged_paragraphs.forEach((fp, i) => {
-          const col = fp.similarity_score >= 70 ? 'var(--red)' : 'var(--yellow)';
-          const snippet = fp.paragraph_snippet || fp.paragraph_text || fp.snippet || '';
-          const title = fp.matched_title || fp.title || 'Unknown';
-          const displaySnippet = snippet.trim() || '(No paragraph preview available)';
+        normalizedRows.forEach((row) => {
+          const hasScore = typeof row.score === 'number' && Number.isFinite(row.score);
+          const col = hasScore
+            ? (row.score >= 70 ? 'var(--red)' : 'var(--yellow)')
+            : 'var(--text-muted)';
           details += `
             <div class="para-match-item" style="margin-bottom:.5rem;">
               <div class="para-header">
-                <span>Paragraph ${i + 1} — matched "${escapeHtml(title)}"</span>
-                <span style="color:${col};font-weight:700;">${Number(fp.similarity_score || 0).toFixed(1)}%</span>
+                <span>${escapeHtml(row.label)} — matched "${escapeHtml(row.title)}"</span>
+                <span style="color:${col};font-weight:700;">${hasScore ? `${row.score.toFixed(1)}%` : 'N/A'}</span>
               </div>
-              <div class="para-text highlighted" style="font-size:.82rem;">${escapeHtml(displaySnippet)}</div>
+              <div class="para-text highlighted" style="font-size:.82rem;">${escapeHtml(row.snippet)}</div>
             </div>`;
         });
         details += `</div>`;
+        } else {
+          details += `<div class="para-match-item" style="padding:.75rem 1rem;color:var(--text-muted);">
+            No paragraph preview details were provided by the server.
+          </div>`;
+        }
       }
       break;
 
