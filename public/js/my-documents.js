@@ -47,37 +47,55 @@ function renderGrid(docs) {
   }
 
   emptyState.classList.add('hidden');
-  grid.innerHTML = docs.map(doc => {
+  grid.innerHTML = docs.map((doc, idx) => {
     const score = doc.similarity_score || 0;
     const riskClass = score >= 60 ? 'high' : score >= 30 ? 'medium' : 'low';
     const riskLabel = score >= 60 ? 'High Risk' : score >= 30 ? 'Medium' : 'Clean';
-    const riskColor = score >= 60 ? 'var(--red)' : score >= 30 ? 'var(--yellow)' : 'var(--green)';
+    const riskColor = score >= 60 ? '#EF4444' : score >= 30 ? '#F59E0B' : '#10B981';
+    const riskBg   = score >= 60 ? '#FEF2F2' : score >= 30 ? '#FFFBEB' : '#ECFDF5';
+    const riskBorder = score >= 60 ? '#FECACA' : score >= 30 ? '#FDE68A' : '#A7F3D0';
     const ext = (doc.original_filename || '').split('.').pop().toUpperCase();
     const icon = ext === 'PDF' ? 'fa-file-pdf' : ext === 'DOCX' ? 'fa-file-word' : 'fa-file-lines';
+    const iconGrad = ext === 'PDF' ? 'linear-gradient(135deg,#EF4444,#B91C1C)' : ext === 'DOCX' ? 'linear-gradient(135deg,#3B82F6,#1D4ED8)' : 'linear-gradient(135deg,#10B981,#059669)';
+
+    // SVG arc score ring
+    const r = 20, circ = 2 * Math.PI * r;
+    const dash = (score / 100) * circ;
 
     return `
-      <div class="doc-card">
-        <div class="doc-card-header">
-          <div class="doc-card-icon"><i class="fas ${icon}"></i></div>
-          <div class="doc-card-meta">
-            <span class="doc-card-ext">${ext}</span>
-            <span class="doc-card-date">${formatDate(doc.created_at)}</span>
+      <div class="doc-card-enhanced" style="animation-delay:${idx * 0.07}s">
+        <div class="doc-card-header" style="background:linear-gradient(135deg,${riskBg} 0%,#F0FDF4 100%);border-bottom:1px solid ${riskBorder};min-height:120px;display:flex;align-items:center;justify-content:space-between;padding:1.4rem 1.5rem;">
+          <div class="doc-card-icon-wrap" style="background:${iconGrad};">
+            <i class="fas ${icon}"></i>
+          </div>
+          <div class="doc-score-ring-wrap">
+            <svg width="54" height="54" viewBox="0 0 54 54" style="transform:rotate(-90deg)">
+              <circle cx="27" cy="27" r="${r}" fill="none" stroke="#E5E7EB" stroke-width="5"/>
+              <circle cx="27" cy="27" r="${r}" fill="none" stroke="${riskColor}" stroke-width="5"
+                stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+                stroke-linecap="round"/>
+            </svg>
+            <span class="score-label" style="color:${riskColor};">${score}%</span>
           </div>
         </div>
-        <h3 class="doc-card-title" title="${escapeHtml(doc.title)}">${escapeHtml(doc.title)}</h3>
-        <p class="doc-card-file">${escapeHtml(doc.original_filename)}</p>
-        <div class="doc-card-score">
-          <div class="score-circle" style="border-color:${riskColor};">
-            <span style="color:${riskColor};font-weight:800;">${score}%</span>
+        <div class="doc-card-meta">
+          <h3 class="doc-card-title" title="${escapeHtml(doc.title)}">${escapeHtml(doc.title)}</h3>
+          <div class="doc-card-info-row">
+            <i class="fas fa-file"></i>
+            <span>${escapeHtml(doc.original_filename)}</span>
           </div>
-          <div>
-            <span class="risk-badge risk-${riskClass}" style="font-size:.75rem;">${riskLabel}</span>
-            <span class="text-muted" style="font-size:.75rem;display:block;">Similarity</span>
+          <div class="doc-card-info-row">
+            <i class="fas fa-calendar-alt"></i>
+            <span>${formatDate(doc.created_at)}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-top:.2rem;">
+            <span class="risk-badge risk-${riskClass}" style="font-size:.72rem;padding:.25rem .65rem;">${riskLabel}</span>
+            <span style="font-size:.75rem;color:var(--text-muted);">${score}% similarity</span>
           </div>
         </div>
         <div class="doc-card-actions">
-          <a href="result.html?id=${doc.id}" class="btn btn-primary btn-sm">
-            <i class="fas fa-eye"></i> View Report
+          <a href="result.html?id=${doc.id}" class="btn-view-details">
+            <i class="fas fa-chart-bar"></i> View Report
           </a>
         </div>
       </div>

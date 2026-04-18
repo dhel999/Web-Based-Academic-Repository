@@ -925,7 +925,11 @@ img { max-width: 100%; }
 .nav-user-name { color: var(--text-body); font-weight: 600; font-size: .85rem; white-space: nowrap; }
 
 /* -- Document Grid -------------------------------------------- */
-.doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.4rem; }
+
+/* Score ring label overlay */
+.doc-score-ring-wrap { position: relative; width: 54px; height: 54px; flex-shrink: 0; }
+.doc-score-ring-wrap .score-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 800; }
 
 .doc-card {
   background: var(--surface);
