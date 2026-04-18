@@ -1,11 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academic Repository — Browse Documents</title>
+  <title>Academic Repository â€” Browse Documents</title>
   <link rel="stylesheet" href="css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -26,37 +30,54 @@
 
   <!-- ===== HERO ===== -->
   <header class="hero hero-enhanced">
-    <div class="hero-particles" id="heroParticles"></div>
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
     <div class="hero-content">
-      <div class="hero-badge"><i class="fas fa-shield-halved"></i> Plagiarism Detection Platform</div>
-      <h1>Academic Repository</h1>
-      <p>Design and Development of a Web-Based Academic Repository with Algorithmic Plagiarism Detection Using TF-IDF and Cosine Similarity</p>
-      <div class="hero-stats-row">
-        <div class="hero-stat" id="heroStatDocs">
-          <span class="hero-stat-num">—</span>
-          <span class="hero-stat-label">Documents</span>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <span class="hero-stat-num"><i class="fas fa-brain"></i></span>
-          <span class="hero-stat-label">AI-Powered</span>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <span class="hero-stat-num"><i class="fas fa-globe"></i></span>
-          <span class="hero-stat-label">Internet Check</span>
-        </div>
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        <span>Web-Based Academic Repository</span>
+        <span class="hero-eyebrow-dot"></span>
+      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-line">Academic</span>
+        <span class="hero-title-line hero-title-accent">Repository</span>
+      </h1>
+      <p class="hero-desc">Algorithmic Plagiarism Detection using <strong>TF-IDF</strong> &amp; <strong>Cosine Similarity</strong> &mdash; analyze, compare, and verify academic documents with AI precision.</p>
+      <div class="hero-feature-pills">
+        <span class="hero-pill"><i class="fas fa-fingerprint"></i> TF-IDF Engine</span>
+        <span class="hero-pill"><i class="fas fa-robot"></i> AI Analysis</span>
+        <span class="hero-pill"><i class="fas fa-globe"></i> Internet Scan</span>
+        <span class="hero-pill"><i class="fas fa-shield-halved"></i> Secure Reports</span>
       </div>
       <div class="hero-actions">
-        <a href="login.html" class="btn btn-primary btn-glow" id="heroUploadBtn">
+        <a href="login.html" class="btn hero-btn-primary btn-glow" id="heroUploadBtn">
           <i class="fas fa-upload"></i> Upload File
         </a>
-        <a href="quick-scan.html" class="btn btn-outline">
+        <a href="quick-scan.html" class="btn hero-btn-secondary">
           <i class="fas fa-bolt"></i> Quick Scan
         </a>
-        <a href="#browseSection" class="btn btn-outline">
+        <a href="#browseSection" class="btn hero-btn-ghost">
           <i class="fas fa-book-open"></i> Browse Papers
         </a>
+      </div>
+      <div class="hero-stats-bar">
+        <div class="hero-stat-item" id="heroStatDocs">
+          <i class="fas fa-file-alt"></i>
+          <span class="hero-stat-num-sm">&mdash;</span>
+          <span class="hero-stat-lbl">Documents</span>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat-item">
+          <i class="fas fa-brain"></i>
+          <span class="hero-stat-lbl">AI-Powered</span>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat-item">
+          <i class="fas fa-shield-halved"></i>
+          <span class="hero-stat-lbl">Plagiarism Detection</span>
+        </div>
       </div>
     </div>
   </header>
@@ -64,7 +85,7 @@
   <!-- ===== MAIN CONTENT ===== -->
   <main class="container" style="max-width:1200px;" id="browseSection">
 
-    <!-- ── About Section ── -->
+    <!-- â”€â”€ About Section â”€â”€ -->
     <section class="about-section" id="aboutSection">
       <div class="about-header">
         <span class="section-tag"><i class="fas fa-info-circle"></i> About the System</span>
@@ -76,7 +97,7 @@
         <div class="about-card">
           <div class="about-card-icon"><i class="fas fa-fingerprint"></i></div>
           <h3>TF-IDF & Cosine Similarity</h3>
-          <p>Utilizes Term Frequency–Inverse Document Frequency combined with Cosine Similarity to detect text overlap between documents at the paragraph level.</p>
+          <p>Utilizes Term Frequencyâ€“Inverse Document Frequency combined with Cosine Similarity to detect text overlap between documents at the paragraph level.</p>
         </div>
         <div class="about-card">
           <div class="about-card-icon"><i class="fas fa-robot"></i></div>
@@ -106,7 +127,7 @@
       </div>
     </section>
 
-    <!-- ── How It Works Section ── -->
+    <!-- â”€â”€ How It Works Section â”€â”€ -->
     <section class="how-it-works-section">
       <div class="about-header">
         <span class="section-tag"><i class="fas fa-cogs"></i> How It Works</span>
@@ -148,7 +169,7 @@
     <!-- Search -->
     <section class="search-bar-enhanced">
       <i class="fas fa-search search-icon-lg"></i>
-      <input type="text" id="searchInput" placeholder="Search by title, author, or keyword…" />
+      <input type="text" id="searchInput" placeholder="Search by title, author, or keywordâ€¦" />
       <span class="search-shortcut">Ctrl+K</span>
     </section>
 
@@ -156,7 +177,7 @@
     <section class="doc-grid" id="docGrid">
       <div class="loading-state">
         <div class="loading-spinner"></div>
-        <p>Loading documents…</p>
+        <p>Loading documentsâ€¦</p>
       </div>
     </section>
 
@@ -176,7 +197,7 @@
       <div class="footer-brand">
         <i class="fas fa-graduation-cap"></i> AcadRepo
       </div>
-      <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+      <p>&copy; 2026 AcadRepo â€” Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
       <div class="footer-links">
         <span><i class="fas fa-code"></i> Built with Node.js</span>
         <span><i class="fas fa-database"></i> Supabase</span>
@@ -186,5 +207,111 @@
 
   <script src="js/nav-auth.js"></script>
   <script src="js/client-browse.js"></script>
+
+  <script>
+  // ── Neural Particle Canvas ─────────────────────────────────────────────────
+  (function () {
+    var canvas = document.getElementById('heroCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var particles = [];
+    var MAX = 55;
+
+    function resize() {
+      var h = canvas.parentElement;
+      canvas.width  = h.offsetWidth;
+      canvas.height = h.offsetHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rand(a, b) { return Math.random() * (b - a) + a; }
+
+    function Particle() {
+      this.x  = rand(0, canvas.width);
+      this.y  = rand(0, canvas.height);
+      this.vx = rand(-.35, .35);
+      this.vy = rand(-.35, .35);
+      this.r  = rand(1.5, 3);
+      this.a  = rand(.3, .8);
+    }
+    Particle.prototype.update = function () {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.x < 0) this.x = canvas.width;
+      if (this.x > canvas.width) this.x = 0;
+      if (this.y < 0) this.y = canvas.height;
+      if (this.y > canvas.height) this.y = 0;
+    };
+
+    for (var i = 0; i < MAX; i++) particles.push(new Particle());
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // connections
+      for (var i = 0; i < particles.length; i++) {
+        for (var j = i + 1; j < particles.length; j++) {
+          var dx = particles[i].x - particles[j].x;
+          var dy = particles[i].y - particles[j].y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 130) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(16,185,129,' + ((1 - dist / 130) * .35) + ')';
+            ctx.lineWidth = 0.8;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      // dots
+      particles.forEach(function (p) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(52,211,153,' + p.a + ')';
+        ctx.shadowColor = '#34D399';
+        ctx.shadowBlur = 6;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        p.update();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // ── Scroll-Reveal ──────────────────────────────────────────────────────────
+  (function () {
+    var els = document.querySelectorAll('.about-card, .step-card, .doc-card-enhanced, .section-header');
+    els.forEach(function (el) { el.classList.add('scroll-reveal'); });
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.1 });
+    els.forEach(function (el) { obs.observe(el); });
+  })();
+
+  // ── Typewriter for hero-desc ───────────────────────────────────────────────
+  (function () {
+    var desc = document.querySelector('.hero-desc');
+    if (!desc) return;
+    var original = desc.innerHTML;
+    // Only run once on load
+    desc.style.opacity = '0';
+    setTimeout(function () {
+      desc.style.transition = 'opacity .4s';
+      desc.style.opacity = '1';
+      desc.innerHTML = original;
+    }, 800);
+  })();
+
+  // ── Stat counter animate ─────────────────────────────────────────────────
+  // (handled by client-browse.js, this just adds glow on update)
+  var _origSet = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
+  </script>
+
 </body>
 </html>
+
+

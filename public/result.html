@@ -1,11 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academic Repository — Plagiarism Report</title>
+  <title>Academic Repository â€” Plagiarism Report</title>
   <link rel="stylesheet" href="css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -46,7 +50,7 @@
     <!-- Loading -->
     <div id="loadingState" class="loading-state card">
       <i class="fas fa-spinner fa-spin fa-2x"></i>
-      <p>Fetching report…</p>
+      <p>Fetching reportâ€¦</p>
     </div>
 
     <!-- Error -->
@@ -70,7 +74,7 @@
             <text x="100" y="105" text-anchor="middle" class="gauge-text" id="gaugeText">0%</text>
             <text x="100" y="118" text-anchor="middle" class="gauge-label">Similarity</text>
           </svg>
-          <div class="risk-badge" id="riskBadge">—</div>
+          <div class="risk-badge" id="riskBadge">â€”</div>
         </div>
         <div class="score-details">
           <h2 id="reportDocTitle">Document Report</h2>
@@ -102,7 +106,7 @@
 
       <!-- Highlighted Paragraph Matches -->
       <section class="card enh-card-animate" id="paragraphMatchSection">
-        <h2><i class="fas fa-paragraph"></i> Document Content — Similarity Highlights</h2>
+        <h2><i class="fas fa-paragraph"></i> Document Content â€” Similarity Highlights</h2>
         <p class="card-subtitle">Full document text with highlighted matches. Sources are color-coded by type.</p>
         <div class="para-legend">
           <span class="legend-item"><span class="legend-dot" style="background:#ffe066;"></span> Local Match (Yellow)</span>
@@ -129,7 +133,7 @@
 
       <!-- AI Summary (only shows after running AI check) -->
       <section class="card hidden enh-card-animate" id="aiAnalysisSection">
-        <h2><i class="fas fa-robot"></i> AI Semantic Analysis — Summary</h2>
+        <h2><i class="fas fa-robot"></i> AI Semantic Analysis â€” Summary</h2>
         <div id="aiContent"></div>
       </section>
 
@@ -138,7 +142,7 @@
   </main>
 
   <footer class="footer">
-    <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+    <p>&copy; 2026 AcadRepo â€” Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
   </footer>
 
   <script src="js/nav-auth.js"></script>
@@ -148,3 +152,4 @@
   </script>
 </body>
 </html>
+

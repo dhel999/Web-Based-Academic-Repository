@@ -173,12 +173,18 @@ Analyze the provided academic text paragraphs for:
 
 Important guidance:
 - Be sensitive to AI-generated or AI-assisted text even when external sources are unavailable.
-- If many paragraphs are likely AI-generated, raise plagiarism_percentage and risk_level accordingly.
-- paragraph_index must reference the numbered paragraph in the input list.
+- If many paragraphs are likely AI-generated, raise plagiarism_percentage and ai_generated_probability accordingly.
+- paragraph_index must reference the numbered paragraph in the input list (1-based).
+- confidence must be a realistic number 0-100 specific to each paragraph, NOT a fixed value.
+  * 85-100: near-certain AI-generated or directly plagiarized
+  * 65-84: highly suspicious phrasing, likely AI-assisted
+  * 40-64: moderate signals, possibly paraphrased
+  * 0-39: minor concerns or low confidence
 
 Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON) with this structure:
 {
   "plagiarism_percentage": <number 0-100>,
+  "ai_generated_probability": <number 0-100>,
   "risk_level": "<low|medium|high>",
   "explanation": "<detailed explanation of findings>",
   "suggestions": "<specific suggestions to improve originality>",
@@ -186,6 +192,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
     {
       "paragraph_index": <number>,
       "risk": "<low|medium|high>",
+      "confidence": <number 0-100>,
       "reason": "<why this paragraph is flagged>"
     }
   ]
@@ -243,9 +250,14 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
       if (idx < 0 || idx >= sampleParagraphs.length) return null;
       const mapped = sampleParagraphs[idx];
       if (!mapped) return null;
+      const risk = normalizeRisk(fp?.risk);
+      // Use GPT-provided confidence; fall back to risk-based defaults only if missing
+      const riskDefault = risk === 'high' ? 82 : risk === 'medium' ? 58 : 28;
+      const confidence = clamp(Number(fp?.confidence) || 0, 1, 99) || riskDefault;
       return {
         paragraph_index: mapped.index,
-        risk: normalizeRisk(fp?.risk),
+        risk,
+        confidence,
         reason: String(fp?.reason || 'Potential AI-assisted or plagiarized writing pattern')
       };
     })
@@ -286,7 +298,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
     .map(fp => ({
       document_id: documentId,
       matched_document_id: null,
-      similarity_score: fp.risk === 'high' ? 80 : 50,
+      similarity_score: fp.confidence || (fp.risk === 'high' ? 82 : 58),
       matched_paragraph: paragraphEntries[fp.paragraph_index]?.text || null,
       source: 'openai'
     }));

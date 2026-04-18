@@ -68,7 +68,7 @@ async function checkPlagiarism(req, res) {
           aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
             ...fp,
             text: paragraphs[fp.paragraph_index] || '',
-            score: fp.risk === 'high' ? 80 : fp.risk === 'medium' ? 50 : 20
+            score: fp.confidence || (fp.risk === 'high' ? 82 : fp.risk === 'medium' ? 58 : 28)
           }));
         }
         response.openai_check = aiResult;

@@ -53,8 +53,9 @@ async function loadPublicDocuments() {
 
     allDocs = data.documents || [];
 
-    // Update hero stat counter
-    const statEl = document.querySelector('#heroStatDocs .hero-stat-num');
+    // Update hero stat counter (supports both old and new element classes)
+    const statEl = document.querySelector('#heroStatDocs .hero-stat-num') ||
+                   document.querySelector('#heroStatDocs .hero-stat-num-sm');
     if (statEl) statEl.textContent = allDocs.length;
 
     renderGrid(allDocs);

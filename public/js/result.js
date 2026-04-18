@@ -404,7 +404,11 @@ function renderPaperView() {
       const blockNorm = block.replace(/\s+/g, ' ').trim().toLowerCase();
       const matchedHint = aiTextHints.find(h => blockNorm.includes(h) || h.includes(blockNorm.slice(0, Math.min(100, blockNorm.length))));
       if (matchedHint) {
-        ai = { score: 50, reason: 'AI flagged by semantic text match' };
+        // Use actual average score from AI DB results instead of fixed 50
+        const avgAiScore = aiResults.length > 0
+          ? Math.round(aiResults.reduce((s, r) => s + (r.similarity_score || 58), 0) / aiResults.length)
+          : 58;
+        ai = { score: avgAiScore, reason: 'AI flagged by semantic text match' };
       }
     }
     const internet = matchIdx >= 0 ? internetMatchMap.get(matchIdx) : null;
@@ -601,7 +605,9 @@ function renderAIAnalysis(ai) {
       idx = findParagraphIndex(fp.text);
     }
     if (idx >= 0) {
-      const score = fp.risk === 'high' ? 85 : fp.risk === 'medium' ? 55 : 30;
+      // Use confidence from AI service; fall back to risk-based defaults only if absent
+      const riskDefault = fp.risk === 'high' ? 85 : fp.risk === 'medium' ? 58 : 30;
+      const score = fp.score || fp.confidence || riskDefault;
       aiMatchMap.set(idx, {
         score: score,
         reason: fp.reason || 'AI flagged'

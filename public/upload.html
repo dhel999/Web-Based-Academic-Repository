@@ -1,11 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academic Repository — Upload Document</title>
+  <title>Academic Repository â€” Upload Document</title>
   <link rel="stylesheet" href="css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -50,7 +54,7 @@
       <h2><i class="fas fa-search"></i> Quick Title Check</h2>
       <p class="card-subtitle">Check if a similar research title already exists before uploading.</p>
       <div class="input-row">
-        <input type="text" id="titleCheckInput" placeholder="Enter research title to check…" />
+        <input type="text" id="titleCheckInput" placeholder="Enter research title to checkâ€¦" />
         <button class="btn btn-secondary" id="btnCheckTitle">
           <i class="fas fa-magnifying-glass"></i> Check Title
         </button>
@@ -66,7 +70,7 @@
       <form id="uploadForm" enctype="multipart/form-data" novalidate>
         <div class="form-group">
           <label for="docTitle">Research Title <span class="required">*</span></label>
-          <input type="text" id="docTitle" name="title" placeholder="Enter the full research title…" required />
+          <input type="text" id="docTitle" name="title" placeholder="Enter the full research titleâ€¦" required />
         </div>
 
         <div class="input-row">
@@ -86,7 +90,7 @@
 
         <div class="form-group">
           <label for="docAbstract">Abstract / Description</label>
-          <textarea id="docAbstract" name="abstract" rows="4" placeholder="Provide a brief summary or abstract of the document…" style="width:100%;background:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:.7rem 1rem;color:var(--text);font-size:.95rem;outline:none;resize:vertical;font-family:inherit;transition:border-color .2s;"></textarea>
+          <textarea id="docAbstract" name="abstract" rows="4" placeholder="Provide a brief summary or abstract of the documentâ€¦" style="width:100%;background:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:.7rem 1rem;color:var(--text);font-size:.95rem;outline:none;resize:vertical;font-family:inherit;transition:border-color .2s;"></textarea>
         </div>
 
         <div class="form-group">
@@ -96,7 +100,7 @@
             <div class="drop-zone-prompt" id="dropPrompt">
               <i class="fas fa-cloud-arrow-up fa-2x"></i>
               <p>Drag & drop or <span class="link-text">browse</span></p>
-              <small>PDF, DOCX, TXT — max 20 MB</small>
+              <small>PDF, DOCX, TXT â€” max 20 MB</small>
             </div>
             <div class="drop-zone-file hidden" id="filePreview">
               <i class="fas fa-file-check fa-2x text-success"></i>
@@ -148,7 +152,7 @@
   </main>
 
   <footer class="footer">
-    <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+    <p>&copy; 2026 AcadRepo â€” Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
   </footer>
 
   <script src="js/auth-guard.js"></script>
@@ -158,3 +162,4 @@
   </script>
 </body>
 </html>
+
