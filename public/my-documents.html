@@ -11,82 +11,191 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* ── Notebook page override (My Documents only) ─────────── */
+    /* ══════════════════════════════════════════════
+       NOTEBOOK DESIGN — My Documents page only
+    ══════════════════════════════════════════════ */
+
+    /* Warm desk/table surface */
     body {
-      background: #ffffff;
+      background: #e8e0d5;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(200,190,170,.35) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(180,170,155,.25) 0%, transparent 50%);
     }
 
-    /* Subtle notebook ruled-line texture on the main area */
+    /* Main becomes the notebook outer wrapper */
     main.container {
+      background: transparent;
+      padding: 2rem 1.5rem 3rem;
+      max-width: 1080px;
+    }
+
+    /* The notebook "book" */
+    .notebook-page {
+      background: #fff;
+      border-radius: 4px 12px 12px 4px;
+      box-shadow:
+        -6px 0 0 #1a3a2a,
+        0 4px 6px rgba(0,0,0,.12),
+        4px 8px 24px rgba(0,0,0,.18),
+        8px 12px 40px rgba(0,0,0,.10);
+      display: flex;
+      position: relative;
+      overflow: visible;
+      min-height: 80vh;
+    }
+
+    /* Spiral binding strip */
+    .nb-binding {
+      width: 46px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #1a3a2a 0%, #0d2218 100%);
+      border-radius: 4px 0 0 4px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 0;
+      gap: 28px;
+    }
+
+    /* Spiral rings */
+    .nb-ring {
+      width: 26px;
+      height: 26px;
+      border: 4px solid #4ade80;
+      border-radius: 50%;
+      background: #e8e0d5;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.4);
+      flex-shrink: 0;
+    }
+
+    /* The actual lined paper area */
+    .nb-paper {
+      flex: 1;
+      padding: 2rem 2.5rem 2.5rem 2rem;
       background:
+        /* Red margin line */
+        linear-gradient(to right, transparent 59px, #ffb3b3 59px, #ffb3b3 61px, transparent 61px),
+        /* Ruled lines */
         repeating-linear-gradient(
           to bottom,
           transparent,
           transparent 31px,
-          #E8F5EC 31px,
-          #E8F5EC 32px
+          #c8e6f5 31px,
+          #c8e6f5 32px
         );
-      background-attachment: local;
-      padding-top: 1.75rem;
-      padding-bottom: 2.5rem;
+      background-color: #fff;
+      border-radius: 0 12px 12px 0;
+      position: relative;
     }
 
-    /* Red margin line on left */
-    main.container::before {
+    /* Notebook title area at top of paper */
+    .nb-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      padding-bottom: .75rem;
+      border-bottom: 2px solid #c8e6f5;
+    }
+
+    .nb-page-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #0d2218;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .nb-page-title i { color: #10B981; }
+
+    .nb-date-tag {
+      font-size: .75rem;
+      color: #9CA3AF;
+      font-style: italic;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Stats row — looks like ruled index cards */
+    .stats-row {
+      margin-bottom: 1.75rem;
+    }
+
+    .stat-card {
+      background: #fff !important;
+      border: 1px solid #e0e0e0 !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04) !important;
+      border-radius: 8px !important;
+      position: relative;
+    }
+
+    /* Tiny tab on top of each stat card */
+    .stat-card::before {
       content: '';
-      position: fixed;
-      left: calc((100vw - 1140px) / 2 - 1px);
-      top: 64px;
-      bottom: 0;
-      width: 2px;
-      background: rgba(239, 100, 100, .18);
-      pointer-events: none;
-      z-index: 0;
+      position: absolute;
+      top: -1px; left: 12px;
+      width: 30px; height: 4px;
+      border-radius: 4px 4px 0 0;
     }
 
-    /* Cards lift off the lined background */
-    .stat-card,
-    .doc-card-enhanced,
-    .doc-card-enhanced .doc-card-actions {
-      background: #ffffff;
-    }
+    .stat-card:nth-child(1)::before { background: #6366F1; }
+    .stat-card:nth-child(2)::before { background: #10B981; }
+    .stat-card:nth-child(3)::before { background: #F59E0B; }
+    .stat-card:nth-child(4)::before { background: #EF4444; }
 
-    /* Search bar white on white bg */
+    /* Search bar */
     .nb-search-wrap {
-      background: #ffffff;
+      background: #fff;
       border: 1.5px solid #D1D5DB;
-      border-radius: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
     }
     .nb-search-wrap:focus-within {
       border-color: #10B981;
       box-shadow: 0 0 0 3px rgba(16,185,129,.12);
     }
 
-    /* Stats row cards — white paper look */
-    .stat-card {
-      box-shadow: 0 2px 10px rgba(0,0,0,.07);
-      border-radius: 14px;
+    /* Section label — like a handwritten heading */
+    .nb-section-label {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #10B981;
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .nb-section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #c8e6f5;
     }
 
-    /* Doc grid cards */
+    /* Doc cards on the paper */
     .doc-card-enhanced {
-      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      background: #fff !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.05) !important;
+      border: 1px solid #e5e7eb !important;
     }
     .doc-card-enhanced:hover {
-      box-shadow: 0 8px 32px rgba(16,185,129,.18), 0 2px 8px rgba(0,0,0,.06);
+      box-shadow: 0 6px 24px rgba(16,185,129,.2), 0 2px 8px rgba(0,0,0,.06) !important;
+      border-color: #6EE7B7 !important;
     }
 
-    /* Footer bright white */
+    /* Footer */
     .footer {
-      background: #ffffff;
-      border-top: 1.5px solid #E5E7EB;
-    }
-
-    /* Hero stays dark green — override body bg only below hero */
-    .hero.hero-enhanced {
-      position: relative;
-      z-index: 1;
+      background: transparent;
+      border-top: none;
+      color: #a09080;
+      font-size: .78rem;
+      text-align: center;
+      padding: 1rem;
     }
   </style>
 </head>
@@ -127,64 +236,83 @@
 
   <!-- ===== MAIN ===== -->
   <main class="container">
+    <div class="notebook-page">
 
-    <!-- Stats Row -->
-    <div class="stats-row" id="statsRow" style="margin-bottom:1.5rem;">
-      <div class="stat-card enh-card-animate" style="border-left:4px solid #6366F1;">
-        <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#6366F1;"><i class="fas fa-file-lines"></i></div>
-        <div style="display:flex;flex-direction:column;">
-          <span style="font-size:1.9rem;font-weight:800;line-height:1;color:var(--text);font-family:'Poppins',sans-serif;" id="statTotal">0</span>
-          <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">Total Documents</span>
-        </div>
-      </div>
-      <div class="stat-card enh-card-animate" style="border-left:4px solid #10B981;">
-        <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#10B981;"><i class="fas fa-circle-check"></i></div>
-        <div style="display:flex;flex-direction:column;">
-          <span style="font-size:1.9rem;font-weight:800;line-height:1;color:#10B981;font-family:'Poppins',sans-serif;" id="statClean">0</span>
-          <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">Clean (&lt; 30%)</span>
-        </div>
-      </div>
-      <div class="stat-card enh-card-animate" style="border-left:4px solid #F59E0B;">
-        <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#F59E0B;"><i class="fas fa-triangle-exclamation"></i></div>
-        <div style="display:flex;flex-direction:column;">
-          <span style="font-size:1.9rem;font-weight:800;line-height:1;color:#F59E0B;font-family:'Poppins',sans-serif;" id="statMedium">0</span>
-          <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">Medium (30–60%)</span>
-        </div>
-      </div>
-      <div class="stat-card enh-card-animate" style="border-left:4px solid #EF4444;">
-        <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#EF4444;"><i class="fas fa-flag"></i></div>
-        <div style="display:flex;flex-direction:column;">
-          <span style="font-size:1.9rem;font-weight:800;line-height:1;color:#EF4444;font-family:'Poppins',sans-serif;" id="statHigh">0</span>
-          <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">High (&gt; 60%)</span>
-        </div>
-      </div>
-    </div>
+      <!-- Spiral binding -->
+      <div class="nb-binding" id="nbBinding"></div>
 
-    <!-- Search -->
-    <section class="enh-card-animate" style="margin-bottom:1.5rem;">
-      <div class="nb-search-wrap" style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem .5rem 1.1rem;">
-        <i class="fas fa-magnifying-glass" style="color:var(--text-light);font-size:.95rem;"></i>
-        <input type="text" id="searchInput" placeholder="Search your documents by title…" style="flex:1;border:none;outline:none;background:transparent;font-size:.93rem;color:var(--text-body);font-family:'Inter',sans-serif;padding:.5rem 0;" />
-        <button class="btn btn-primary" id="btnSearch" style="padding:.5rem 1.1rem;border-radius:10px;font-size:.85rem;">
-          <i class="fas fa-magnifying-glass"></i> Search
-        </button>
-      </div>
-    </section>
+      <!-- Lined paper content -->
+      <div class="nb-paper">
 
-    <!-- Document Grid -->
-    <section class="doc-grid" id="docGrid">
-      <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading your documents…</p></div>
-    </section>
+        <!-- Page header line -->
+        <div class="nb-page-header">
+          <div class="nb-page-title"><i class="fas fa-book-open"></i> My Documents</div>
+          <span class="nb-date-tag" id="nbDate"></span>
+        </div>
 
-    <!-- Empty State -->
-    <section class="card empty-state hidden" id="emptyState" style="padding:3.5rem 2rem;text-align:center;">
-      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
-        <i class="fas fa-folder-open" style="font-size:2rem;color:#10B981;"></i>
-      </div>
-      <h3 style="margin-bottom:.5rem;font-size:1.15rem;">No documents yet</h3>
-      <p class="text-muted" style="margin-bottom:1.5rem;max-width:320px;margin-left:auto;margin-right:auto;">Upload your first research document to check for plagiarism and get a detailed similarity report.</p>
-      <a href="upload.html" class="btn btn-primary" style="padding:.75rem 1.75rem;"><i class="fas fa-upload"></i> Upload Document</a>
-    </section>
+        <!-- Stats Row -->
+        <div class="nb-section-label"><i class="fas fa-chart-bar"></i> Overview</div>
+        <div class="stats-row" id="statsRow" style="margin-bottom:1.75rem;">
+          <div class="stat-card enh-card-animate" style="border-left:4px solid #6366F1;">
+            <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#6366F1;"><i class="fas fa-file-lines"></i></div>
+            <div style="display:flex;flex-direction:column;">
+              <span style="font-size:1.9rem;font-weight:800;line-height:1;color:var(--text);font-family:'Poppins',sans-serif;" id="statTotal">0</span>
+              <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">Total Documents</span>
+            </div>
+          </div>
+          <div class="stat-card enh-card-animate" style="border-left:4px solid #10B981;">
+            <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#10B981;"><i class="fas fa-circle-check"></i></div>
+            <div style="display:flex;flex-direction:column;">
+              <span style="font-size:1.9rem;font-weight:800;line-height:1;color:#10B981;font-family:'Poppins',sans-serif;" id="statClean">0</span>
+              <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">Clean (&lt; 30%)</span>
+            </div>
+          </div>
+          <div class="stat-card enh-card-animate" style="border-left:4px solid #F59E0B;">
+            <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#F59E0B;"><i class="fas fa-triangle-exclamation"></i></div>
+            <div style="display:flex;flex-direction:column;">
+              <span style="font-size:1.9rem;font-weight:800;line-height:1;color:#F59E0B;font-family:'Poppins',sans-serif;" id="statMedium">0</span>
+              <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">Medium (30–60%)</span>
+            </div>
+          </div>
+          <div class="stat-card enh-card-animate" style="border-left:4px solid #EF4444;">
+            <div class="stat-icon" style="width:44px;height:44px;border-radius:12px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#EF4444;"><i class="fas fa-flag"></i></div>
+            <div style="display:flex;flex-direction:column;">
+              <span style="font-size:1.9rem;font-weight:800;line-height:1;color:#EF4444;font-family:'Poppins',sans-serif;" id="statHigh">0</span>
+              <span style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;">High (&gt; 60%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="nb-section-label"><i class="fas fa-magnifying-glass"></i> Search</div>
+        <div class="enh-card-animate" style="margin-bottom:1.75rem;">
+          <div class="nb-search-wrap" style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem .5rem 1.1rem;">
+            <i class="fas fa-magnifying-glass" style="color:var(--text-light);font-size:.95rem;"></i>
+            <input type="text" id="searchInput" placeholder="Search your documents by title…" style="flex:1;border:none;outline:none;background:transparent;font-size:.93rem;color:var(--text-body);font-family:'Inter',sans-serif;padding:.5rem 0;" />
+            <button class="btn btn-primary" id="btnSearch" style="padding:.5rem 1.1rem;border-radius:8px;font-size:.85rem;">
+              <i class="fas fa-magnifying-glass"></i> Search
+            </button>
+          </div>
+        </div>
+
+        <!-- Document Grid -->
+        <div class="nb-section-label"><i class="fas fa-layer-group"></i> Papers</div>
+        <section class="doc-grid" id="docGrid">
+          <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading your documents…</p></div>
+        </section>
+
+        <!-- Empty State -->
+        <section class="card empty-state hidden" id="emptyState" style="padding:3.5rem 2rem;text-align:center;background:#fff;border:1px dashed #D1D5DB;">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+            <i class="fas fa-folder-open" style="font-size:2rem;color:#10B981;"></i>
+          </div>
+          <h3 style="margin-bottom:.5rem;font-size:1.15rem;">No documents yet</h3>
+          <p class="text-muted" style="margin-bottom:1.5rem;max-width:320px;margin-left:auto;margin-right:auto;">Upload your first research document to check for plagiarism and get a detailed similarity report.</p>
+          <a href="upload.html" class="btn btn-primary" style="padding:.75rem 1.75rem;"><i class="fas fa-upload"></i> Upload Document</a>
+        </section>
+
+      </div><!-- /nb-paper -->
+    </div><!-- /notebook-page -->
   </main>
 
   <footer class="footer">
@@ -194,7 +322,26 @@
   <script src="js/auth-guard.js"></script>
   <script src="js/my-documents.js"></script>
   <script>
+    // Hero particles
     (function(){const c=document.getElementById('heroParticles');if(!c)return;for(let i=0;i<20;i++){const p=document.createElement('div');p.className='hero-particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(6+Math.random()*8)+'s';p.style.animationDelay=(Math.random()*6)+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p);}})();
+
+    // Spiral rings — fill binding height
+    (function(){
+      const b = document.getElementById('nbBinding');
+      if (!b) return;
+      const count = Math.floor((window.innerHeight * 0.85) / 56);
+      for (let i = 0; i < Math.max(count, 14); i++) {
+        const r = document.createElement('div');
+        r.className = 'nb-ring';
+        b.appendChild(r);
+      }
+    })();
+
+    // Page date
+    (function(){
+      const el = document.getElementById('nbDate');
+      if (el) el.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    })();
   </script>
 </body>
 </html>
