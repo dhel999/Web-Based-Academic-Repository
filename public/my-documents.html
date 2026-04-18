@@ -10,6 +10,85 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Notebook page override (My Documents only) ─────────── */
+    body {
+      background: #ffffff;
+    }
+
+    /* Subtle notebook ruled-line texture on the main area */
+    main.container {
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent,
+          transparent 31px,
+          #E8F5EC 31px,
+          #E8F5EC 32px
+        );
+      background-attachment: local;
+      padding-top: 1.75rem;
+      padding-bottom: 2.5rem;
+    }
+
+    /* Red margin line on left */
+    main.container::before {
+      content: '';
+      position: fixed;
+      left: calc((100vw - 1140px) / 2 - 1px);
+      top: 64px;
+      bottom: 0;
+      width: 2px;
+      background: rgba(239, 100, 100, .18);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Cards lift off the lined background */
+    .stat-card,
+    .doc-card-enhanced,
+    .doc-card-enhanced .doc-card-actions {
+      background: #ffffff;
+    }
+
+    /* Search bar white on white bg */
+    .nb-search-wrap {
+      background: #ffffff;
+      border: 1.5px solid #D1D5DB;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .nb-search-wrap:focus-within {
+      border-color: #10B981;
+      box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+    }
+
+    /* Stats row cards — white paper look */
+    .stat-card {
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      border-radius: 14px;
+    }
+
+    /* Doc grid cards */
+    .doc-card-enhanced {
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    }
+    .doc-card-enhanced:hover {
+      box-shadow: 0 8px 32px rgba(16,185,129,.18), 0 2px 8px rgba(0,0,0,.06);
+    }
+
+    /* Footer bright white */
+    .footer {
+      background: #ffffff;
+      border-top: 1.5px solid #E5E7EB;
+    }
+
+    /* Hero stays dark green — override body bg only below hero */
+    .hero.hero-enhanced {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
 </head>
 <body>
 
@@ -83,7 +162,7 @@
 
     <!-- Search -->
     <section class="enh-card-animate" style="margin-bottom:1.5rem;">
-      <div style="display:flex;align-items:center;gap:.75rem;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.5rem .75rem .5rem 1.1rem;box-shadow:var(--shadow-sm);transition:border-color .2s;" onfocus="this.style.borderColor='var(--indigo-light)'" onblur="this.style.borderColor='var(--border)'">
+      <div class="nb-search-wrap" style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem .5rem 1.1rem;">
         <i class="fas fa-magnifying-glass" style="color:var(--text-light);font-size:.95rem;"></i>
         <input type="text" id="searchInput" placeholder="Search your documents by title…" style="flex:1;border:none;outline:none;background:transparent;font-size:.93rem;color:var(--text-body);font-family:'Inter',sans-serif;padding:.5rem 0;" />
         <button class="btn btn-primary" id="btnSearch" style="padding:.5rem 1.1rem;border-radius:10px;font-size:.85rem;">
