@@ -630,20 +630,21 @@ img { max-width: 100%; }
 /* -- Doc Paper View (functional � preserve exactly) ----------- */
 .doc-paper-view {
   background: #ffffff;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 3rem 3.5rem;
   color: #1a1a1a;
   font-family: 'Times New Roman', 'Georgia', serif;
   font-size: 1rem;
-  line-height: 2;
-  box-shadow: 0 4px 24px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.05);
-  max-height: 85vh;
+  line-height: 1.9;
+  box-shadow: 0 2px 12px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.06);
+  max-height: 78vh;
   overflow-y: auto;
   position: relative;
+  border: 1px solid #e0e0e0;
 }
 
 @media (min-width: 768px) {
-  .doc-paper-view { padding: 3.5rem 4rem; max-width: 850px; margin: 0 auto; }
+  .doc-paper-view { padding: 3.5rem 4.5rem; max-width: 860px; margin: 0 auto; }
 }
 
 .doc-paper-view::-webkit-scrollbar { width: 8px; }
@@ -1532,6 +1533,69 @@ img { max-width: 100%; }
 /* -- How It Works -- */
 .how-it-works-section { margin-bottom: 3rem; }
 
+/* Vertical two-column layout */
+.hiw-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 3rem;
+  align-items: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.75rem 2.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.hiw-header-col { display: flex; flex-direction: column; gap: 1rem; position: sticky; top: 6rem; }
+.hiw-title { font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1.2; margin: .25rem 0 0; font-family: 'Poppins', sans-serif; }
+.hiw-title-accent { color: var(--indigo-mid); }
+.hiw-subtitle { font-size: .9rem; color: var(--text-muted); line-height: 1.6; }
+.hiw-cta-btn { align-self: flex-start; margin-top: .5rem; background: linear-gradient(135deg, var(--indigo-mid), var(--indigo-dark)); color: #fff; padding: .6rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: .9rem; text-decoration: none; display: inline-flex; align-items: center; gap: .5rem; transition: opacity .2s, transform .2s; }
+.hiw-cta-btn:hover { opacity: .88; transform: translateY(-2px); }
+
+.hiw-steps-col { display: flex; flex-direction: column; gap: 0; }
+
+.hiw-step { display: flex; gap: 1.25rem; }
+.hiw-step-left { display: flex; flex-direction: column; align-items: center; }
+.hiw-step-num {
+  width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--indigo-mid), var(--indigo-dark));
+  color: #fff; font-weight: 800; font-size: .95rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-indigo);
+  font-family: 'Poppins', sans-serif;
+  position: relative; z-index: 1;
+}
+.hiw-step-line { flex: 1; width: 2px; background: linear-gradient(to bottom, var(--indigo-mid), transparent); margin: 4px 0; min-height: 32px; }
+
+.hiw-step-body {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  flex: 1;
+  margin-bottom: 1rem;
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+}
+.hiw-step-body:hover { border-color: var(--indigo-light); box-shadow: var(--shadow-lg); transform: translateX(4px); }
+
+.hiw-step-icon { width: 36px; height: 36px; border-radius: 9px; background: var(--indigo-pale); display: flex; align-items: center; justify-content: center; color: var(--indigo-mid); font-size: 1rem; margin-bottom: .6rem; }
+.hiw-step-body h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .3rem; font-family: 'Poppins', sans-serif; }
+.hiw-step-body p { font-size: .83rem; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+.hiw-step-last .hiw-step-body { margin-bottom: 0; }
+
+@media (max-width: 860px) {
+  .hiw-layout { grid-template-columns: 1fr; gap: 1.75rem; padding: 2rem 1.5rem; }
+  .hiw-header-col { position: static; }
+  .hiw-title { font-size: 1.5rem; }
+}
+@media (max-width: 640px) {
+  .hiw-layout { padding: 1.5rem 1rem; }
+}
+
+/* Legacy (kept for backward compat) */
 .steps-grid { display: flex; align-items: center; justify-content: center; gap: .75rem; }
 
 .step-card {
@@ -1558,8 +1622,6 @@ img { max-width: 100%; }
 @media (max-width: 640px) {
   .about-grid { grid-template-columns: 1fr; }
   .about-header h2 { font-size: 1.35rem; }
-  .steps-grid { flex-direction: column; }
-  .step-connector { transform: rotate(90deg); }
   .step-card { max-width: 100%; width: 100%; }
 }
 

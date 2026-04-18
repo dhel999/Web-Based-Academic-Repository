@@ -175,11 +175,13 @@ Important guidance:
 - Be sensitive to AI-generated or AI-assisted text even when external sources are unavailable.
 - If many paragraphs are likely AI-generated, raise plagiarism_percentage and ai_generated_probability accordingly.
 - paragraph_index must reference the numbered paragraph in the input list (1-based).
-- confidence must be a realistic number 0-100 specific to each paragraph, NOT a fixed value.
-  * 85-100: near-certain AI-generated or directly plagiarized
-  * 65-84: highly suspicious phrasing, likely AI-assisted
-  * 40-64: moderate signals, possibly paraphrased
-  * 0-39: minor concerns or low confidence
+- confidence must be a realistic number 0-100 specific to each paragraph, NOT a fixed value and NEVER exactly 50.
+  * 88-100: near-certain AI-generated or directly plagiarized
+  * 70-87: highly suspicious phrasing, likely AI-assisted
+  * 55-69: moderate signals, possibly paraphrased or AI-assisted
+  * 30-54: minor signals, possibly original with some templated phrasing
+  * 0-29: very low confidence, likely original
+  IMPORTANT: Do not use 50 as a default. Assign specific values based on actual paragraph signals.
 
 Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON) with this structure:
 {
@@ -252,8 +254,10 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
       if (!mapped) return null;
       const risk = normalizeRisk(fp?.risk);
       // Use GPT-provided confidence; fall back to risk-based defaults only if missing
-      const riskDefault = risk === 'high' ? 82 : risk === 'medium' ? 58 : 28;
-      const confidence = clamp(Number(fp?.confidence) || 0, 1, 99) || riskDefault;
+      const riskDefault = risk === 'high' ? 82 : risk === 'medium' ? 62 : 28;
+      const rawConf = clamp(Number(fp?.confidence) || 0, 1, 99);
+      // If GPT returns exactly 50 (its neutral default) or 0, use risk-based value instead
+      const confidence = (rawConf === 50 || rawConf === 0) ? riskDefault : rawConf;
       return {
         paragraph_index: mapped.index,
         risk,
@@ -298,7 +302,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
     .map(fp => ({
       document_id: documentId,
       matched_document_id: null,
-      similarity_score: fp.confidence || (fp.risk === 'high' ? 82 : 58),
+      similarity_score: (fp.confidence && fp.confidence !== 50) ? fp.confidence : (fp.risk === 'high' ? 82 : fp.risk === 'medium' ? 62 : 30),
       matched_paragraph: paragraphEntries[fp.paragraph_index]?.text || null,
       source: 'openai'
     }));

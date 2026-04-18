@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academic Repository â€” Browse Documents</title>
+  <title>Academic Repository — Browse Documents</title>
   <link rel="stylesheet" href="css/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -97,7 +97,7 @@
         <div class="about-card">
           <div class="about-card-icon"><i class="fas fa-fingerprint"></i></div>
           <h3>TF-IDF & Cosine Similarity</h3>
-          <p>Utilizes Term Frequencyâ€“Inverse Document Frequency combined with Cosine Similarity to detect text overlap between documents at the paragraph level.</p>
+          <p>Utilizes Term Frequency–Inverse Document Frequency combined with Cosine Similarity to detect text overlap between documents at the paragraph level.</p>
         </div>
         <div class="about-card">
           <div class="about-card-icon"><i class="fas fa-robot"></i></div>
@@ -129,33 +129,57 @@
 
     <!-- â”€â”€ How It Works Section â”€â”€ -->
     <section class="how-it-works-section">
-      <div class="about-header">
-        <span class="section-tag"><i class="fas fa-cogs"></i> How It Works</span>
-        <h2>Simple 4-Step Process</h2>
-      </div>
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-number">1</div>
-          <h4>Upload</h4>
-          <p>Upload your PDF or DOCX academic paper with details like author, course, and abstract.</p>
+      <div class="hiw-layout">
+        <div class="hiw-header-col">
+          <span class="section-tag"><i class="fas fa-cogs"></i> How It Works</span>
+          <h2 class="hiw-title">Simple<br><span class="hiw-title-accent">4-Step Process</span></h2>
+          <p class="hiw-subtitle">From upload to detailed report — get results in seconds.</p>
+          <a href="upload.html" class="btn hiw-cta-btn"><i class="fas fa-rocket"></i> Get Started</a>
         </div>
-        <div class="step-connector"><i class="fas fa-arrow-right"></i></div>
-        <div class="step-card">
-          <div class="step-number">2</div>
-          <h4>Analyze</h4>
-          <p>The system extracts text and runs TF-IDF & Cosine Similarity against all stored documents.</p>
-        </div>
-        <div class="step-connector"><i class="fas fa-arrow-right"></i></div>
-        <div class="step-card">
-          <div class="step-number">3</div>
-          <h4>Detect</h4>
-          <p>AI analysis and internet search provide additional plagiarism detection layers.</p>
-        </div>
-        <div class="step-connector"><i class="fas fa-arrow-right"></i></div>
-        <div class="step-card">
-          <div class="step-number">4</div>
-          <h4>Report</h4>
-          <p>View a detailed similarity report with matching paragraphs, scores, and source references.</p>
+        <div class="hiw-steps-col">
+          <div class="hiw-step">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">1</div>
+              <div class="hiw-step-line"></div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-upload"></i></div>
+              <h4>Upload Document</h4>
+              <p>Submit your PDF or DOCX academic paper with author details, course, and abstract.</p>
+            </div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">2</div>
+              <div class="hiw-step-line"></div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-brain"></i></div>
+              <h4>Analyze Text</h4>
+              <p>The system extracts text and runs TF-IDF &amp; Cosine Similarity against all stored documents.</p>
+            </div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">3</div>
+              <div class="hiw-step-line"></div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-robot"></i></div>
+              <h4>AI &amp; Web Detection</h4>
+              <p>AI semantic analysis and internet search provide additional plagiarism detection layers.</p>
+            </div>
+          </div>
+          <div class="hiw-step hiw-step-last">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">4</div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-chart-bar"></i></div>
+              <h4>Detailed Report</h4>
+              <p>View a full similarity report with highlighted paragraphs, scores, and source references.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -169,7 +193,7 @@
     <!-- Search -->
     <section class="search-bar-enhanced">
       <i class="fas fa-search search-icon-lg"></i>
-      <input type="text" id="searchInput" placeholder="Search by title, author, or keywordâ€¦" />
+      <input type="text" id="searchInput" placeholder="Search by title, author, or keyword…" />
       <span class="search-shortcut">Ctrl+K</span>
     </section>
 
@@ -177,7 +201,7 @@
     <section class="doc-grid" id="docGrid">
       <div class="loading-state">
         <div class="loading-spinner"></div>
-        <p>Loading documentsâ€¦</p>
+        <p>Loading documents…</p>
       </div>
     </section>
 
@@ -197,7 +221,7 @@
       <div class="footer-brand">
         <i class="fas fa-graduation-cap"></i> AcadRepo
       </div>
-      <p>&copy; 2026 AcadRepo â€” Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+      <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
       <div class="footer-links">
         <span><i class="fas fa-code"></i> Built with Node.js</span>
         <span><i class="fas fa-database"></i> Supabase</span>

@@ -404,10 +404,11 @@ function renderPaperView() {
       const blockNorm = block.replace(/\s+/g, ' ').trim().toLowerCase();
       const matchedHint = aiTextHints.find(h => blockNorm.includes(h) || h.includes(blockNorm.slice(0, Math.min(100, blockNorm.length))));
       if (matchedHint) {
-        // Use actual average score from AI DB results instead of fixed 50
-        const avgAiScore = aiResults.length > 0
-          ? Math.round(aiResults.reduce((s, r) => s + (r.similarity_score || 58), 0) / aiResults.length)
-          : 58;
+        // Use average score from aiMatchMap values (in-scope) as fallback
+        const aiScores = [...aiMatchMap.values()].map(v => v.score).filter(s => s && s !== 50);
+        const avgAiScore = aiScores.length > 0
+          ? Math.round(aiScores.reduce((a, b) => a + b, 0) / aiScores.length)
+          : 65;
         ai = { score: avgAiScore, reason: 'AI flagged by semantic text match' };
       }
     }
