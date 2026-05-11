@@ -7,7 +7,7 @@ async function listAllDocuments(req, res) {
   try {
     const { data, error } = await supabase
       .from('documents')
-      .select('id, title, original_filename, thumbnail_url, created_at, user_id')
+      .select('id, title, original_filename, thumbnail_url, created_at, user_id, authors, course, year')
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -153,4 +153,28 @@ async function getStats(req, res) {
   }
 }
 
-module.exports = { listAllDocuments, deleteDocument, listUsers, deleteUser, getStats };
+/**
+ * PATCH /api/admin/users/:id/role — toggle user role between 'admin' and 'user'
+ */
+async function updateUserRole(req, res) {
+  const { id } = req.params;
+  const { role } = req.body;
+  if (!['admin', 'user'].includes(role)) {
+    return res.status(400).json({ error: 'Invalid role. Must be admin or user.' });
+  }
+  if (req.user.id === id) {
+    return res.status(400).json({ error: 'Cannot change your own role' });
+  }
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ role })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    res.json({ message: `Role updated to ${role}` });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update role' });
+  }
+}
+
+module.exports = { listAllDocuments, deleteDocument, listUsers, deleteUser, updateUserRole, getStats };

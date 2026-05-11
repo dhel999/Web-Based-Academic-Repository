@@ -3,13 +3,243 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academic Repository — Admin Dashboard</title>
+  <title>Admin Dashboard — AcadRepo</title>
   <link rel="stylesheet" href="css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       ADMIN DASHBOARD — Full Sidebar Layout
+    ============================================================ */
+    body { background: #F0F4F8; overflow-x: hidden; }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .admin-layout { display: flex; min-height: calc(100vh - 64px); padding-top: 64px; }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    .admin-sidebar {
+      width: 240px; flex-shrink: 0;
+      background: linear-gradient(175deg, #020B1E 0%, #051D4D 55%, #0D3A8C 100%);
+      position: fixed; top: 64px; left: 0; bottom: 0; z-index: 50;
+      display: flex; flex-direction: column; overflow-y: auto;
+      border-right: 1px solid rgba(255,255,255,.06); transition: transform .25s;
+    }
+    .sidebar-section-label {
+      font-size: .63rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(255,255,255,.28); padding: 1.1rem 1.2rem .35rem;
+    }
+    .sidebar-nav { padding: .6rem .7rem 1rem; flex: 1; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: .65rem; padding: .58rem .85rem;
+      border-radius: 9px; color: rgba(255,255,255,.55); font-size: .85rem;
+      font-weight: 500; text-decoration: none; transition: all .2s; margin-bottom: .18rem;
+      cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+      font-family: 'Inter', sans-serif;
+    }
+    .sidebar-link:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); }
+    .sidebar-link.active { background: rgba(255,255,255,.13); color: #fff; font-weight: 600; }
+    .sidebar-link.active i { color: #42A5F5; }
+    .sidebar-link i { width: 17px; text-align: center; font-size: .88rem; flex-shrink: 0; }
+    .sidebar-badge {
+      margin-left: auto; background: rgba(255,255,255,.15); color: #fff;
+      font-size: .62rem; font-weight: 700; padding: .12rem .42rem;
+      border-radius: 999px; min-width: 18px; text-align: center;
+    }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.07); margin: .6rem .7rem; }
+    .sidebar-footer { padding: .85rem .9rem; border-top: 1px solid rgba(255,255,255,.07); }
+    .sidebar-admin-card {
+      background: rgba(255,255,255,.07); border-radius: 10px; padding: .7rem .9rem;
+      display: flex; align-items: center; gap: .65rem;
+    }
+    .sidebar-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #1565C0, #42A5F5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-admin-name { font-size: .78rem; font-weight: 600; color: #fff; line-height: 1.2; }
+    .sidebar-admin-role { font-size: .63rem; color: #42A5F5; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-top: .1rem; }
+
+    /* ── Main ─────────────────────────────────────────────────── */
+    .admin-main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: calc(100vh - 64px); }
+    .admin-topbar {
+      background: #fff; border-bottom: 1px solid #E5E7EB; padding: 0 1.75rem;
+      height: 54px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 64px; z-index: 40; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .topbar-breadcrumb { display: flex; align-items: center; gap: .45rem; font-size: .8rem; color: #6B7280; }
+    .topbar-breadcrumb span { color: #0D47A1; font-weight: 700; }
+    .topbar-breadcrumb i { font-size: .6rem; }
+    .topbar-actions { display: flex; align-items: center; gap: .6rem; }
+    .topbar-clock { font-size: .75rem; color: #6B7280; background: #F3F4F6; padding: .28rem .7rem; border-radius: 6px; white-space: nowrap; }
+    .topbar-btn {
+      display: inline-flex; align-items: center; gap: .35rem; background: #0D47A1; color: #fff;
+      border: none; padding: .42rem .9rem; border-radius: 8px; font-size: .78rem; font-weight: 600;
+      cursor: pointer; transition: all .2s; font-family: 'Inter', sans-serif; text-decoration: none;
+    }
+    .topbar-btn:hover { background: #1565C0; color: #fff; transform: translateY(-1px); }
+    .topbar-btn.ghost { background: #F3F4F6; color: #374151; }
+    .topbar-btn.ghost:hover { background: #E5E7EB; transform: none; }
+
+    /* ── Content ──────────────────────────────────────────────── */
+    .admin-content { padding: 1.6rem 1.75rem; flex: 1; }
+    .admin-tab-content { display: none; }
+    .admin-tab-content.active { display: block; animation: tabFadeIn .3s ease; }
+    @keyframes tabFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .page-header { margin-bottom: 1.4rem; }
+    .page-header h2 { font-size: 1.25rem; font-weight: 800; color: #0A0F1E; display: flex; align-items: center; gap: .45rem; font-family: 'Poppins', sans-serif; margin-bottom: .2rem; }
+    .page-header h2 i { color: #1565C0; font-size: 1rem; }
+    .page-header p { font-size: .8rem; color: #6B7280; }
+
+    /* ── KPI Grid ─────────────────────────────────────────────── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.4rem; }
+    .kpi-card {
+      background: #fff; border-radius: 13px; padding: 1.2rem 1.3rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #E5E7EB;
+      position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi-card.blue::before   { background: linear-gradient(90deg,#1565C0,#42A5F5); }
+    .kpi-card.teal::before   { background: linear-gradient(90deg,#0891B2,#22D3EE); }
+    .kpi-card.green::before  { background: linear-gradient(90deg,#059669,#34D399); }
+    .kpi-card.amber::before  { background: linear-gradient(90deg,#D97706,#FBBF24); }
+    .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .7rem; }
+    .kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
+    .kpi-card.blue   .kpi-icon { background:#EFF6FF; color:#1565C0; }
+    .kpi-card.teal   .kpi-icon { background:#ECFEFF; color:#0891B2; }
+    .kpi-card.green  .kpi-icon { background:#F0FDF4; color:#059669; }
+    .kpi-card.amber  .kpi-icon { background:#FFFBEB; color:#D97706; }
+    .kpi-trend { font-size: .67rem; font-weight: 700; padding: .13rem .4rem; border-radius: 5px; display: flex; align-items: center; gap: .2rem; }
+    .kpi-trend.neu  { background:#F3F4F6; color:#9CA3AF; }
+    .kpi-value { font-family:'Poppins',sans-serif; font-size: 1.75rem; font-weight: 800; color: #0A0F1E; line-height:1; margin-bottom:.25rem; }
+    .kpi-label { font-size: .72rem; color: #9CA3AF; font-weight: 500; }
+
+    /* ── Overview Grid ────────────────────────────────────────── */
+    .overview-grid { display: grid; gap: 1.1rem; margin-bottom: 1.25rem; }
+    .overview-grid.col-2 { grid-template-columns: 1.65fr 1fr; }
+    .panel {
+      background: #fff; border: 1px solid #E5E7EB; border-radius: 13px;
+      padding: 1.25rem 1.4rem; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .panel-title { font-size: .88rem; font-weight: 700; color: #0A0F1E; display: flex; align-items: center; gap: .4rem; font-family:'Poppins',sans-serif; }
+    .panel-title i { color:#1565C0; font-size: .82rem; }
+    .panel-badge { font-size:.68rem; font-weight:700; padding:.18rem .5rem; border-radius:6px; background:#EFF6FF; color:#1565C0; border:1px solid #BFDBFE; }
+
+    /* Distribution chart */
+    .dist-chart { display:flex; flex-direction:column; gap:.8rem; }
+    .dist-row { display:flex; align-items:center; gap:.7rem; }
+    .dist-label { width:96px; font-size:.72rem; color:#374151; font-weight:600; flex-shrink:0; }
+    .dist-bar-wrap { flex:1; background:#F3F4F6; border-radius:99px; height:9px; overflow:hidden; }
+    .dist-bar { height:100%; border-radius:99px; transition:width .9s cubic-bezier(.22,1,.36,1); width:0%; }
+    .dist-bar.low    { background:linear-gradient(90deg,#059669,#34D399); }
+    .dist-bar.medium { background:linear-gradient(90deg,#D97706,#FBBF24); }
+    .dist-bar.high   { background:linear-gradient(90deg,#DC2626,#F87171); }
+    .dist-count { font-size:.75rem; font-weight:700; color:#374151; min-width:28px; text-align:right; }
+    .dist-legend { display:flex; gap:.9rem; margin-top:.7rem; padding-top:.7rem; border-top:1px solid #F3F4F6; flex-wrap:wrap; }
+    .dist-legend-item { display:flex; align-items:center; gap:.3rem; font-size:.7rem; color:#6B7280; }
+    .dist-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .dist-dot.low { background:#059669; } .dist-dot.medium { background:#D97706; } .dist-dot.high { background:#DC2626; }
+
+    /* Quick stats */
+    .quick-stats { display:flex; flex-direction:column; gap:.7rem; }
+    .quick-stat-row { display:flex; align-items:center; justify-content:space-between; padding:.6rem .75rem; border-radius:9px; background:#F8FAFC; border:1px solid #F1F5F9; transition:background .15s; }
+    .quick-stat-row:hover { background:#EFF6FF; border-color:#BFDBFE; }
+    .qs-left { display:flex; align-items:center; gap:.55rem; }
+    .qs-icon { width:29px; height:29px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.76rem; flex-shrink:0; }
+    .qs-label { font-size:.78rem; color:#374151; font-weight:500; }
+    .qs-value { font-size:.88rem; font-weight:800; color:#0A0F1E; font-family:'Poppins',sans-serif; }
+
+    /* Recent list */
+    .recent-list { display:flex; flex-direction:column; gap:.55rem; }
+    .recent-item { display:flex; align-items:center; gap:.8rem; padding:.6rem .7rem; border-radius:9px; background:#F8FAFC; border:1px solid #F1F5F9; transition:all .18s; }
+    .recent-item:hover { background:#EFF6FF; border-color:#BFDBFE; }
+    .recent-file-icon { width:32px; height:32px; border-radius:8px; background:#EFF6FF; display:flex; align-items:center; justify-content:center; color:#1565C0; font-size:.82rem; flex-shrink:0; }
+    .recent-meta { flex:1; min-width:0; }
+    .recent-title { font-size:.8rem; font-weight:600; color:#0A0F1E; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .recent-sub   { font-size:.7rem; color:#9CA3AF; margin-top:.1rem; }
+    .recent-score { font-size:.75rem; font-weight:700; padding:.18rem .5rem; border-radius:6px; flex-shrink:0; }
+    .recent-score.low    { background:#F0FDF4; color:#059669; }
+    .recent-score.medium { background:#FFFBEB; color:#D97706; }
+    .recent-score.high   { background:#FEF2F2; color:#DC2626; }
+    .recent-empty { text-align:center; padding:1.5rem; color:#9CA3AF; font-size:.82rem; }
+
+    /* ── Table Layout ─────────────────────────────────────────── */
+    .table-toolbar { display:flex; align-items:center; gap:.65rem; margin-bottom:.9rem; flex-wrap:wrap; }
+    .table-search { flex:1; min-width:180px; position:relative; }
+    .table-search i { position:absolute; left:.8rem; top:50%; transform:translateY(-50%); color:#9CA3AF; font-size:.82rem; pointer-events:none; }
+    .table-search input { width:100%; padding:.52rem .85rem .52rem 2.3rem; border:1.5px solid #E5E7EB; border-radius:9px; font-size:.83rem; outline:none; transition:border-color .2s, box-shadow .2s; font-family:'Inter',sans-serif; background:#fff; color:#374151; }
+    .table-search input:focus { border-color:#1565C0; box-shadow:0 0 0 3px rgba(21,101,192,.1); }
+    .filter-btn { display:flex; align-items:center; gap:.3rem; padding:.48rem .85rem; border:1.5px solid #E5E7EB; border-radius:9px; background:#fff; color:#374151; font-size:.78rem; font-weight:600; cursor:pointer; transition:all .18s; font-family:'Inter',sans-serif; white-space:nowrap; }
+    .filter-btn:hover { border-color:#1565C0; color:#1565C0; background:#EFF6FF; }
+    .filter-btn.active { border-color:#1565C0; background:#EFF6FF; color:#1565C0; }
+    .count-badge { font-size:.68rem; background:#1565C0; color:#fff; border-radius:99px; padding:.08rem .38rem; font-weight:700; }
+
+    .enhanced-table { width:100%; border-collapse:collapse; }
+    .enhanced-table th { padding:.62rem .95rem; text-align:left; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#6B7280; background:#F8FAFC; border-bottom:1.5px solid #E5E7EB; white-space:nowrap; }
+    .enhanced-table td { padding:.82rem .95rem; border-bottom:1px solid #F1F5F9; vertical-align:middle; color:#374151; font-size:.83rem; }
+    .enhanced-table tr:last-child td { border-bottom:none; }
+    .enhanced-table tbody tr:hover td { background:#FAFBFF; }
+
+    .user-cell { display:flex; align-items:center; gap:.6rem; }
+    .user-avatar { width:33px; height:33px; border-radius:50%; background:linear-gradient(135deg,#1565C0,#42A5F5); color:#fff; font-size:.72rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .user-name  { font-weight:600; color:#0A0F1E; font-size:.83rem; }
+    .user-email { font-size:.72rem; color:#9CA3AF; margin-top:.08rem; }
+    .doc-title-wrap strong { font-size:.83rem; color:#0A0F1E; display:block; line-height:1.3; }
+    .doc-title-wrap small  { font-size:.7rem; color:#9CA3AF; }
+
+    .sim-pill { display:inline-flex; align-items:center; padding:.22rem .65rem; border-radius:99px; font-size:.76rem; font-weight:700; }
+    .sim-pill.low    { background:#F0FDF4; color:#059669; border:1px solid #BBF7D0; }
+    .sim-pill.medium { background:#FFFBEB; color:#D97706; border:1px solid #FDE68A; }
+    .sim-pill.high   { background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; }
+
+    .role-pill { display:inline-flex; align-items:center; gap:.28rem; padding:.22rem .6rem; border-radius:99px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .role-pill.admin { background:#EFF6FF; color:#1565C0; border:1px solid #BFDBFE; }
+    .role-pill.user  { background:#F3F4F6; color:#6B7280; border:1px solid #D1D5DB; }
+
+    .action-group { display:flex; align-items:center; gap:.35rem; }
+    .act-btn { display:inline-flex; align-items:center; justify-content:center; width:29px; height:29px; border-radius:7px; border:1.5px solid #E5E7EB; background:#fff; color:#6B7280; font-size:.76rem; cursor:pointer; transition:all .18s; text-decoration:none; }
+    .act-btn:hover { transform:scale(1.1); }
+    .act-btn.view    { border-color:#BFDBFE; color:#1565C0; } .act-btn.view:hover    { background:#EFF6FF; }
+    .act-btn.promote { border-color:#A7F3D0; color:#059669; } .act-btn.promote:hover { background:#F0FDF4; }
+    .act-btn.demote  { border-color:#FDE68A; color:#D97706; } .act-btn.demote:hover  { background:#FFFBEB; }
+    .act-btn.del     { border-color:#FECACA; color:#DC2626; } .act-btn.del:hover     { background:#FEF2F2; }
+
+    .table-empty { padding:2.5rem; text-align:center; color:#9CA3AF; }
+    .table-empty i { font-size:2.2rem; margin-bottom:.6rem; display:block; opacity:.35; }
+    .table-empty p { font-size:.85rem; }
+    .table-footer { display:flex; align-items:center; justify-content:space-between; padding:.65rem 1rem; border-top:1px solid #F1F5F9; font-size:.75rem; color:#9CA3AF; background:#F8FAFC; border-radius:0 0 10px 10px; margin-top:.5rem; }
+
+    /* ── System tab ───────────────────────────────────────────── */
+    .sys-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; }
+    .sys-info-list { display:flex; flex-direction:column; gap:.55rem; }
+    .sys-info-row { display:flex; align-items:center; justify-content:space-between; padding:.58rem .8rem; background:#F8FAFC; border-radius:8px; border:1px solid #F1F5F9; }
+    .sys-info-label { font-size:.76rem; color:#6B7280; font-weight:500; display:flex; align-items:center; gap:.38rem; }
+    .sys-info-label i { color:#1565C0; width:13px; text-align:center; }
+    .sys-info-value { font-size:.8rem; font-weight:600; color:#0A0F1E; }
+    .tech-badge { display:inline-flex; align-items:center; gap:.3rem; background:#EFF6FF; border:1px solid #BFDBFE; color:#1565C0; border-radius:7px; padding:.3rem .65rem; font-size:.72rem; font-weight:600; margin:.2rem; }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    .admin-toast { position:fixed; bottom:1.5rem; right:1.5rem; background:#0D47A1; color:#fff; padding:.7rem 1.1rem; border-radius:10px; font-size:.83rem; font-weight:500; box-shadow:0 8px 24px rgba(13,71,161,.3); display:flex; align-items:center; gap:.55rem; z-index:999; transform:translateY(80px); opacity:0; transition:all .3s cubic-bezier(.34,1.56,.64,1); pointer-events:none; }
+    .admin-toast.show { transform:translateY(0); opacity:1; }
+    .admin-toast.success { background:#059669; }
+    .admin-toast.error   { background:#DC2626; }
+
+    .sidebar-toggle-btn { display:none; background:none; border:none; color:var(--text-body); font-size:1.1rem; cursor:pointer; padding:.4rem; border-radius:7px; }
+    .sidebar-toggle-btn:hover { background:var(--surface-3); }
+    .spin { animation:adminSpin .8s linear infinite; }
+    @keyframes adminSpin { to { transform:rotate(360deg); } }
+
+    @media (max-width:1100px) { .kpi-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:900px)  { .overview-grid.col-2 { grid-template-columns:1fr; } .sys-grid { grid-template-columns:1fr; } }
+    @media (max-width:768px) { .admin-sidebar { transform:translateX(-100%); } .admin-sidebar.open { transform:translateX(0); } .admin-main { margin-left:0; } .sidebar-toggle-btn { display:block; } .admin-content { padding:1.1rem 1rem; } }
+    @media (max-width:520px) { .kpi-grid { grid-template-columns:1fr; } }
+    .navbar { z-index:60; }
+  </style>
 </head>
 <body>
 
@@ -17,9 +247,9 @@
   <nav class="navbar">
     <div class="nav-brand">
       <img src="img/SSC_logo.png" alt="Sulu State University" />
-      <span>AcadRepo <span style="font-size:.7rem;color:var(--red);font-weight:700;">ADMIN</span></span>
+      <span>AcadRepo <span style="font-size:.66rem;color:#EF4444;font-weight:700;background:#FEF2F2;padding:.1rem .38rem;border-radius:4px;margin-left:.1rem;">ADMIN</span></span>
     </div>
-    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+    <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
       <i class="fas fa-bars"></i>
     </button>
     <ul class="nav-links" id="navLinks">
@@ -29,127 +259,317 @@
     </ul>
   </nav>
 
-  <!-- ===== HERO with particles ===== -->
-  <header class="hero hero-enhanced" style="padding:2.5rem 2rem 1.5rem;">
-    <div class="hero-particles" id="heroParticles"></div>
-    <div class="enh-floating-icons">
-      <i class="fas fa-gauge-high enh-float-icon"></i>
-      <i class="fas fa-users-gear enh-float-icon"></i>
-      <i class="fas fa-shield-halved enh-float-icon"></i>
-      <i class="fas fa-chart-line enh-float-icon"></i>
-    </div>
-    <div class="hero-content" style="text-align:center;">
-      <div class="hero-badge"><i class="fas fa-crown"></i> Administration</div>
-      <h1 class="enh-page-title">Admin Dashboard</h1>
-      <p>Manage documents, users, and system settings</p>
-    </div>
-  </header>
+  <!-- ===== ADMIN LAYOUT ===== -->
+  <div class="admin-layout">
 
-  <!-- ===== MAIN ===== -->
-  <main class="container">
-
-    <!-- Stats -->
-    <div class="stats-row" id="statsRow">
-      <div class="stat-card enh-stat enh-card-animate">
-        <div class="stat-icon"><i class="fas fa-file-lines"></i></div>
-        <div class="stat-info">
-          <span class="stat-value" id="statDocs">—</span>
-          <span class="stat-label">Total Documents</span>
+    <!-- ── SIDEBAR ── -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <nav class="sidebar-nav">
+        <span class="sidebar-section-label">Main</span>
+        <button class="sidebar-link active" data-tab="overview">
+          <i class="fas fa-gauge-high"></i> Overview
+        </button>
+        <button class="sidebar-link" data-tab="documents">
+          <i class="fas fa-file-lines"></i> Documents
+          <span class="sidebar-badge" id="sidebarDocCount">—</span>
+        </button>
+        <button class="sidebar-link" data-tab="users">
+          <i class="fas fa-users"></i> Users
+          <span class="sidebar-badge" id="sidebarUserCount">—</span>
+        </button>
+        <div class="sidebar-divider"></div>
+        <span class="sidebar-section-label">More</span>
+        <button class="sidebar-link" data-tab="system">
+          <i class="fas fa-server"></i> System Info
+        </button>
+        <a href="index.html" class="sidebar-link">
+          <i class="fas fa-arrow-left"></i> Back to Site
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-admin-card">
+          <div class="sidebar-avatar" id="sidebarInitials">A</div>
+          <div>
+            <div class="sidebar-admin-name" id="sidebarName">Administrator</div>
+            <div class="sidebar-admin-role">Admin</div>
+          </div>
         </div>
       </div>
-      <div class="stat-card enh-stat enh-card-animate">
-        <div class="stat-icon" style="color:var(--teal);"><i class="fas fa-users"></i></div>
-        <div class="stat-info">
-          <span class="stat-value" id="statUsers">—</span>
-          <span class="stat-label">Total Users</span>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <div class="topbar-breadcrumb">
+          <i class="fas fa-home"></i> AcadRepo
+          <i class="fas fa-chevron-right"></i>
+          <span id="topbarPage">Overview</span>
         </div>
-      </div>
-      <div class="stat-card enh-stat enh-card-animate">
-        <div class="stat-icon" style="color:var(--green);"><i class="fas fa-paragraph"></i></div>
-        <div class="stat-info">
-          <span class="stat-value" id="statParas">—</span>
-          <span class="stat-label">Stored Paragraphs</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="admin-tabs enh-tabs">
-      <button class="admin-tab active" data-tab="documents">
-        <i class="fas fa-file-lines"></i> Documents
-      </button>
-      <button class="admin-tab" data-tab="users">
-        <i class="fas fa-users"></i> Users
-      </button>
-    </div>
-
-    <!-- Documents Tab -->
-    <section class="card admin-section active enh-card-animate" id="documentsTab">
-      <div class="input-row" style="margin-bottom:1rem;">
-        <input type="text" id="docSearch" placeholder="Search documents…" />
-      </div>
-      <div class="admin-table-wrap">
-        <table class="admin-table enh-table" id="docTable">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Uploader</th>
-              <th>Similarity</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="docTableBody">
-            <tr><td colspan="5" class="text-muted" style="text-align:center;">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Users Tab -->
-    <section class="card admin-section enh-card-animate" id="usersTab">
-      <div class="admin-table-wrap">
-        <table class="admin-table enh-table" id="usersTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Documents</th>
-              <th>Joined</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody">
-            <tr><td colspan="6" class="text-muted" style="text-align:center;">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay hidden" id="deleteModal">
-      <div class="modal-card">
-        <h3><i class="fas fa-triangle-exclamation" style="color:var(--red);"></i> Confirm Delete</h3>
-        <p id="deleteMessage">Are you sure you want to delete this item?</p>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" id="btnCancelDelete">Cancel</button>
-          <button class="btn btn-danger" id="btnConfirmDelete">
-            <i class="fas fa-trash"></i> Delete
+        <div class="topbar-actions">
+          <div class="topbar-clock" id="topbarClock"></div>
+          <a href="upload.html" class="topbar-btn"><i class="fas fa-plus"></i> New Document</a>
+          <button class="topbar-btn ghost" onclick="refreshAll()" title="Refresh data">
+            <i class="fas fa-rotate-right" id="refreshIcon"></i>
           </button>
         </div>
+      </header>
+
+      <main class="admin-content">
+
+        <!-- ═══ TAB: OVERVIEW ═══ -->
+        <section class="admin-tab-content active" id="tab-overview">
+          <div class="page-header">
+            <h2><i class="fas fa-gauge-high"></i> Dashboard Overview</h2>
+            <p>System-wide statistics and recent activity at a glance</p>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi-card blue">
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-file-lines"></i></div><span class="kpi-trend neu"><i class="fas fa-minus"></i></span></div>
+              <div class="kpi-value" id="kpiDocs">—</div><div class="kpi-label">Total Documents</div>
+            </div>
+            <div class="kpi-card teal">
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-users"></i></div><span class="kpi-trend neu"><i class="fas fa-minus"></i></span></div>
+              <div class="kpi-value" id="kpiUsers">—</div><div class="kpi-label">Registered Users</div>
+            </div>
+            <div class="kpi-card green">
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-paragraph"></i></div><span class="kpi-trend neu"><i class="fas fa-minus"></i></span></div>
+              <div class="kpi-value" id="kpiParas">—</div><div class="kpi-label">Stored Paragraphs</div>
+            </div>
+            <div class="kpi-card amber">
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-percent"></i></div><span class="kpi-trend neu"><i class="fas fa-minus"></i></span></div>
+              <div class="kpi-value" id="kpiAvg">—</div><div class="kpi-label">Avg. Similarity Score</div>
+            </div>
+          </div>
+
+          <div class="overview-grid col-2" style="margin-bottom:1.1rem;">
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title"><i class="fas fa-chart-bar"></i> Similarity Distribution</span>
+                <span class="panel-badge" id="distTotal">0 docs</span>
+              </div>
+              <div class="dist-chart">
+                <div class="dist-row"><span class="dist-label">Low (0–30%)</span><div class="dist-bar-wrap"><div class="dist-bar low" id="barLow"></div></div><span class="dist-count" id="countLow">0</span></div>
+                <div class="dist-row"><span class="dist-label">Med (30–60%)</span><div class="dist-bar-wrap"><div class="dist-bar medium" id="barMed"></div></div><span class="dist-count" id="countMed">0</span></div>
+                <div class="dist-row"><span class="dist-label">High (60–100%)</span><div class="dist-bar-wrap"><div class="dist-bar high" id="barHigh"></div></div><span class="dist-count" id="countHigh">0</span></div>
+                <div class="dist-legend">
+                  <span class="dist-legend-item"><span class="dist-dot low"></span> Low Risk</span>
+                  <span class="dist-legend-item"><span class="dist-dot medium"></span> Medium Risk</span>
+                  <span class="dist-legend-item"><span class="dist-dot high"></span> High Risk</span>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title"><i class="fas fa-bolt"></i> Quick Stats</span></div>
+              <div class="quick-stats">
+                <div class="quick-stat-row">
+                  <div class="qs-left"><div class="qs-icon" style="background:#EFF6FF;color:#1565C0;"><i class="fas fa-user-shield"></i></div><span class="qs-label">Admin Accounts</span></div>
+                  <span class="qs-value" id="qsAdmins">—</span>
+                </div>
+                <div class="quick-stat-row">
+                  <div class="qs-left"><div class="qs-icon" style="background:#F0FDF4;color:#059669;"><i class="fas fa-circle-check"></i></div><span class="qs-label">Clean Documents</span></div>
+                  <span class="qs-value" id="qsClean">—</span>
+                </div>
+                <div class="quick-stat-row">
+                  <div class="qs-left"><div class="qs-icon" style="background:#FEF2F2;color:#DC2626;"><i class="fas fa-triangle-exclamation"></i></div><span class="qs-label">High Risk Docs</span></div>
+                  <span class="qs-value" id="qsHigh">—</span>
+                </div>
+                <div class="quick-stat-row">
+                  <div class="qs-left"><div class="qs-icon" style="background:#F5F3FF;color:#7C3AED;"><i class="fas fa-calculator"></i></div><span class="qs-label">Avg Para / Doc</span></div>
+                  <span class="qs-value" id="qsAvgPara">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title"><i class="fas fa-clock-rotate-left"></i> Recent Uploads</span>
+              <button class="filter-btn" style="font-size:.75rem;padding:.3rem .7rem;" onclick="switchTab('documents')">View All <i class="fas fa-arrow-right" style="font-size:.7rem;"></i></button>
+            </div>
+            <div class="recent-list" id="recentList">
+              <div class="recent-empty"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ TAB: DOCUMENTS ═══ -->
+        <section class="admin-tab-content" id="tab-documents">
+          <div class="page-header">
+            <h2><i class="fas fa-file-lines"></i> Document Management</h2>
+            <p>View, search, filter, and delete uploaded research papers</p>
+          </div>
+          <div class="panel">
+            <div class="table-toolbar">
+              <div class="table-search"><i class="fas fa-search"></i><input type="text" id="docSearch" placeholder="Search by title, author, or course…" /></div>
+              <button class="filter-btn active" onclick="filterDocs(this,'all')">All <span class="count-badge" id="filterAllCount">0</span></button>
+              <button class="filter-btn" onclick="filterDocs(this,'low')"><span style="color:#059669;font-size:.7rem;">●</span> Low</button>
+              <button class="filter-btn" onclick="filterDocs(this,'medium')"><span style="color:#D97706;font-size:.7rem;">●</span> Medium</button>
+              <button class="filter-btn" onclick="filterDocs(this,'high')"><span style="color:#DC2626;font-size:.7rem;">●</span> High Risk</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="enhanced-table">
+                <thead>
+                  <tr>
+                    <th>#</th><th>Title &amp; File</th><th>Author(s)</th><th>Course</th>
+                    <th>Year</th><th>Uploader</th><th>Similarity</th><th>Date</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="docTableBody">
+                  <tr><td colspan="9"><div class="table-empty"><i class="fas fa-spinner spin"></i><p>Loading documents…</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-footer"><span id="docTableInfo">Loading…</span><span>Document repository</span></div>
+          </div>
+        </section>
+
+        <!-- ═══ TAB: USERS ═══ -->
+        <section class="admin-tab-content" id="tab-users">
+          <div class="page-header">
+            <h2><i class="fas fa-users"></i> User Management</h2>
+            <p>Manage accounts, roles, and permissions</p>
+          </div>
+          <div class="panel">
+            <div class="table-toolbar">
+              <div class="table-search"><i class="fas fa-search"></i><input type="text" id="userSearch" placeholder="Search by name or email…" /></div>
+              <button class="filter-btn active" onclick="filterUsers(this,'all')">All Users</button>
+              <button class="filter-btn" onclick="filterUsers(this,'admin')"><i class="fas fa-shield" style="color:#1565C0;font-size:.68rem;"></i> Admins</button>
+              <button class="filter-btn" onclick="filterUsers(this,'user')"><i class="fas fa-user" style="color:#6B7280;font-size:.68rem;"></i> Users</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="enhanced-table">
+                <thead>
+                  <tr><th>User</th><th>Email</th><th>Role</th><th>Documents</th><th>Joined</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr><td colspan="6"><div class="table-empty"><i class="fas fa-spinner spin"></i><p>Loading users…</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-footer"><span id="userTableInfo">Loading…</span><span>Registered accounts</span></div>
+          </div>
+        </section>
+
+        <!-- ═══ TAB: SYSTEM INFO ═══ -->
+        <section class="admin-tab-content" id="tab-system">
+          <div class="page-header">
+            <h2><i class="fas fa-server"></i> System Information</h2>
+            <p>Platform configuration and technical details</p>
+          </div>
+          <div class="sys-grid">
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title"><i class="fas fa-circle-info"></i> Platform Details</span></div>
+              <div class="sys-info-list">
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-code-branch"></i> System</span><span class="sys-info-value">AcadRepo v1.0</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-building-columns"></i> Institution</span><span class="sys-info-value">Sulu State University</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-calendar"></i> Academic Year</span><span class="sys-info-value">2025–2026</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-graduation-cap"></i> Department</span><span class="sys-info-value">BSCS Department</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-globe"></i> Environment</span><span class="sys-info-value">Production (Render.com)</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-database"></i> Database</span><span class="sys-info-value">Supabase (PostgreSQL)</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-file"></i> File Formats</span><span class="sys-info-value">PDF, DOCX, TXT (max 20 MB)</span></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title"><i class="fas fa-microchip"></i> Algorithm &amp; Stack</span></div>
+              <div class="sys-info-list" style="margin-bottom:.9rem;">
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-fingerprint"></i> Engine</span><span class="sys-info-value">TF-IDF + Cosine Similarity</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-robot"></i> AI Model</span><span class="sys-info-value">OpenAI GPT-4</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-globe"></i> Internet Scan</span><span class="sys-info-value">Google Custom Search API</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-lock"></i> Auth</span><span class="sys-info-value">JWT + Supabase Auth</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-user-shield"></i> Roles</span><span class="sys-info-value">Admin / User (RBAC)</span></div>
+              </div>
+              <div style="border-top:1px solid #F1F5F9;padding-top:.8rem;">
+                <div style="font-size:.68rem;color:#9CA3AF;margin-bottom:.45rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Tech Stack</div>
+                <div style="display:flex;flex-wrap:wrap;">
+                  <span class="tech-badge"><i class="fab fa-node-js"></i> Node.js</span>
+                  <span class="tech-badge"><i class="fas fa-server"></i> Express</span>
+                  <span class="tech-badge"><i class="fas fa-database"></i> Supabase</span>
+                  <span class="tech-badge"><i class="fas fa-robot"></i> OpenAI</span>
+                  <span class="tech-badge"><i class="fab fa-html5"></i> HTML5</span>
+                  <span class="tech-badge"><i class="fab fa-css3-alt"></i> CSS3</span>
+                  <span class="tech-badge"><i class="fab fa-js"></i> Vanilla JS</span>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title"><i class="fas fa-chart-pie"></i> Live Storage Stats</span><span class="panel-badge">Live</span></div>
+              <div class="sys-info-list">
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-file-lines"></i> Total Documents</span><span class="sys-info-value" id="sysStatDocs">—</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-paragraph"></i> Total Paragraphs</span><span class="sys-info-value" id="sysStatParas">—</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-users"></i> Total Users</span><span class="sys-info-value" id="sysStatUsers">—</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-percentage"></i> Avg Similarity</span><span class="sys-info-value" id="sysStatAvg">—</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-user-shield"></i> Admin Count</span><span class="sys-info-value" id="sysStatAdmins">—</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-circle-check"></i> Clean Docs</span><span class="sys-info-value" id="sysStatClean">—</span></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title"><i class="fas fa-shield-halved"></i> Security &amp; Privacy</span></div>
+              <div class="sys-info-list">
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-certificate"></i> Transport</span><span class="sys-info-value">HTTPS / TLS 1.3</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-key"></i> Token</span><span class="sys-info-value">Bearer JWT (signed)</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-eye-slash"></i> Reports</span><span class="sys-info-value">Owner-only (private)</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-trash-can-arrow-up"></i> Quick Scan</span><span class="sys-info-value">Auto-delete after scan</span></div>
+                <div class="sys-info-row"><span class="sys-info-label"><i class="fas fa-shield"></i> OWASP</span><span class="sys-info-value">Input validation enforced</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <footer style="padding:.9rem 1.75rem;text-align:center;font-size:.72rem;color:#9CA3AF;border-top:1px solid #E5E7EB;background:#fff;">
+        &copy; 2026 AcadRepo — Sulu State University &nbsp;|&nbsp; Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection
+      </footer>
+    </div>
+  </div>
+
+  <!-- ===== DELETE MODAL ===== -->
+  <div class="modal-overlay hidden" id="deleteModal">
+    <div class="modal-card">
+      <h3><i class="fas fa-triangle-exclamation" style="color:#DC2626;"></i> Confirm Delete</h3>
+      <p id="deleteMessage">Are you sure you want to delete this item?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btnCancelDelete">Cancel</button>
+        <button class="btn btn-danger" id="btnConfirmDelete"><i class="fas fa-trash"></i> Delete</button>
       </div>
     </div>
-  </main>
+  </div>
 
-  <footer class="footer">
-    <p>&copy; 2025 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
-  </footer>
+  <!-- ===== ROLE MODAL ===== -->
+  <div class="modal-overlay hidden" id="roleModal">
+    <div class="modal-card">
+      <h3 id="roleModalTitle"><i class="fas fa-user-gear" style="color:#1565C0;"></i> Change Role</h3>
+      <p id="roleModalMessage">Update role for this user?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btnCancelRole">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmRole"><i class="fas fa-check"></i> Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="admin-toast" id="adminToast">
+    <i class="fas fa-circle-check" id="toastIcon"></i>
+    <span id="toastMsg">Done!</span>
+  </div>
 
   <script src="js/auth-guard.js"></script>
   <script src="js/admin.js"></script>
   <script>
-    (function(){const c=document.getElementById('heroParticles');if(!c)return;for(let i=0;i<20;i++){const p=document.createElement('div');p.className='hero-particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(6+Math.random()*8)+'s';p.style.animationDelay=(Math.random()*6)+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p);}})();
+    (function clockTick() {
+      const el = document.getElementById('topbarClock');
+      if (el) {
+        const n = new Date();
+        el.textContent = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})
+          + '  ' + n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      }
+      setTimeout(clockTick, 15000);
+    })();
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      document.getElementById('adminSidebar').classList.toggle('open');
+    });
   </script>
 </body>
 </html>
