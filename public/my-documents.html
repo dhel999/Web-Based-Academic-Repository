@@ -3,9 +3,311 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academic Repository — My Documents</title>
+  <title>My Documents — AcadRepo</title>
   <link rel="stylesheet" href="css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <style>
+    /* ============================================================
+       MY DOCUMENTS — Professional Design
+    ============================================================ */
+    body { background: #F0F4F8; }
+
+    .mydocs-layout { padding-top: 64px; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── Hero ─────────────────────────────────────────────── */
+    .mydocs-hero {
+      background: linear-gradient(135deg, #020B1E 0%, #0D47A1 55%, #1565C0 100%);
+      padding: 2.8rem 2rem 4rem;
+      position: relative; overflow: hidden;
+    }
+    .mydocs-hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 15% 80%, rgba(66,165,245,.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 20%, rgba(13,71,161,.35) 0%, transparent 50%);
+    }
+    .hero-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-text h1 { font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: .4rem; display: flex; align-items: center; gap: .55rem; }
+    .hero-text h1 i { font-size: 1.5rem; opacity: .85; }
+    .hero-text p { font-size: .9rem; color: rgba(255,255,255,.6); }
+    .hero-actions { display: flex; gap: .65rem; align-items: center; flex-wrap: wrap; }
+    .hbtn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .62rem 1.3rem; border-radius: 9px; font-size: .85rem;
+      font-weight: 600; cursor: pointer; transition: all .2s;
+      text-decoration: none; border: none; font-family: 'Inter', sans-serif;
+    }
+    .hbtn.solid { background: #fff; color: #0D47A1; }
+    .hbtn.solid:hover { background: #E3F2FD; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+    .hbtn.ghost { background: rgba(255,255,255,.12); color: #fff; border: 1.5px solid rgba(255,255,255,.22); }
+    .hbtn.ghost:hover { background: rgba(255,255,255,.2); }
+
+    /* ── KPI cards (overlaps hero bottom) ─────────────────── */
+    .kpi-strip { max-width: 1120px; margin: -2.4rem auto 0; padding: 0 2rem; position: relative; z-index: 10; }
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .kpi-card {
+      background: #fff; border-radius: 14px; padding: 1.2rem 1.3rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,.11); border: 1px solid #E5E7EB;
+      position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,.14); }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3.5px; border-radius: 14px 14px 0 0; }
+    .kpi-card.c-blue::before  { background: linear-gradient(90deg,#1565C0,#42A5F5); }
+    .kpi-card.c-green::before { background: linear-gradient(90deg,#059669,#34D399); }
+    .kpi-card.c-amber::before { background: linear-gradient(90deg,#D97706,#FBBF24); }
+    .kpi-card.c-red::before   { background: linear-gradient(90deg,#DC2626,#F87171); }
+    .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .75rem; }
+    .kpi-ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
+    .c-blue  .kpi-ico { background:#EFF6FF; color:#1565C0; }
+    .c-green .kpi-ico { background:#F0FDF4; color:#059669; }
+    .c-amber .kpi-ico { background:#FFFBEB; color:#D97706; }
+    .c-red   .kpi-ico { background:#FEF2F2; color:#DC2626; }
+    .kpi-val { font-family:'Poppins',sans-serif; font-size: 1.8rem; font-weight: 800; color: #0A0F1E; line-height:1; margin-bottom:.22rem; }
+    .kpi-lbl { font-size: .71rem; color: #9CA3AF; font-weight: 500; }
+
+    /* ── Content ───────────────────────────────────────────── */
+    .mydocs-body { max-width: 1120px; margin: 0 auto; padding: 2.4rem 2rem 3rem; flex: 1; }
+
+    /* ── Toolbar ───────────────────────────────────────────── */
+    .docs-toolbar {
+      background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
+      padding: .9rem 1.1rem; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+      display: flex; align-items: center; gap: .75rem; margin-bottom: 1.6rem; flex-wrap: wrap;
+    }
+    .search-wrap { flex: 1; min-width: 200px; position: relative; }
+    .search-wrap i { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: .82rem; pointer-events: none; }
+    .search-wrap input {
+      width: 100%; padding: .55rem .85rem .55rem 2.5rem; border: 1.5px solid #E5E7EB;
+      border-radius: 9px; font-size: .85rem; outline: none; background: #F9FAFB;
+      color: #374151; font-family: 'Inter', sans-serif; transition: all .2s;
+    }
+    .search-wrap input:focus { border-color: #1565C0; background: #fff; box-shadow: 0 0 0 3px rgba(21,101,192,.1); }
+    .fpills { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .fpill {
+      padding: .32rem .75rem; border-radius: 99px; font-size: .73rem; font-weight: 600;
+      cursor: pointer; transition: all .18s; white-space: nowrap;
+      border: 1.5px solid #E5E7EB; background: #fff; color: #6B7280;
+      font-family: 'Inter', sans-serif;
+    }
+    .fpill:hover { border-color: #1565C0; color: #1565C0; background: #EFF6FF; }
+    .fpill.on { border-color: #1565C0; background: #EFF6FF; color: #1565C0; }
+    .tbtn {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .55rem 1.1rem; border-radius: 9px; font-size: .82rem; font-weight: 600;
+      cursor: pointer; transition: all .18s; border: none;
+      font-family: 'Inter', sans-serif; text-decoration: none; white-space: nowrap;
+      background: #0D47A1; color: #fff;
+    }
+    .tbtn:hover { background: #1565C0; transform: translateY(-1px); }
+
+    /* ── Section header ────────────────────────────────────── */
+    .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; }
+    .sec-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #9CA3AF; display: flex; align-items: center; gap: .4rem; }
+    .sec-badge { font-size: .7rem; background: #EFF6FF; color: #1565C0; border: 1px solid #BFDBFE; padding: .12rem .5rem; border-radius: 99px; font-weight: 700; }
+
+    /* ── Doc grid ──────────────────────────────────────────── */
+    .doc-grid-pro { display: grid; grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)); gap: 1.1rem; }
+
+    /* ── Doc card ──────────────────────────────────────────── */
+    .dcard {
+      background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05); transition: all .22s;
+    }
+    .dcard:hover { transform: translateY(-4px); box-shadow: 0 10px 32px rgba(13,71,161,.13); border-color: #BFDBFE; }
+
+    /* Card top stripe */
+    .dcard-stripe { height: 4px; flex-shrink: 0; }
+    .dcard-stripe.s-clean  { background: linear-gradient(90deg,#059669,#34D399); }
+    .dcard-stripe.s-medium { background: linear-gradient(90deg,#D97706,#FBBF24); }
+    .dcard-stripe.s-high   { background: linear-gradient(90deg,#DC2626,#F87171); }
+    .dcard-stripe.s-none   { background: #E5E7EB; }
+
+    .dcard-body { padding: 1.2rem 1.25rem; display: flex; flex-direction: column; gap: .85rem; flex: 1; }
+
+    /* Top row: icon + title + score */
+    .dcard-top { display: flex; align-items: flex-start; gap: .75rem; }
+    .dcard-icon { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .dcard-icon.i-pdf  { background: #FEF2F2; color: #DC2626; }
+    .dcard-icon.i-docx { background: #EFF6FF; color: #1565C0; }
+    .dcard-icon.i-txt  { background: #F3F4F6; color: #6B7280; }
+    .dcard-icon.i-def  { background: #F5F3FF; color: #7C3AED; }
+    .dcard-titles { flex: 1; min-width: 0; }
+    .dcard-title { font-size: .88rem; font-weight: 700; color: #0A0F1E; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: .15rem; }
+    .dcard-fname { font-size: .7rem; color: #9CA3AF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .score-badge { padding: .22rem .6rem; border-radius: 99px; font-size: .75rem; font-weight: 700; flex-shrink: 0; align-self: flex-start; }
+    .score-badge.s-clean  { background: #F0FDF4; color: #059669; border: 1px solid #BBF7D0; }
+    .score-badge.s-medium { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+    .score-badge.s-high   { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    .score-badge.s-none   { background: #F3F4F6; color: #9CA3AF; border: 1px solid #E5E7EB; }
+
+    /* Meta tags */
+    .dcard-meta { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .mtag { display: inline-flex; align-items: center; gap: .25rem; background: #F8FAFC; color: #6B7280; border: 1px solid #F1F5F9; font-size: .69rem; padding: .18rem .5rem; border-radius: 6px; font-weight: 500; }
+    .mtag i { font-size: .6rem; color: #9CA3AF; }
+
+    /* Progress bar */
+    .score-bar-track { background: #F1F5F9; border-radius: 99px; height: 5px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 99px; transition: width .9s cubic-bezier(.22,1,.36,1); }
+    .score-bar-fill.s-clean  { background: linear-gradient(90deg,#059669,#34D399); }
+    .score-bar-fill.s-medium { background: linear-gradient(90deg,#D97706,#FBBF24); }
+    .score-bar-fill.s-high   { background: linear-gradient(90deg,#DC2626,#F87171); }
+    .score-bar-fill.s-none   { background: #E5E7EB; }
+
+    /* Actions */
+    .dcard-actions { display: flex; gap: .5rem; padding: .9rem 1.25rem; border-top: 1px solid #F1F5F9; background: #FAFBFF; }
+    .dact {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .3rem;
+      padding: .52rem; border-radius: 8px; font-size: .78rem; font-weight: 600;
+      cursor: pointer; transition: all .18s; text-decoration: none;
+      border: 1.5px solid transparent; font-family: 'Inter', sans-serif;
+    }
+    .dact.view   { background: #EFF6FF; color: #1565C0; border-color: #BFDBFE; }
+    .dact.view:hover   { background: #1565C0; color: #fff; border-color: #1565C0; }
+
+    /* ── States ────────────────────────────────────────────── */
+    .pro-empty {
+      grid-column: 1 / -1; text-align: center;
+      padding: 3.5rem 2rem; background: #fff;
+      border: 2px dashed #E5E7EB; border-radius: 14px;
+    }
+    .pro-empty-icon { width: 80px; height: 80px; border-radius: 50%; background: #EFF6FF; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 2rem; color: #1565C0; }
+    .pro-empty h3 { font-size: 1.1rem; font-weight: 700; color: #0A0F1E; margin-bottom: .4rem; font-family:'Poppins',sans-serif; }
+    .pro-empty p  { font-size: .85rem; color: #9CA3AF; max-width: 300px; margin: 0 auto 1.5rem; }
+    .pro-loading  { grid-column: 1 / -1; text-align: center; padding: 3.5rem; color: #9CA3AF; }
+    .pro-loading i { font-size: 2.2rem; margin-bottom: .75rem; display: block; color: #1565C0; opacity: .45; }
+    .pro-loading p { font-size: .85rem; }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) {
+      .hero-text h1 { font-size: 1.55rem; }
+      .kpi-strip { padding: 0 1rem; }
+      .mydocs-body { padding: 2rem 1rem 2.5rem; }
+    }
+    @media (max-width: 520px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .doc-grid-pro { grid-template-columns: 1fr; }
+      .mydocs-hero { padding: 2rem 1rem 3.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img src="img/SSC_logo.png" alt="Sulu State University" />
+      <span>AcadRepo</span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="my-documents.html" class="active"><i class="fas fa-folder-open"></i> My Documents</a></li>
+      <li><a href="upload.html"><i class="fas fa-upload"></i> Upload</a></li>
+      <li id="navUser" class="nav-user-item"></li>
+    </ul>
+  </nav>
+
+  <div class="mydocs-layout">
+
+    <!-- ── Hero ── -->
+    <div class="mydocs-hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <h1><i class="fas fa-folder-open"></i> My Documents</h1>
+          <p id="heroSubtitle">Your uploaded research papers and similarity reports</p>
+        </div>
+        <div class="hero-actions">
+          <a href="upload.html" class="hbtn solid"><i class="fas fa-plus"></i> Upload New</a>
+          <a href="dashboard.html" class="hbtn ghost"><i class="fas fa-gauge-high"></i> Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── KPI Strip ── -->
+    <div class="kpi-strip">
+      <div class="kpi-row">
+        <div class="kpi-card c-blue">
+          <div class="kpi-top"><div class="kpi-ico"><i class="fas fa-file-lines"></i></div></div>
+          <div class="kpi-val" id="statTotal">0</div>
+          <div class="kpi-lbl">Total Documents</div>
+        </div>
+        <div class="kpi-card c-green">
+          <div class="kpi-top"><div class="kpi-ico"><i class="fas fa-circle-check"></i></div></div>
+          <div class="kpi-val" id="statClean">0</div>
+          <div class="kpi-lbl">Clean (&lt; 30%)</div>
+        </div>
+        <div class="kpi-card c-amber">
+          <div class="kpi-top"><div class="kpi-ico"><i class="fas fa-triangle-exclamation"></i></div></div>
+          <div class="kpi-val" id="statMedium">0</div>
+          <div class="kpi-lbl">Medium (30–60%)</div>
+        </div>
+        <div class="kpi-card c-red">
+          <div class="kpi-top"><div class="kpi-ico"><i class="fas fa-flag"></i></div></div>
+          <div class="kpi-val" id="statHigh">0</div>
+          <div class="kpi-lbl">High (&gt; 60%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Body ── -->
+    <div class="mydocs-body">
+
+      <!-- Toolbar -->
+      <div class="docs-toolbar">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search documents by title…" />
+        </div>
+        <div class="fpills">
+          <button class="fpill on" data-filter="all">All</button>
+          <button class="fpill" data-filter="clean"><span style="color:#059669;margin-right:.2rem;">●</span>Clean</button>
+          <button class="fpill" data-filter="medium"><span style="color:#D97706;margin-right:.2rem;">●</span>Medium</button>
+          <button class="fpill" data-filter="high"><span style="color:#DC2626;margin-right:.2rem;">●</span>High Risk</button>
+        </div>
+        <button class="tbtn" id="btnSearch"><i class="fas fa-search"></i> Search</button>
+      </div>
+
+      <!-- Section header -->
+      <div class="sec-header">
+        <span class="sec-title"><i class="fas fa-layer-group"></i> Research Papers</span>
+        <span class="sec-badge" id="docCount">— papers</span>
+      </div>
+
+      <!-- Grid -->
+      <div class="doc-grid-pro" id="docGrid">
+        <div class="pro-loading"><i class="fas fa-spinner fa-spin"></i><p>Loading your documents…</p></div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="hidden" id="emptyState">
+        <div class="pro-empty">
+          <div class="pro-empty-icon"><i class="fas fa-folder-open"></i></div>
+          <h3>No documents yet</h3>
+          <p>Upload your first research paper to get a detailed plagiarism similarity report.</p>
+          <a href="upload.html" class="tbtn" style="display:inline-flex;margin:0 auto;">
+            <i class="fas fa-upload"></i> Upload Document
+          </a>
+        </div>
+      </div>
+
+    </div><!-- /mydocs-body -->
+
+    <footer style="padding:.9rem 2rem;text-align:center;font-size:.72rem;color:#9CA3AF;border-top:1px solid #E5E7EB;background:#fff;margin-top:auto;">
+      &copy; 2026 AcadRepo — Sulu State University &nbsp;|&nbsp; Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection
+    </footer>
+  </div>
+
+  <script src="js/auth-guard.js"></script>
+  <script src="js/my-documents.js"></script>
+</body>
+</html>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
