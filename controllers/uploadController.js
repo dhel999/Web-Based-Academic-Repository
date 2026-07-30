@@ -3,6 +3,7 @@ const path = require('path');
 const supabase = require('../utils/supabase');
 const { extractText, splitIntoParagraphs, splitIntoDisplayParagraphs, deleteFile } = require('../services/fileService');
 const { compareDocuments, compareParagraphs } = require('../utils/tfidf');
+const { getSettings } = require('../utils/settings');
 
 // ── Thresholds ────────────────────────────────────────────────
 const TITLE_EXACT_BLOCK     = true;   // block exact (case-insensitive) title matches
@@ -36,6 +37,22 @@ async function uploadDocument(req, res) {
   const originalFilename = req.file.originalname;
 
   try {
+    // ── 0. Check upload quota ─────────────────────────────────────────
+    const settings = await getSettings();
+    if (settings.max_uploads_per_user > 0 && req.user) {
+      const { count } = await supabase
+        .from('documents')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', req.user.id);
+      const used = count || 0;
+      if (used >= settings.max_uploads_per_user) {
+        deleteFile(req.file.path);
+        return res.status(429).json({
+          error: `Upload limit reached. You have uploaded ${used} of ${settings.max_uploads_per_user} allowed documents. Contact your administrator to increase this limit.`
+        });
+      }
+    }
+
     // ── 1. Extract text ─────────────────────────────────────────
     const extractedText = await extractText(filePath, originalFilename);
 

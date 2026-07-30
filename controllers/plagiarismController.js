@@ -3,6 +3,7 @@ const { runLocalPlagiarismCheck, checkSimilarTitles, getResultsByDocument } = re
 const { analyzeWithOpenAI } = require('../services/openaiService');
 const { searchInternetPlagiarism, searchTitleOnline } = require('../services/internetSearchService');
 const { splitIntoDisplayParagraphs } = require('../services/fileService');
+const { getSettings } = require('../utils/settings');
 
 /**
  * POST /api/check-plagiarism
@@ -62,6 +63,34 @@ async function checkPlagiarism(req, res) {
 
     // --- OpenAI semantic check (optional) ---
     if (use_openai) {
+      // Check AI scanning settings before calling OpenAI
+      const aiSettings = await getSettings();
+
+      if (!aiSettings.ai_scanning_enabled) {
+        response.openai_check = {
+          error: 'AI scanning is currently disabled by the administrator.',
+          disabled: true
+        };
+        return res.json(response);
+      }
+
+      if (aiSettings.max_ai_scans_per_user > 0 && req.user) {
+        const { count } = await supabase
+          .from('ai_scan_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', req.user.id);
+        const used = count || 0;
+        if (used >= aiSettings.max_ai_scans_per_user) {
+          response.openai_check = {
+            error: `AI scan limit reached. You have used ${used} of ${aiSettings.max_ai_scans_per_user} allowed AI scans. Contact your administrator.`,
+            limit_reached: true,
+            used,
+            limit: aiSettings.max_ai_scans_per_user
+          };
+          return res.json(response);
+        }
+      }
+
       try {
         const aiResult = await analyzeWithOpenAI(doc.id, paragraphs);
         if (aiResult.flaggedParagraphs) {
@@ -72,6 +101,10 @@ async function checkPlagiarism(req, res) {
           }));
         }
         response.openai_check = aiResult;
+        // Log AI scan usage (non-critical)
+        if (req.user) {
+          supabase.from('ai_scan_log').insert({ user_id: req.user.id, document_id: doc.id }).then(() => {}).catch(() => {});
+        }
       } catch (aiErr) {
         response.openai_check = { error: aiErr.message };
       }

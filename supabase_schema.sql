@@ -71,3 +71,27 @@ CREATE INDEX IF NOT EXISTS idx_paragraphs_document_id       ON paragraphs(docume
 CREATE INDEX IF NOT EXISTS idx_plagiarism_results_document  ON plagiarism_results(document_id);
 CREATE INDEX IF NOT EXISTS idx_plagiarism_results_source    ON plagiarism_results(source);
 CREATE INDEX IF NOT EXISTS idx_documents_title              ON documents USING gin(to_tsvector('english', title));
+
+-- 4. System Settings table (singleton row id=1)
+CREATE TABLE IF NOT EXISTS system_settings (
+  id                    INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  max_uploads_per_user  INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
+  max_ai_scans_per_user INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
+  ai_scanning_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+  max_file_size_mb      INTEGER NOT NULL DEFAULT 20,
+  allow_pdf             BOOLEAN NOT NULL DEFAULT TRUE,
+  allow_docx            BOOLEAN NOT NULL DEFAULT TRUE,
+  allow_txt             BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at            TIMESTAMPTZ DEFAULT NOW()
+);
+-- Insert default settings row
+INSERT INTO system_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
+
+-- 5. AI Scan Log table (tracks per-user AI scan usage)
+CREATE TABLE IF NOT EXISTS ai_scan_log (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
+  document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ai_scan_log_user_id ON ai_scan_log(user_id);

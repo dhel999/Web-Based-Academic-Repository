@@ -58,6 +58,7 @@ async function refreshAll() {
   icon.classList.add('spin');
   try {
     await Promise.all([loadStats(), loadDocuments(), loadUsers()]);
+    await loadSettings(); // depends on stats being loaded first for usage display
   } finally {
     icon.classList.remove('spin');
   }
@@ -76,7 +77,7 @@ function switchTab(tabName) {
   const section = document.getElementById(`tab-${tabName}`);
   if (section) section.classList.add('active');
 
-  const labels = { overview:'Overview', documents:'Documents', users:'Users', system:'System Info' };
+  const labels = { overview:'Overview', documents:'Documents', users:'Users', system:'System Info', settings:'Settings' };
   document.getElementById('topbarPage').textContent = labels[tabName] || tabName;
 
   // Close mobile sidebar
@@ -354,6 +355,102 @@ function filterUsers(btn, role) {
   renderUsers(applyUserFilters(document.getElementById('userSearch').value));
 }
 window.filterUsers = filterUsers;
+
+/* ─────────────────────────────────────────────
+   SETTINGS
+───────────────────────────────────────────── */
+async function loadSettings() {
+  try {
+    const res  = await authFetch(`${API}/admin/settings`);
+    const data = await res.json();
+    const s = data.settings || {};
+    const u = data.usage   || {};
+
+    // Populate form inputs
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+    set('maxUploads',    s.max_uploads_per_user  ?? 0);
+    set('maxAiScans',    s.max_ai_scans_per_user ?? 0);
+    set('maxFileSizeMb', s.max_file_size_mb      ?? 20);
+    chk('aiEnabled',  s.ai_scanning_enabled !== false);
+    chk('allowPdf',   s.allow_pdf  !== false);
+    chk('allowDocx',  s.allow_docx !== false);
+    chk('allowTxt',   s.allow_txt  !== false);
+
+    // AI status badge
+    const badge   = document.getElementById('aiStatusBadge');
+    const enabled = s.ai_scanning_enabled !== false;
+    if (badge) {
+      badge.textContent  = enabled ? 'Enabled' : 'Disabled';
+      badge.style.background   = enabled ? '#F0FDF4' : '#FEF2F2';
+      badge.style.color        = enabled ? '#059669' : '#DC2626';
+      badge.style.borderColor  = enabled ? '#BBF7D0' : '#FECACA';
+    }
+
+    // Wire toggle to update badge live
+    const toggle = document.getElementById('aiEnabled');
+    if (toggle && !toggle._badgeWired) {
+      toggle._badgeWired = true;
+      toggle.addEventListener('change', () => {
+        if (!badge) return;
+        badge.textContent       = toggle.checked ? 'Enabled' : 'Disabled';
+        badge.style.background  = toggle.checked ? '#F0FDF4' : '#FEF2F2';
+        badge.style.color       = toggle.checked ? '#059669' : '#DC2626';
+        badge.style.borderColor = toggle.checked ? '#BBF7D0' : '#FECACA';
+      });
+    }
+
+    // Usage stats panel
+    const txt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    txt('usageDocs',    u.total_documents ?? '—');
+    txt('usageAiScans', u.total_ai_scans  ?? '—');
+    txt('usageUsers',   u.total_users     ?? '—');
+    const aiStatusEl = document.getElementById('usageAiStatus');
+    if (aiStatusEl) {
+      aiStatusEl.innerHTML = enabled
+        ? '<span style="color:#059669;font-weight:700;">● Active</span>'
+        : '<span style="color:#DC2626;font-weight:700;">● Disabled</span>';
+    }
+    const updatedEl = document.getElementById('usageUpdated');
+    if (updatedEl) {
+      updatedEl.textContent = s.updated_at ? formatDate(s.updated_at) : 'Never';
+    }
+  } catch { /* silently fail */ }
+}
+
+async function saveSettings() {
+  const btn = document.getElementById('btnSaveSettings');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+  try {
+    const gv  = id => { const el = document.getElementById(id); return el ? el.value : '0'; };
+    const gc  = id => { const el = document.getElementById(id); return el ? el.checked : true; };
+    const body = {
+      max_uploads_per_user:  parseInt(gv('maxUploads'))    || 0,
+      max_ai_scans_per_user: parseInt(gv('maxAiScans'))    || 0,
+      max_file_size_mb:      parseInt(gv('maxFileSizeMb')) || 20,
+      ai_scanning_enabled:   gc('aiEnabled'),
+      allow_pdf:             gc('allowPdf'),
+      allow_docx:            gc('allowDocx'),
+      allow_txt:             gc('allowTxt')
+    };
+    const res = await authFetch(`${API}/admin/settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Save failed'); }
+    showToast('Settings saved successfully', 'success');
+    await loadSettings();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Settings';
+  }
+}
+window.saveSettings = saveSettings;
 
 /* ─────────────────────────────────────────────
    DELETE MODAL
