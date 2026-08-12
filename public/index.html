@@ -46,10 +46,9 @@
       </h1>
       <p class="hero-desc">Algorithmic Plagiarism Detection using <strong>TF-IDF</strong> &amp; <strong>Cosine Similarity</strong> &mdash; analyze, compare, and verify academic documents with AI precision.</p>
       <div class="hero-feature-pills">
-        <span class="hero-pill"><i class="fas fa-fingerprint"></i> TF-IDF Engine</span>
-        <span class="hero-pill"><i class="fas fa-robot"></i> AI Analysis</span>
-        <span class="hero-pill"><i class="fas fa-globe"></i> Internet Scan</span>
-        <span class="hero-pill"><i class="fas fa-shield-halved"></i> Secure Reports</span>
+        <span class="hero-pill"><i class="fas fa-fingerprint"></i> Similarity Analysis</span>
+        <span class="hero-pill"><i class="fas fa-book-open"></i> Academic Archive</span>
+        <span class="hero-pill"><i class="fas fa-shield-halved"></i> Verified Reports</span>
       </div>
       <div class="hero-actions">
         <a href="login.html" class="btn hero-btn-primary btn-glow" id="heroUploadBtn">
@@ -70,13 +69,13 @@
         </div>
         <div class="hero-stat-sep"></div>
         <div class="hero-stat-item">
-          <i class="fas fa-brain"></i>
-          <span class="hero-stat-lbl">AI-Powered</span>
+          <i class="fas fa-magnifying-glass"></i>
+          <span class="hero-stat-lbl">Smart Search</span>
         </div>
         <div class="hero-stat-sep"></div>
         <div class="hero-stat-item">
-          <i class="fas fa-shield-halved"></i>
-          <span class="hero-stat-lbl">Plagiarism Detection</span>
+          <i class="fas fa-shield-check"></i>
+          <span class="hero-stat-lbl">Trusted Review</span>
         </div>
       </div>
     </div>
@@ -85,102 +84,21 @@
   <!-- ===== MAIN CONTENT ===== -->
   <main class="container" style="max-width:1200px;" id="browseSection">
 
-    <!-- â”€â”€ About Section â”€â”€ -->
-    <section class="about-section" id="aboutSection">
-      <div class="about-header">
-        <span class="section-tag"><i class="fas fa-info-circle"></i> About the System</span>
-        <h2>Web-Based Academic Repository with<br>Algorithmic Plagiarism Detection</h2>
-        <p class="about-subtitle">A comprehensive digital platform designed to store, manage, and analyze academic documents using advanced text similarity algorithms.</p>
+    <section class="feature-strip" aria-label="Platform highlights">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-fingerprint"></i></div>
+        <h3>Similarity Check</h3>
+        <p>Scans academic documents for text overlap using TF-IDF and cosine similarity.</p>
       </div>
-
-      <div class="about-grid">
-        <div class="about-card">
-          <div class="about-card-icon"><i class="fas fa-fingerprint"></i></div>
-          <h3>TF-IDF & Cosine Similarity</h3>
-          <p>Utilizes Term Frequency–Inverse Document Frequency combined with Cosine Similarity to detect text overlap between documents at the paragraph level.</p>
-        </div>
-        <div class="about-card">
-          <div class="about-card-icon"><i class="fas fa-robot"></i></div>
-          <h3>AI-Powered Analysis</h3>
-          <p>Leverages OpenAI GPT models to provide intelligent content analysis, detecting paraphrased or restructured content that simple algorithms may miss.</p>
-        </div>
-        <div class="about-card">
-          <div class="about-card-icon"><i class="fas fa-globe"></i></div>
-          <h3>Internet Search</h3>
-          <p>Scans web sources to check if submitted content exists online, providing a broader scope of plagiarism detection beyond the local repository.</p>
-        </div>
-        <div class="about-card">
-          <div class="about-card-icon"><i class="fas fa-chart-pie"></i></div>
-          <h3>Detailed Reports</h3>
-          <p>Generates comprehensive similarity reports with paragraph-by-paragraph analysis, color-coded scores, and matched source references.</p>
-        </div>
-        <div class="about-card">
-          <div class="about-card-icon"><i class="fas fa-upload"></i></div>
-          <h3>Easy Document Upload</h3>
-          <p>Supports PDF and DOCX file formats. Simply upload your document and the system automatically extracts text, analyzes, and stores it securely.</p>
-        </div>
-        <div class="about-card">
-          <div class="about-card-icon"><i class="fas fa-user-shield"></i></div>
-          <h3>Secure & Private</h3>
-          <p>Full analysis reports are visible only to document owners. Guests and other users can only view a short description and similarity percentage.</p>
-        </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-file-lines"></i></div>
+        <h3>Document Archive</h3>
+        <p>Browse verified research papers and maintain a clean academic repository.</p>
       </div>
-    </section>
-
-    <!-- â”€â”€ How It Works Section â”€â”€ -->
-    <section class="how-it-works-section">
-      <div class="hiw-layout">
-        <div class="hiw-header-col">
-          <span class="section-tag"><i class="fas fa-cogs"></i> How It Works</span>
-          <h2 class="hiw-title">Simple<br><span class="hiw-title-accent">4-Step Process</span></h2>
-          <p class="hiw-subtitle">From upload to detailed report — get results in seconds.</p>
-          <a href="upload.html" class="btn hiw-cta-btn"><i class="fas fa-rocket"></i> Get Started</a>
-        </div>
-        <div class="hiw-steps-col">
-          <div class="hiw-step">
-            <div class="hiw-step-left">
-              <div class="hiw-step-num">1</div>
-              <div class="hiw-step-line"></div>
-            </div>
-            <div class="hiw-step-body">
-              <div class="hiw-step-icon"><i class="fas fa-upload"></i></div>
-              <h4>Upload Document</h4>
-              <p>Submit your PDF or DOCX academic paper with author details, course, and abstract.</p>
-            </div>
-          </div>
-          <div class="hiw-step">
-            <div class="hiw-step-left">
-              <div class="hiw-step-num">2</div>
-              <div class="hiw-step-line"></div>
-            </div>
-            <div class="hiw-step-body">
-              <div class="hiw-step-icon"><i class="fas fa-brain"></i></div>
-              <h4>Analyze Text</h4>
-              <p>The system extracts text and runs TF-IDF &amp; Cosine Similarity against all stored documents.</p>
-            </div>
-          </div>
-          <div class="hiw-step">
-            <div class="hiw-step-left">
-              <div class="hiw-step-num">3</div>
-              <div class="hiw-step-line"></div>
-            </div>
-            <div class="hiw-step-body">
-              <div class="hiw-step-icon"><i class="fas fa-robot"></i></div>
-              <h4>AI &amp; Web Detection</h4>
-              <p>AI semantic analysis and internet search provide additional plagiarism detection layers.</p>
-            </div>
-          </div>
-          <div class="hiw-step hiw-step-last">
-            <div class="hiw-step-left">
-              <div class="hiw-step-num">4</div>
-            </div>
-            <div class="hiw-step-body">
-              <div class="hiw-step-icon"><i class="fas fa-chart-bar"></i></div>
-              <h4>Detailed Report</h4>
-              <p>View a full similarity report with highlighted paragraphs, scores, and source references.</p>
-            </div>
-          </div>
-        </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shield-check"></i></div>
+        <h3>Secure Review</h3>
+        <p>Generate clear reports while keeping sensitive analysis private to the owner.</p>
       </div>
     </section>
 

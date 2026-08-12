@@ -212,6 +212,7 @@ async function updateAdminSettings(req, res) {
     const {
       max_uploads_per_user,
       max_ai_scans_per_user,
+      max_document_detections_per_student,
       ai_scanning_enabled,
       max_file_size_mb,
       allow_pdf,
@@ -223,14 +224,15 @@ async function updateAdminSettings(req, res) {
       .from('system_settings')
       .upsert({
         id: 1,
-        max_uploads_per_user:  Math.max(0, parseInt(max_uploads_per_user)  || 0),
-        max_ai_scans_per_user: Math.max(0, parseInt(max_ai_scans_per_user) || 0),
-        ai_scanning_enabled:   Boolean(ai_scanning_enabled),
-        max_file_size_mb:      Math.max(1, parseInt(max_file_size_mb) || 20),
-        allow_pdf:             Boolean(allow_pdf),
-        allow_docx:            Boolean(allow_docx),
-        allow_txt:             Boolean(allow_txt),
-        updated_at:            new Date().toISOString()
+        max_uploads_per_user:                 Math.max(0, parseInt(max_uploads_per_user)  || 0),
+        max_ai_scans_per_user:                Math.max(0, parseInt(max_ai_scans_per_user) || 0),
+        max_document_detections_per_student:  Math.max(0, parseInt(max_document_detections_per_student) || 3),
+        ai_scanning_enabled:                  Boolean(ai_scanning_enabled),
+        max_file_size_mb:                     Math.max(1, parseInt(max_file_size_mb) || 20),
+        allow_pdf:                            Boolean(allow_pdf),
+        allow_docx:                           Boolean(allow_docx),
+        allow_txt:                            Boolean(allow_txt),
+        updated_at:                           new Date().toISOString()
       });
 
     if (error) throw new Error(error.message);

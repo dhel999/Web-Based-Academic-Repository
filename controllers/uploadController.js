@@ -1,9 +1,16 @@
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+const crypto = require('crypto');
 const supabase = require('../utils/supabase');
 const { extractText, splitIntoParagraphs, splitIntoDisplayParagraphs, deleteFile } = require('../services/fileService');
 const { compareDocuments, compareParagraphs } = require('../utils/tfidf');
 const { getSettings } = require('../utils/settings');
+
+function hashDocumentContent(text) {
+  return crypto.createHash('sha256')
+    .update(String(text || '').trim().replace(/\s+/g, ' '))
+    .digest('hex');
+}
 
 // ── Thresholds ────────────────────────────────────────────────
 const TITLE_EXACT_BLOCK     = true;   // block exact (case-insensitive) title matches
@@ -61,6 +68,7 @@ async function uploadDocument(req, res) {
     }
 
     const paragraphs = splitIntoParagraphs(extractedText);
+    const contentHash = hashDocumentContent(extractedText);
 
     // ── 2. Check for EXACT duplicate title ──────────────────────
     if (TITLE_EXACT_BLOCK) {
@@ -212,6 +220,8 @@ async function uploadDocument(req, res) {
         title,
         original_filename: originalFilename,
         extracted_text: extractedText,
+        content_hash: contentHash,
+        version: 1,
         authors: authors || null,
         course: course || null,
         year: year || null,

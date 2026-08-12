@@ -4,6 +4,15 @@ const { analyzeWithOpenAI } = require('../services/openaiService');
 const { searchInternetPlagiarism, searchTitleOnline } = require('../services/internetSearchService');
 const { splitIntoDisplayParagraphs } = require('../services/fileService');
 const { getSettings } = require('../utils/settings');
+const {
+  hashDocumentContent,
+  checkDetectionQuota,
+  consumeDetectionCredit,
+  getCachedDetection,
+  saveDetectionCacheRecord,
+  markDetectionCompleted,
+  markDetectionFailed
+} = require('../utils/detectionCache');
 
 /**
  * POST /api/check-plagiarism
@@ -18,10 +27,13 @@ async function checkPlagiarism(req, res) {
       return res.status(400).json({ error: 'document_id is required' });
     }
 
-    // Fetch the document
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required to run document detection.' });
+    }
+
     const { data: doc, error: docError } = await supabase
       .from('documents')
-      .select('id, title, extracted_text, user_id')
+      .select('id, title, extracted_text, user_id, content_hash, version')
       .eq('id', document_id)
       .single();
 
@@ -29,12 +41,62 @@ async function checkPlagiarism(req, res) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Only the document owner or admin can run analysis
-    if (!req.user || (req.user.id !== doc.user_id && req.user.role !== 'admin')) {
+    if (req.user.id !== doc.user_id && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Only the document owner can run analysis' });
     }
 
-    // Fetch paragraphs of this document
+    const studentId = req.user.id;
+    const documentHash = hashDocumentContent(doc.extracted_text || '');
+    const cached = await getCachedDetection(studentId, doc.id, documentHash);
+
+    if (cached && cached.detection_status === 'completed') {
+      return res.json({
+        document_id: doc.id,
+        title: doc.title,
+        cached_result: true,
+        message: 'Using the saved result for this document version.',
+        local_check: cached.result_data?.local_check || {
+          overall_score: cached.similarity_score || 0,
+          document_matches: [],
+          paragraph_matches: [],
+          all_paragraphs: [],
+          display_paragraphs: splitIntoDisplayParagraphs(doc.extracted_text || '')
+        },
+        openai_check: cached.result_data?.openai_check || null
+      });
+    }
+
+    if (cached && cached.detection_status === 'processing') {
+      return res.status(202).json({
+        document_id: doc.id,
+        title: doc.title,
+        cached_result: false,
+        message: 'Detection is already in progress for this document version.',
+        status: 'processing'
+      });
+    }
+
+    const quota = await checkDetectionQuota(studentId);
+    if (!quota.allowed) {
+      return res.status(429).json({
+        error: quota.message,
+        limit_reached: true,
+        remaining_count: quota.usage.remaining_count,
+        used_count: quota.usage.used_count,
+        maximum_allowed: quota.usage.maximum_allowed
+      });
+    }
+
+    await saveDetectionCacheRecord(studentId, doc.id, documentHash, {
+      detection_status: 'processing',
+      result_data: null,
+      api_provider: null,
+      ai_score: null,
+      similarity_score: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+
     const { data: paragraphRows, error: paraError } = await supabase
       .from('paragraphs')
       .select('paragraph_text')
@@ -45,7 +107,6 @@ async function checkPlagiarism(req, res) {
 
     const paragraphs = (paragraphRows || []).map(p => p.paragraph_text);
 
-    // --- Local TF-IDF check ---
     const localResult = await runLocalPlagiarismCheck(doc.id, doc.extracted_text, paragraphs);
 
     const response = {
@@ -55,15 +116,14 @@ async function checkPlagiarism(req, res) {
         overall_score: localResult.overallScore,
         document_matches: localResult.documentMatches.slice(0, 10),
         paragraph_matches: localResult.paragraphMatches.slice(0, 30),
-        all_paragraphs: paragraphs,  // analysis paragraphs
+        all_paragraphs: paragraphs,
         display_paragraphs: splitIntoDisplayParagraphs(doc.extracted_text || '')
       },
-      openai_check: null
+      openai_check: null,
+      cached_result: false
     };
 
-    // --- OpenAI semantic check (optional) ---
     if (use_openai) {
-      // Check AI scanning settings before calling OpenAI
       const aiSettings = await getSettings();
 
       if (!aiSettings.ai_scanning_enabled) {
@@ -71,10 +131,7 @@ async function checkPlagiarism(req, res) {
           error: 'AI scanning is currently disabled by the administrator.',
           disabled: true
         };
-        return res.json(response);
-      }
-
-      if (aiSettings.max_ai_scans_per_user > 0 && req.user) {
+      } else if (aiSettings.max_ai_scans_per_user > 0 && req.user) {
         const { count } = await supabase
           .from('ai_scan_log')
           .select('id', { count: 'exact', head: true })
@@ -87,30 +144,39 @@ async function checkPlagiarism(req, res) {
             used,
             limit: aiSettings.max_ai_scans_per_user
           };
-          return res.json(response);
+        } else {
+          try {
+            const aiResult = await analyzeWithOpenAI(doc.id, paragraphs);
+            if (aiResult.flaggedParagraphs) {
+              aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
+                ...fp,
+                text: paragraphs[fp.paragraph_index] || '',
+                score: fp.confidence || (fp.risk === 'high' ? 82 : fp.risk === 'medium' ? 58 : 28)
+              }));
+            }
+            response.openai_check = aiResult;
+            if (req.user) {
+              supabase.from('ai_scan_log').insert({ user_id: req.user.id, document_id: doc.id }).then(() => {}).catch(() => {});
+            }
+          } catch (aiErr) {
+            response.openai_check = { error: aiErr.message };
+          }
         }
-      }
-
-      try {
-        const aiResult = await analyzeWithOpenAI(doc.id, paragraphs);
-        if (aiResult.flaggedParagraphs) {
-          aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
-            ...fp,
-            text: paragraphs[fp.paragraph_index] || '',
-            score: fp.confidence || (fp.risk === 'high' ? 82 : fp.risk === 'medium' ? 58 : 28)
-          }));
-        }
-        response.openai_check = aiResult;
-        // Log AI scan usage (non-critical)
-        if (req.user) {
-          supabase.from('ai_scan_log').insert({ user_id: req.user.id, document_id: doc.id }).then(() => {}).catch(() => {});
-        }
-      } catch (aiErr) {
-        response.openai_check = { error: aiErr.message };
       }
     }
 
-    return res.json(response);
+    const usage = await consumeDetectionCredit(studentId);
+    await markDetectionCompleted(studentId, doc.id, documentHash, response, response.local_check.overall_score, response.local_check.overall_score, 'local');
+
+    return res.json({
+      ...response,
+      usage,
+      detection_limit: {
+        used_count: usage.used_count,
+        remaining_count: usage.remaining_count,
+        maximum_allowed: usage.maximum_allowed
+      }
+    });
 
   } catch (err) {
     console.error('Plagiarism check error:', err);

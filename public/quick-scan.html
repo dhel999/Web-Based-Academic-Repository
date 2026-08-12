@@ -113,6 +113,17 @@
         </div>
         <h3 id="scanStatusText">Analyzing your document…</h3>
         <p class="text-muted" id="scanSubtext">Running TF-IDF & Cosine Similarity against repository</p>
+
+        <div class="scan-progress-meter">
+          <div class="scan-progress-track">
+            <div class="scan-progress-fill" id="scanProgressFill" style="width: 0%;"></div>
+          </div>
+          <div class="scan-progress-meta">
+            <span id="scanProgressLabel">0%</span>
+            <span id="scanProgressStage">Preparing</span>
+          </div>
+        </div>
+
         <div class="qs-progress-steps">
           <div class="qs-pstep active" id="pstep1"><i class="fas fa-file-import"></i> Extracting</div>
           <div class="qs-pstep" id="pstep2"><i class="fas fa-database"></i> Comparing</div>

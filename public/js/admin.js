@@ -369,9 +369,10 @@ async function loadSettings() {
     // Populate form inputs
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
     const chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-    set('maxUploads',    s.max_uploads_per_user  ?? 0);
-    set('maxAiScans',    s.max_ai_scans_per_user ?? 0);
-    set('maxFileSizeMb', s.max_file_size_mb      ?? 20);
+    set('maxUploads',                     s.max_uploads_per_user                  ?? 0);
+    set('maxAiScans',                     s.max_ai_scans_per_user                 ?? 0);
+    set('maxDocumentDetectionsPerStudent', s.max_document_detections_per_student   ?? 3);
+    set('maxFileSizeMb',                  s.max_file_size_mb                      ?? 20);
     chk('aiEnabled',  s.ai_scanning_enabled !== false);
     chk('allowPdf',   s.allow_pdf  !== false);
     chk('allowDocx',  s.allow_docx !== false);
@@ -427,13 +428,14 @@ async function saveSettings() {
     const gv  = id => { const el = document.getElementById(id); return el ? el.value : '0'; };
     const gc  = id => { const el = document.getElementById(id); return el ? el.checked : true; };
     const body = {
-      max_uploads_per_user:  parseInt(gv('maxUploads'))    || 0,
-      max_ai_scans_per_user: parseInt(gv('maxAiScans'))    || 0,
-      max_file_size_mb:      parseInt(gv('maxFileSizeMb')) || 20,
-      ai_scanning_enabled:   gc('aiEnabled'),
-      allow_pdf:             gc('allowPdf'),
-      allow_docx:            gc('allowDocx'),
-      allow_txt:             gc('allowTxt')
+      max_uploads_per_user:                 parseInt(gv('maxUploads'))    || 0,
+      max_ai_scans_per_user:                parseInt(gv('maxAiScans'))    || 0,
+      max_document_detections_per_student:  parseInt(gv('maxDocumentDetectionsPerStudent')) || 3,
+      max_file_size_mb:                     parseInt(gv('maxFileSizeMb')) || 20,
+      ai_scanning_enabled:                  gc('aiEnabled'),
+      allow_pdf:                            gc('allowPdf'),
+      allow_docx:                           gc('allowDocx'),
+      allow_txt:                            gc('allowTxt')
     };
     const res = await authFetch(`${API}/admin/settings`, {
       method: 'PUT',

@@ -45,6 +45,12 @@ ALTER TABLE documents ADD COLUMN IF NOT EXISTS authors TEXT;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS course TEXT;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS year TEXT;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS abstract TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS content_hash TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_content_hash
+  ON documents (user_id, content_hash)
+  WHERE content_hash IS NOT NULL;
 
 -- 2. Paragraphs table
 CREATE TABLE IF NOT EXISTS paragraphs (
@@ -74,18 +80,52 @@ CREATE INDEX IF NOT EXISTS idx_documents_title              ON documents USING g
 
 -- 4. System Settings table (singleton row id=1)
 CREATE TABLE IF NOT EXISTS system_settings (
-  id                    INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  max_uploads_per_user  INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
-  max_ai_scans_per_user INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
-  ai_scanning_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
-  max_file_size_mb      INTEGER NOT NULL DEFAULT 20,
-  allow_pdf             BOOLEAN NOT NULL DEFAULT TRUE,
-  allow_docx            BOOLEAN NOT NULL DEFAULT TRUE,
-  allow_txt             BOOLEAN NOT NULL DEFAULT TRUE,
-  updated_at            TIMESTAMPTZ DEFAULT NOW()
+  id                                    INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  max_uploads_per_user                  INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
+  max_ai_scans_per_user                 INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
+  max_document_detections_per_student   INTEGER NOT NULL DEFAULT 3,
+  ai_scanning_enabled                   BOOLEAN NOT NULL DEFAULT TRUE,
+  max_file_size_mb                      INTEGER NOT NULL DEFAULT 20,
+  allow_pdf                             BOOLEAN NOT NULL DEFAULT TRUE,
+  allow_docx                            BOOLEAN NOT NULL DEFAULT TRUE,
+  allow_txt                             BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at                            TIMESTAMPTZ DEFAULT NOW()
 );
 -- Insert default settings row
-INSERT INTO system_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
+INSERT INTO system_settings (id, max_document_detections_per_student)
+VALUES (1, 3)
+ON CONFLICT (id) DO UPDATE SET max_document_detections_per_student = EXCLUDED.max_document_detections_per_student;
+
+CREATE TABLE IF NOT EXISTS student_detection_usage (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id       UUID NOT NULL,
+  used_count       INTEGER NOT NULL DEFAULT 0,
+  maximum_allowed  INTEGER NOT NULL DEFAULT 3,
+  remaining_count  INTEGER NOT NULL DEFAULT 3,
+  period           TEXT NOT NULL DEFAULT 'lifetime',
+  updated_at       TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (student_id, period)
+);
+
+CREATE TABLE IF NOT EXISTS document_detection_cache (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id       UUID NOT NULL,
+  document_id      UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  document_hash    TEXT NOT NULL,
+  ai_score         FLOAT,
+  similarity_score FLOAT,
+  detection_status TEXT NOT NULL DEFAULT 'processing' CHECK (detection_status IN ('pending','processing','completed','failed')),
+  api_provider     TEXT,
+  result_data      JSONB,
+  detected_at      TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (student_id, document_id, document_hash)
+);
+
+CREATE INDEX IF NOT EXISTS idx_detection_cache_student_doc ON document_detection_cache(student_id, document_id, document_hash);
+CREATE INDEX IF NOT EXISTS idx_detection_cache_status ON document_detection_cache(detection_status);
+CREATE INDEX IF NOT EXISTS idx_student_detection_usage_student ON student_detection_usage(student_id);
 
 -- 5. AI Scan Log table (tracks per-user AI scan usage)
 CREATE TABLE IF NOT EXISTS ai_scan_log (

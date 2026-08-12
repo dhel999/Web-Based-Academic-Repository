@@ -77,20 +77,28 @@ btnScanAgain.addEventListener('click', () => {
   btnScan.disabled = true;
 });
 
+function updateScanProgress(percent, stageLabel) {
+  const fill = document.getElementById('scanProgressFill');
+  const label = document.getElementById('scanProgressLabel');
+  const stage = document.getElementById('scanProgressStage');
+  if (fill) fill.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+  if (label) label.textContent = `${Math.round(percent)}%`;
+  if (stage) stage.textContent = stageLabel || 'Processing';
+}
+
 async function runQuickScan() {
   if (!selectedFile) return;
 
   const useAI = document.getElementById('chkAI').checked;
   const useInternet = document.getElementById('chkInternet').checked;
 
-  // Show progress
   uploadSection.classList.add('hidden');
   scanProgress.classList.remove('hidden');
   scanResults.classList.add('hidden');
 
-  // Reset progress steps
   document.querySelectorAll('.qs-pstep').forEach(el => { el.classList.remove('active','done','queued'); });
   setStep(1);
+  updateScanProgress(8, 'Preparing');
 
   if (useAI) {
     const aiStep = document.getElementById('pstep3');
@@ -108,6 +116,7 @@ async function runQuickScan() {
 
   try {
     setStep(2);
+    updateScanProgress(30, 'Extracting');
     updateStatus('Analyzing your document…', 'Running TF-IDF & Cosine Similarity against repository');
 
     const res = await fetch(`${API}/quick-scan`, {
@@ -126,14 +135,19 @@ async function runQuickScan() {
     }
     if (!res.ok) throw new Error(data.error || `Scan failed (HTTP ${res.status})`);
 
-    // Mark remaining steps done
+    updateScanProgress(68, 'Comparing');
     const step2 = document.getElementById('pstep2');
     if (step2) { step2.classList.remove('active', 'queued'); step2.classList.add('done'); }
 
-    scanProgress.classList.add('hidden');
     currentQuickScanData = data;
-    renderResults(currentQuickScanData);
-    runOptionalQuickScanChecks(useAI, useInternet);
+
+    if (useAI || useInternet) {
+      renderResults(currentQuickScanData);
+      await runOptionalQuickScanChecks(useAI, useInternet);
+    } else {
+      scanProgress.classList.add('hidden');
+      renderResults(currentQuickScanData);
+    }
 
   } catch (err) {
     scanProgress.classList.add('hidden');
@@ -144,7 +158,11 @@ async function runQuickScan() {
 
 async function runOptionalQuickScanChecks(useAI, useInternet) {
   const paragraphs = currentQuickScanData?.local_check?.analysis_paragraphs || currentQuickScanData?.local_check?.all_paragraphs || [];
-  if (paragraphs.length === 0) return;
+  if (paragraphs.length === 0) {
+    scanProgress.classList.add('hidden');
+    renderResults(currentQuickScanData);
+    return;
+  }
 
   if (useAI) {
     const aiSection = document.getElementById('aiSection');
@@ -152,6 +170,7 @@ async function runOptionalQuickScanChecks(useAI, useInternet) {
     document.getElementById('aiResultContent').innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Running AI semantic analysis...</p>';
     const aiStep = document.getElementById('pstep3');
     if (aiStep) { aiStep.classList.remove('queued'); aiStep.classList.add('active'); }
+    updateScanProgress(82, 'AI Analysis');
 
     try {
       const res = await fetch(`${API}/quick-scan-ai`, {
@@ -179,6 +198,7 @@ async function runOptionalQuickScanChecks(useAI, useInternet) {
     document.getElementById('internetResultList').innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Searching internet sources...</p>';
     const webStep = document.getElementById('pstep4');
     if (webStep) { webStep.classList.remove('queued'); webStep.classList.add('active'); }
+    updateScanProgress(92, 'Web Search');
 
     try {
       const res = await fetch(`${API}/quick-scan-internet`, {
@@ -199,6 +219,9 @@ async function runOptionalQuickScanChecks(useAI, useInternet) {
       if (webStep) webStep.classList.remove('active');
     }
   }
+
+  updateScanProgress(100, 'Completed');
+  scanProgress.classList.add('hidden');
 }
 
 function setStep(n) {
@@ -411,7 +434,7 @@ function renderInternetResults(matches) {
 }
 
 function renderDocumentStyleView(local, ai, internet) {
-  const paragraphs = Array.isArray(local.all_paragraphs) ? local.all_paragraphs : [];
+  const paragraphs = Array.isArray(local.analysis_paragraphs) ? local.analysis_paragraphs : (Array.isArray(local.all_paragraphs) ? local.all_paragraphs : []);
   if (!qsDocPaper) return;
 
   if (paragraphs.length === 0) {
@@ -439,7 +462,8 @@ function renderDocumentStyleView(local, ai, internet) {
     if (!old || (m.matched_score || 0) > old.score) {
       localMap.set(idx, {
         score: m.matched_score || 0,
-        title: m.matched_title || 'Unknown'
+        title: m.matched_title || 'Unknown',
+        matchedText: m.matched_text || m.paragraph_text || ''
       });
     }
   }
@@ -520,10 +544,29 @@ function renderDocumentStyleView(local, ai, internet) {
       sourceInfo += `<div class="paper-source-info source-internet"><strong><i class="fas fa-globe"></i> Internet Match:</strong> ${(webHit.score || 0).toFixed(1)}% from ${webSource}</div>`;
     }
 
-    html += `<div class="${cls}">${esc(text).replace(/\n/g, '<br>')}${badges}</div>${sourceInfo}`;
+    const highlightedText = localHit && localHit.matchedText
+      ? highlightMatchedSnippet(text, localHit.matchedText, 'scan-inline-local')
+      : (aiHit && aiHit.reason ? highlightMatchedSnippet(text, String(aiHit.reason || ''), 'scan-inline-ai') : esc(text).replace(/\n/g, '<br>'));
+
+    html += `<div class="${cls}">${highlightedText}${badges}</div>${sourceInfo}`;
   }
 
   qsDocPaper.innerHTML = html || `<p style="color:#666;text-align:center;padding:2rem;"><i class="fas fa-circle-info"></i> No paragraph content to display.</p>`;
+}
+
+function highlightMatchedSnippet(text, matchText, clsName) {
+  const sourceText = String(text || '');
+  const match = String(matchText || '').trim();
+  if (!match) return esc(sourceText).replace(/\n/g, '<br>');
+
+  const safeText = esc(sourceText).replace(/\n/g, '<br>');
+  const safeMatch = esc(match);
+  const regex = new RegExp(escapeRegExp(safeMatch), 'gi');
+  return safeText.replace(regex, (value) => `<span class="scan-inline-highlight ${clsName}">${value}</span>`);
+}
+
+function escapeRegExp(string) {
+  return String(string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function esc(str) {
