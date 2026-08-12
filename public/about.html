@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Repository — About System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img src="img/SSC_logo.png" alt="Sulu State University" />
+      <span>AcadRepo</span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="about.html" class="active"><i class="fas fa-circle-info"></i> About System</a></li>
+      <li id="navAuthLinks"></li>
+    </ul>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div class="page-hero-eyebrow"><i class="fas fa-circle-info"></i> About System</div>
+      <h1>AcadRepo</h1>
+      <p>Web-based academic repository for document storage, review, and plagiarism detection.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="about-section">
+      <div class="about-header">
+        <span class="section-tag"><i class="fas fa-graduation-cap"></i> System Overview</span>
+        <h2>Academic repository and integrity management system</h2>
+      </div>
+
+      <div class="about-article-card">
+        <p>
+          <strong>AcadRepo</strong> is a web-based academic repository designed to store, organize, manage, and preserve students’ thesis, research papers, capstone projects, and other academic documentation. The system provides a centralized platform where students can securely submit their academic documents, while authorized administrators and advisers can review, manage, and monitor submitted research.
+        </p>
+
+        <p>
+          It includes document metadata, search and filtering, document archiving, and similarity detection using <strong>TF-IDF and cosine similarity</strong> to identify potential similarities between newly submitted documents and previously stored academic works. The system can also maintain detection results so that the same document does not need to be analyzed repeatedly, helping reduce unnecessary API or AI usage.
+        </p>
+
+        <p>
+          Through AcadRepo, academic documents can be systematically preserved and made easier to search, review, and reference, while maintaining appropriate access and privacy controls for student research.
+        </p>
+      </div>
+
+      <div class="about-grid">
+        <article class="about-card">
+          <div class="about-card-icon"><i class="fas fa-database"></i></div>
+          <h3>Document Storage</h3>
+          <p>Stores thesis, research papers, and academic projects in a central repository for long-term access and organization.</p>
+        </article>
+
+        <article class="about-card">
+          <div class="about-card-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
+          <h3>Similarity Analysis</h3>
+          <p>Checks documents with TF-IDF and cosine similarity to detect overlapping content and possible duplication.</p>
+        </article>
+
+        <article class="about-card">
+          <div class="about-card-icon"><i class="fas fa-user-shield"></i></div>
+          <h3>Access Control</h3>
+          <p>Provides controlled access for students, advisers, and administrators while preserving privacy and authorization.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="how-it-works-section">
+      <div class="about-header">
+        <span class="section-tag"><i class="fas fa-cogs"></i> System Workflow</span>
+        <h2>How the repository works</h2>
+      </div>
+
+      <div class="hiw-layout">
+        <div class="hiw-steps">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>Submission</h3>
+            <p>Students upload their research document together with essential details such as title, author, course, and abstract.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>Processing</h3>
+            <p>The system organizes the document and evaluates content similarity against existing academic records.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>Review</h3>
+            <p>Advisers and administrators can review the outcome and monitor the status of submitted research work.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <h3>Preservation</h3>
+            <p>Approved documents remain accessible, searchable, and protected within the academic repository.</p>
+          </div>
+        </div>
+
+        <div class="hiw-feature-panel">
+          <h3>Purpose of the System</h3>
+          <p>AcadRepo is built to support academic integrity, improve document organization, and provide a structured environment for preserving research outputs while reducing unnecessary repeated analysis.</p>
+
+          <ul class="feature-list">
+            <li><i class="fas fa-check-circle"></i> Centralized archive for thesis and research documents</li>
+            <li><i class="fas fa-check-circle"></i> Searchable metadata and academic record management</li>
+            <li><i class="fas fa-check-circle"></i> Similarity checking for originality review</li>
+            <li><i class="fas fa-check-circle"></i> Reduced duplicate analysis and better system efficiency</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
+  </footer>
+
+  <script src="js/nav-auth.js"></script>
+</body>
+</html>

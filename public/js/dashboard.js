@@ -67,38 +67,10 @@ function renderTable(docs) {
           <a href="result.html?id=${doc.id}" class="btn btn-primary" style="padding:.35rem .75rem;font-size:.8rem;">
             <i class="fas fa-shield-halved"></i> Report
           </a>
-          <button class="btn btn-secondary" style="padding:.35rem .75rem;font-size:.8rem;"
-            onclick="rerunAnalysis('${doc.id}', this)">
-            <i class="fas fa-rotate"></i> Re-run
-          </button>
         </div>
       </td>
     </tr>
   `).join('');
-}
-
-async function rerunAnalysis(documentId, btn) {
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-  try {
-    const res = await fetch(`${API}/check-plagiarism`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_id: documentId, use_openai: false })
-    });
-    if (!res.ok) throw new Error('Analysis failed');
-    btn.innerHTML = '<i class="fas fa-check"></i> Done';
-    btn.style.color = 'var(--green)';
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-rotate"></i> Re-run';
-      btn.style.color = '';
-    }, 2500);
-  } catch (err) {
-    btn.innerHTML = '<i class="fas fa-xmark"></i> Error';
-    btn.style.color = 'var(--red)';
-    btn.disabled = false;
-  }
 }
 
 // ── Utilities ─────────────────────────────────────────────────
