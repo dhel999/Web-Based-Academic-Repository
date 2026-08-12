@@ -1,3 +1,32 @@
+/**
+ * ================================================================
+ * PLAGIARISM DETECTION CONTROLLER
+ * ================================================================
+ * 
+ * ENHANCED SIMILARITY DETECTION WITH INTELLIGENT CACHING
+ * 
+ * This controller implements a smart detection system that:
+ * 1. Only runs similarity detection ONCE per document version
+ * 2. Saves all results to database (detection_cache + plagiarism_results)
+ * 3. Returns cached results on subsequent requests (no credit consumed)
+ * 4. Tracks student detection quota usage
+ * 
+ * HOW IT WORKS:
+ * - When a document is analyzed, its content is hashed (SHA-256)
+ * - The hash is used to check if this exact version was analyzed before
+ * - If cached result exists: return it immediately (no credit used)
+ * - If no cache: run detection, save results, consume 1 credit
+ * - Results saved to: document_detection_cache (full analysis) + plagiarism_results (matches)
+ * 
+ * BENEFITS:
+ * - Saves API/compute costs by avoiding repeated analysis
+ * - Students can view their reports unlimited times without penalty
+ * - Quota system prevents abuse while allowing legitimate re-checks
+ * - Fast response times for cached results
+ * 
+ * ================================================================
+ */
+
 const supabase = require('../utils/supabase');
 const { runLocalPlagiarismCheck, checkSimilarTitles, getResultsByDocument } = require('../services/plagiarismService');
 const { analyzeWithOpenAI } = require('../services/openaiService');
@@ -49,12 +78,18 @@ async function checkPlagiarism(req, res) {
     const documentHash = hashDocumentContent(doc.extracted_text || '');
     const cached = await getCachedDetection(studentId, doc.id, documentHash);
 
+    // Return cached results if detection already completed
     if (cached && cached.detection_status === 'completed') {
+      console.log(`Returning cached detection result for document ${doc.id}`);
+      
+      // Get usage stats without consuming credit
+      const usage = await getStudentDetectionUsage(studentId);
+      
       return res.json({
         document_id: doc.id,
         title: doc.title,
         cached_result: true,
-        message: 'Using the saved result for this document version.',
+        message: 'Using the saved result for this document version. No additional detection credit consumed.',
         local_check: cached.result_data?.local_check || {
           overall_score: cached.similarity_score || 0,
           document_matches: [],
@@ -62,7 +97,13 @@ async function checkPlagiarism(req, res) {
           all_paragraphs: [],
           display_paragraphs: splitIntoDisplayParagraphs(doc.extracted_text || '')
         },
-        openai_check: cached.result_data?.openai_check || null
+        openai_check: cached.result_data?.openai_check || null,
+        detection_limit: {
+          used_count: usage.used_count,
+          remaining_count: usage.remaining_count,
+          maximum_allowed: usage.maximum_allowed
+        },
+        cached_at: cached.detected_at
       });
     }
 
@@ -107,7 +148,49 @@ async function checkPlagiarism(req, res) {
 
     const paragraphs = (paragraphRows || []).map(p => p.paragraph_text);
 
+    console.log(`Running new similarity detection for document ${doc.id}`);
     const localResult = await runLocalPlagiarismCheck(doc.id, doc.extracted_text, paragraphs);
+
+    // Save plagiarism results to database for each match
+    const savePromises = [];
+    if (localResult.documentMatches && localResult.documentMatches.length > 0) {
+      for (const match of localResult.documentMatches.slice(0, 15)) {
+        if (match.similarity_score > 5) {
+          savePromises.push(
+            supabase.from('plagiarism_results').insert({
+              document_id: doc.id,
+              matched_document_id: match.document_id,
+              similarity_score: match.similarity_score,
+              matched_paragraph: null,
+              source: 'local'
+            })
+          );
+        }
+      }
+    }
+
+    // Save paragraph-level matches
+    if (localResult.paragraphMatches && localResult.paragraphMatches.length > 0) {
+      for (const pmatch of localResult.paragraphMatches.slice(0, 20)) {
+        if (pmatch.matched_score > 10) {
+          savePromises.push(
+            supabase.from('plagiarism_results').insert({
+              document_id: doc.id,
+              matched_document_id: pmatch.matched_doc_id || null,
+              similarity_score: pmatch.matched_score,
+              matched_paragraph: pmatch.matched_text?.substring(0, 500) || null,
+              source: 'local'
+            })
+          );
+        }
+      }
+    }
+
+    // Execute all saves in parallel
+    if (savePromises.length > 0) {
+      await Promise.allSettled(savePromises);
+      console.log(`Saved ${savePromises.length} plagiarism result records`);
+    }
 
     const response = {
       document_id: doc.id,
@@ -165,8 +248,19 @@ async function checkPlagiarism(req, res) {
       }
     }
 
+    // Consume detection credit and mark as completed
     const usage = await consumeDetectionCredit(studentId);
-    await markDetectionCompleted(studentId, doc.id, documentHash, response, response.local_check.overall_score, response.local_check.overall_score, 'local');
+    await markDetectionCompleted(
+      studentId, 
+      doc.id, 
+      documentHash, 
+      response, 
+      response.openai_check?.ai_score || null,
+      response.local_check.overall_score, 
+      use_openai && response.openai_check && !response.openai_check.error ? 'openai+local' : 'local'
+    );
+
+    console.log(`Detection completed for document ${doc.id}. Credit consumed: ${usage.used_count}/${usage.maximum_allowed}`);
 
     return res.json({
       ...response,
@@ -175,11 +269,31 @@ async function checkPlagiarism(req, res) {
         used_count: usage.used_count,
         remaining_count: usage.remaining_count,
         maximum_allowed: usage.maximum_allowed
-      }
+      },
+      message: 'Similarity detection completed successfully. Results saved to database.'
     });
 
   } catch (err) {
     console.error('Plagiarism check error:', err);
+    
+    // Mark detection as failed if it was started
+    try {
+      if (req.user && req.body.document_id) {
+        const { data: doc } = await supabase
+          .from('documents')
+          .select('id, extracted_text')
+          .eq('id', req.body.document_id)
+          .single();
+        
+        if (doc) {
+          const documentHash = hashDocumentContent(doc.extracted_text || '');
+          await markDetectionFailed(req.user.id, doc.id, documentHash);
+        }
+      }
+    } catch (markErr) {
+      console.error('Error marking detection as failed:', markErr);
+    }
+    
     return res.status(500).json({ error: err.message });
   }
 }

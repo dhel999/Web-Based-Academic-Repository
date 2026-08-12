@@ -242,6 +242,28 @@ async function markDetectionFailed(studentId, documentId, documentHash) {
   return data;
 }
 
+async function getAllDetectionsByStudent(studentId) {
+  const { data, error } = await supabase
+    .from('document_detection_cache')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function getDocumentDetectionHistory(documentId) {
+  const { data, error } = await supabase
+    .from('document_detection_cache')
+    .select('*')
+    .eq('document_id', documentId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
 module.exports = {
   hashDocumentContent,
   getStudentDetectionUsage,
@@ -251,5 +273,7 @@ module.exports = {
   getCachedDetection,
   saveDetectionCacheRecord,
   markDetectionCompleted,
-  markDetectionFailed
+  markDetectionFailed,
+  getAllDetectionsByStudent,
+  getDocumentDetectionHistory
 };
