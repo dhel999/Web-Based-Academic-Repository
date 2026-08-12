@@ -242,4 +242,68 @@ async function updateAdminSettings(req, res) {
   }
 }
 
-module.exports = { listAllDocuments, deleteDocument, listUsers, deleteUser, updateUserRole, getStats, getAdminSettings, updateAdminSettings };
+/**
+ * GET /api/admin/cache-stats — detection cache statistics
+ */
+async function getCacheStats(req, res) {
+  try {
+    // Get total detections from cache table
+    const { data: cacheData, error: cacheError } = await supabase
+      .from('document_detection_cache')
+      .select('detection_status');
+    
+    if (cacheError) throw new Error(cacheError.message);
+    
+    const totalDetections = (cacheData || []).length;
+    const completedDetections = (cacheData || []).filter(d => d.detection_status === 'completed').length;
+    const cachedDetections = completedDetections; // Cached results are completed detections
+    
+    res.json({
+      total_detections: totalDetections,
+      cached_detections: cachedDetections,
+      cache_hit_rate: totalDetections > 0 ? Math.round((cachedDetections / totalDetections) * 100) : 0
+    });
+  } catch (err) {
+    console.error('Cache stats error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch cache stats' });
+  }
+}
+
+/**
+ * GET /api/admin/detection-usage — detection credits usage statistics
+ */
+async function getDetectionUsage(req, res) {
+  try {
+    // Get total students and their credit usage
+    const { data: usageData, error: usageError } = await supabase
+      .from('student_detection_usage')
+      .select('used_count');
+    
+    if (usageError) throw new Error(usageError.message);
+    
+    const totalStudents = (usageData || []).length;
+    const totalCreditsUsed = (usageData || []).reduce((sum, u) => sum + (u.used_count || 0), 0);
+    
+    res.json({
+      total_students: totalStudents,
+      total_credits_used: totalCreditsUsed,
+      avg_credits_per_student: totalStudents > 0 ? Math.round(totalCreditsUsed / totalStudents) : 0
+    });
+  } catch (err) {
+    console.error('Detection usage error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch detection usage' });
+  }
+}
+
+module.exports = { 
+  listAllDocuments, 
+  deleteDocument, 
+  listUsers, 
+  deleteUser, 
+  updateUserRole, 
+  getStats, 
+  getAdminSettings, 
+  updateAdminSettings,
+  getCacheStats,
+  getDetectionUsage 
+};
