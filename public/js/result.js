@@ -91,9 +91,18 @@ async function loadReport() {
     loadingState.classList.add('hidden');
     reportContent.classList.remove('hidden');
 
-    // Auto-run local analysis if no paragraph-level results exist yet
+    // Check if results exist in database
     const hasParaResults = results.some(r => r.matched_paragraph);
-    if (!hasParaResults) {
+    const hasDocResults = results.some(r => r.source === 'local');
+    
+    if (hasParaResults || hasDocResults) {
+      // Show cached results banner
+      showCachedResultBanner(results);
+      // Update button text to indicate results are cached
+      btnRecheck.innerHTML = '<i class="fas fa-rotate"></i> Re-scan Document (New Analysis)';
+      btnRecheck.title = 'Run a fresh plagiarism scan (will consume detection credit)';
+    } else {
+      // Auto-run local analysis only if NO results exist
       await runAnalysis(false);
     }
 
@@ -181,6 +190,22 @@ function renderDocumentInfo(doc) {
   docSubtitle.textContent = `Uploaded: ${formatDate(doc.created_at)} | ${doc.original_filename}`;
   reportDocTitle.textContent  = doc.title;
   reportFilename.textContent  = doc.original_filename;
+}
+
+function showCachedResultBanner(results) {
+  const banner = document.getElementById('cachedResultBanner');
+  const cachedDate = document.getElementById('cachedDate');
+  
+  if (!banner) return;
+  
+  // Find the most recent scan date
+  const dates = results.map(r => new Date(r.created_at)).filter(d => !isNaN(d));
+  if (dates.length > 0) {
+    const latestDate = new Date(Math.max(...dates));
+    cachedDate.textContent = `Scanned: ${formatDate(latestDate)}`;
+  }
+  
+  banner.classList.remove('hidden');
 }
 
 function renderResultsFromDB(results) {
@@ -529,6 +554,18 @@ function renderInternetSources(results) {
 async function runAnalysis(useAI) {
   const btn = useAI ? btnRecheckAI : btnRecheck;
   const orig = btn.innerHTML;
+  
+  // Confirm re-scan if cached results exist
+  const banner = document.getElementById('cachedResultBanner');
+  if (!useAI && banner && !banner.classList.contains('hidden')) {
+    const confirmRescan = confirm(
+      'This document already has saved results.\n\n' +
+      'Re-scanning will consume 1 detection credit from your quota.\n\n' +
+      'Do you want to proceed with a fresh scan?'
+    );
+    if (!confirmRescan) return;
+  }
+  
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing…';
 
