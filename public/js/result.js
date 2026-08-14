@@ -84,9 +84,10 @@ async function loadReport() {
     fullExtractedText = currentDoc.extracted_text || '';
     currentDisplayParagraphs = Array.isArray(docData.display_paragraphs) ? docData.display_paragraphs : [];
     const results     = resultData.results || [];
+    const aiSummary   = resultData.ai_summary || null;
 
     renderDocumentInfo(currentDoc);
-    renderResultsFromDB(results);
+    renderResultsFromDB(results, aiSummary);
 
     loadingState.classList.add('hidden');
     reportContent.classList.remove('hidden');
@@ -208,7 +209,7 @@ function showCachedResultBanner(results) {
   banner.classList.remove('hidden');
 }
 
-function renderResultsFromDB(results) {
+function renderResultsFromDB(results, aiSummary) {
   const localResults    = results.filter(r => r.source === 'local');
   const aiResults       = results.filter(r => r.source === 'openai');
   const internetResults = results.filter(r => r.source === 'internet');
@@ -296,21 +297,43 @@ function renderResultsFromDB(results) {
 
   // Build AI match map — integrate into paper view (skip short paragraphs)
   aiMatchMap = new Map();
-  for (const r of aiResults) {
-    let paraText = r.matched_paragraph || '';
-    // Try to find which paragraph this AI result matches
-    for (let idx = 0; idx < currentParagraphs.length; idx++) {
-      const p = currentParagraphs[idx];
-      // Skip short paragraphs — headers, titles, numbered items
-      if (p.split(/\s+/).length < 8 || p.length < 40) continue;
-      if (paraText.includes(p.slice(0, 60)) || p.includes(paraText.slice(0, 60))) {
-        if (!aiMatchMap.has(idx) || r.similarity_score > aiMatchMap.get(idx).score) {
-          aiMatchMap.set(idx, {
-            score: r.similarity_score,
-            reason: paraText
-          });
+  
+  // Check if we have full AI summary data with flaggedParagraphs
+  if (aiSummary && aiSummary.flaggedParagraphs && aiSummary.flaggedParagraphs.length > 0) {
+    // Use flagged paragraphs from cached AI summary
+    const flagged = aiSummary.flaggedParagraphs;
+    for (const fp of flagged) {
+      let idx = fp.paragraph_index != null ? fp.paragraph_index : -1;
+      if ((idx == null || idx < 0 || idx >= currentParagraphs.length) && fp.text) {
+        idx = findParagraphIndex(fp.text);
+      }
+      if (idx >= 0) {
+        const riskDefault = fp.risk === 'high' ? 85 : fp.risk === 'medium' ? 58 : 30;
+        const score = fp.score || fp.confidence || riskDefault;
+        aiMatchMap.set(idx, {
+          score: score,
+          reason: fp.reason || 'AI flagged'
+        });
+      }
+    }
+  } else {
+    // Fall back to building from database results
+    for (const r of aiResults) {
+      let paraText = r.matched_paragraph || '';
+      // Try to find which paragraph this AI result matches
+      for (let idx = 0; idx < currentParagraphs.length; idx++) {
+        const p = currentParagraphs[idx];
+        // Skip short paragraphs — headers, titles, numbered items
+        if (p.split(/\s+/).length < 8 || p.length < 40) continue;
+        if (paraText.includes(p.slice(0, 60)) || p.includes(paraText.slice(0, 60))) {
+          if (!aiMatchMap.has(idx) || r.similarity_score > aiMatchMap.get(idx).score) {
+            aiMatchMap.set(idx, {
+              score: r.similarity_score,
+              reason: paraText
+            });
+          }
+          break;
         }
-        break;
       }
     }
   }
@@ -318,8 +341,27 @@ function renderResultsFromDB(results) {
   // Render the unified paper view with ALL content
   renderPaperView();
 
-  if (aiResults.length > 0) {
-    // Show AI summary section
+  // Render AI summary section if available
+  if (aiSummary && aiSummary.plagiarismPercentage !== undefined) {
+    // Full AI summary available from cached data - show complete analysis
+    aiAnalysisSection.classList.remove('hidden');
+    const flagged = aiSummary.flaggedParagraphs || [];
+    aiContent.innerHTML = `
+      <div class="ai-result">
+        <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;">
+          <div style="font-size:2rem;font-weight:800;color:${aiSummary.plagiarismPercentage >= 70 ? '#e74c3c' : aiSummary.plagiarismPercentage >= 40 ? '#f0c000' : 'var(--green)'};">${aiSummary.plagiarismPercentage}%</div>
+          <div>
+            <div style="font-size:.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:700;">AI Plagiarism Estimate</div>
+            <div class="risk-badge risk-${aiSummary.riskLevel || 'low'}" style="display:inline-block;margin-top:.25rem;">${(aiSummary.riskLevel || 'low').toUpperCase()} RISK</div>
+          </div>
+        </div>
+        <p style="font-size:.85rem;color:var(--text-muted);">${escapeHtml(aiSummary.explanation || '')}</p>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-top:.5rem;"><strong>Suggestions:</strong> ${escapeHtml(aiSummary.suggestions || '')}</p>
+        <p style="font-size:.85rem;color:#e74c3c;margin-top:.5rem;"><i class="fas fa-info-circle"></i> ${flagged.length} paragraph(s) highlighted in <strong>red</strong> in the document above.</p>
+      </div>
+    `;
+  } else if (aiResults.length > 0) {
+    // Only paragraph-level AI results available, show simplified summary
     aiAnalysisSection.classList.remove('hidden');
     aiContent.innerHTML = `
       <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">

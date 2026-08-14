@@ -340,7 +340,7 @@ async function getResults(req, res) {
     // Check ownership — only the document owner can see results
     const { data: doc } = await supabase
       .from('documents')
-      .select('user_id')
+      .select('user_id, extracted_text')
       .eq('id', document_id)
       .single();
 
@@ -352,7 +352,26 @@ async function getResults(req, res) {
     }
 
     const results = await getResultsByDocument(document_id);
-    return res.json({ results });
+    
+    // Also fetch cached AI summary data if it exists
+    let aiSummary = null;
+    if (req.user) {
+      const documentHash = hashDocumentContent(doc.extracted_text || '');
+      const { data: cached } = await supabase
+        .from('document_detection_cache')
+        .select('result_data')
+        .eq('student_id', req.user.id)
+        .eq('document_id', document_id)
+        .eq('document_hash', documentHash)
+        .eq('detection_status', 'completed')
+        .maybeSingle();
+      
+      if (cached && cached.result_data && cached.result_data.openai_check) {
+        aiSummary = cached.result_data.openai_check;
+      }
+    }
+    
+    return res.json({ results, ai_summary: aiSummary });
   } catch (err) {
     console.error('Get results error:', err);
     return res.status(500).json({ error: err.message });
