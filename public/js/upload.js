@@ -17,7 +17,6 @@ const statusMsg     = document.getElementById('statusMessage');
 const resultsPreview= document.getElementById('resultsPreview');
 const resultsContent= document.getElementById('resultsContent');
 const btnViewFull   = document.getElementById('btnViewFull');
-const runOpenAI     = document.getElementById('runOpenAI');
 
 let lastRejectionData = null; // stored for PDF export
 
@@ -202,21 +201,21 @@ uploadForm.addEventListener('submit', async (e) => {
       console.log('Upload warning:', uploadData.warnings);
     }
 
-    updateProgress(55, 'Running TF-IDF plagiarism analysis…');
+    updateProgress(45, 'Running TF-IDF similarity analysis…');
 
-    // Step 2: Check plagiarism
-    const useAI = runOpenAI.checked;
+    // Step 2: Run full detection — similarity, AI, and internet checks together
     const checkHeaders = { 'Content-Type': 'application/json' };
     if (token) checkHeaders['Authorization'] = `Bearer ${token}`;
+    updateProgress(65, 'Scanning for AI-generated text and internet matches…');
     const checkRes = await fetch(`${API}/check-plagiarism`, {
       method: 'POST',
       headers: checkHeaders,
-      body: JSON.stringify({ document_id: documentId, use_openai: useAI })
+      body: JSON.stringify({ document_id: documentId, use_openai: true, use_internet: true })
     });
     const checkData = await checkRes.json();
     if (!checkRes.ok) throw new Error(checkData.error || 'Plagiarism check failed');
 
-    updateProgress(100, 'Analysis complete!');
+    updateProgress(100, 'Analysis complete! Results saved.');
 
     // Show results preview
     renderResultsPreview(checkData, documentId);
@@ -249,6 +248,7 @@ function renderResultsPreview(data, documentId) {
   const label = score >= 70 ? 'High Risk' : score >= 40 ? 'Medium Risk' : 'Low Risk';
   const matchCount = data.local_check?.document_matches?.length || 0;
   const paraCount  = data.local_check?.paragraph_matches?.length || 0;
+  const internetCount = data.internet_check?.matches?.length || data.internet_check?.total_found || 0;
 
   resultsContent.innerHTML = `
     <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem;">
@@ -263,6 +263,8 @@ function renderResultsPreview(data, documentId) {
       <span class="pill">${paraCount} flagged paragraph${paraCount !== 1 ? 's' : ''}</span>
       ${data.openai_check && !data.openai_check.error ? `<span class="pill"><i class="fas fa-robot"></i> AI: ${data.openai_check.plagiarismPercentage}%</span>` : ''}
       ${data.openai_check?.error ? `<span class="pill" style="border-color:var(--red);color:var(--red);"><i class="fas fa-triangle-exclamation"></i> AI Error: ${escapeHtml(data.openai_check.error)}</span>` : ''}
+      ${data.internet_check && !data.internet_check.error ? `<span class="pill"><i class="fas fa-globe"></i> Internet: ${internetCount} match${internetCount !== 1 ? 'es' : ''}</span>` : ''}
+      ${data.internet_check?.error ? `<span class="pill" style="border-color:var(--red);color:var(--red);"><i class="fas fa-triangle-exclamation"></i> Internet Error: ${escapeHtml(data.internet_check.error)}</span>` : ''}
     </div>
   `;
 

@@ -50,7 +50,7 @@ const {
  */
 async function checkPlagiarism(req, res) {
   try {
-    const { document_id, use_openai = false } = req.body;
+    const { document_id, use_openai = true, use_internet = true } = req.body;
 
     if (!document_id) {
       return res.status(400).json({ error: 'document_id is required' });
@@ -98,6 +98,7 @@ async function checkPlagiarism(req, res) {
           display_paragraphs: splitIntoDisplayParagraphs(doc.extracted_text || '')
         },
         openai_check: cached.result_data?.openai_check || null,
+        internet_check: cached.result_data?.internet_check || null,
         detection_limit: {
           used_count: usage.used_count,
           remaining_count: usage.remaining_count,
@@ -203,6 +204,7 @@ async function checkPlagiarism(req, res) {
         display_paragraphs: splitIntoDisplayParagraphs(doc.extracted_text || '')
       },
       openai_check: null,
+      internet_check: null,
       cached_result: false
     };
 
@@ -248,16 +250,55 @@ async function checkPlagiarism(req, res) {
       }
     }
 
+    if (use_internet) {
+      try {
+        const internetMatches = await searchInternetPlagiarism(paragraphs, 12);
+
+        // Save each internet match to plagiarism_results (same shape as /api/check-internet)
+        const internetSavePromises = internetMatches.map(match =>
+          supabase.from('plagiarism_results').insert({
+            document_id: doc.id,
+            matched_document_id: null,
+            similarity_score: match.similarity_score,
+            matched_paragraph: JSON.stringify({
+              new_paragraph: match.paragraph_text,
+              matched_text: match.matched_snippet,
+              source_url: match.source_url,
+              source_domain: match.source_domain,
+              all_sources: match.all_sources
+            }),
+            source: 'internet'
+          })
+        );
+        if (internetSavePromises.length > 0) {
+          await Promise.allSettled(internetSavePromises);
+          console.log(`Saved ${internetSavePromises.length} internet plagiarism result records`);
+        }
+
+        response.internet_check = {
+          matches: internetMatches,
+          total_checked: Math.min(paragraphs.length, 12),
+          total_found: internetMatches.length
+        };
+      } catch (netErr) {
+        console.error('Internet check error during upload analysis:', netErr.message);
+        response.internet_check = { error: netErr.message };
+      }
+    }
+
     // Consume detection credit and mark as completed
     const usage = await consumeDetectionCredit(studentId);
+    const apiProviderParts = ['local'];
+    if (use_openai && response.openai_check && !response.openai_check.error) apiProviderParts.push('openai');
+    if (use_internet && response.internet_check && !response.internet_check.error) apiProviderParts.push('internet');
     await markDetectionCompleted(
-      studentId, 
-      doc.id, 
-      documentHash, 
-      response, 
+      studentId,
+      doc.id,
+      documentHash,
+      response,
       response.openai_check?.ai_score || null,
-      response.local_check.overall_score, 
-      use_openai && response.openai_check && !response.openai_check.error ? 'openai+local' : 'local'
+      response.local_check.overall_score,
+      apiProviderParts.join('+')
     );
 
     console.log(`Detection completed for document ${doc.id}. Credit consumed: ${usage.used_count}/${usage.maximum_allowed}`);

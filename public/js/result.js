@@ -103,8 +103,9 @@ async function loadReport() {
       btnRecheck.innerHTML = '<i class="fas fa-rotate"></i> Re-scan Document (New Analysis)';
       btnRecheck.title = 'Run a fresh plagiarism scan (will consume detection credit)';
     } else {
-      // Auto-run local analysis only if NO results exist
-      await runAnalysis(false);
+      // No results exist yet (e.g. document uploaded before auto-scan was added) —
+      // run the full similarity + AI + internet analysis automatically.
+      await runAnalysis(true);
     }
 
   } catch (err) {
@@ -616,7 +617,7 @@ async function runAnalysis(useAI) {
     const res = await fetch(`${API}/check-plagiarism`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ document_id: documentId, use_openai: useAI })
+      body: JSON.stringify({ document_id: documentId, use_openai: useAI, use_internet: useAI })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Analysis failed');
@@ -626,6 +627,23 @@ async function runAnalysis(useAI) {
     const docMatches  = localCheck.document_matches || [];
     const paraMatches = localCheck.paragraph_matches || [];
     const score       = localCheck.overall_score || 0;
+
+    // Merge internet results (if requested) into the internet match map before rendering
+    if (useAI && data.internet_check && !data.internet_check.error) {
+      for (const m of (data.internet_check.matches || [])) {
+        const idx = m.paragraph_index;
+        if (idx != null && (!internetMatchMap.has(idx) || m.similarity_score > internetMatchMap.get(idx).score)) {
+          internetMatchMap.set(idx, {
+            score: m.similarity_score,
+            snippet: m.matched_snippet || '',
+            url: m.source_url || '',
+            domain: m.source_domain || '',
+            all_sources: m.all_sources || []
+          });
+        }
+      }
+      renderInternetSources(data.internet_check.matches || []);
+    }
 
     renderGauge(score);
     renderScorePills(docMatches.length, 0, internetMatchMap.size, score);
