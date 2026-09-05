@@ -418,6 +418,7 @@ async function loadSettings() {
     const chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
     set('maxUploads',                     s.max_uploads_per_user                  ?? 0);
     set('maxAiScans',                     s.max_ai_scans_per_user                 ?? 0);
+    set('maxQuickScansPerWeek',           s.max_quick_scans_per_week              ?? 3);
     set('maxDocumentDetectionsPerStudent', s.max_document_detections_per_student   ?? 3);
     set('maxFileSizeMb',                  s.max_file_size_mb                      ?? 20);
     chk('aiEnabled',  s.ai_scanning_enabled !== false);
@@ -474,9 +475,11 @@ async function saveSettings() {
   try {
     const gv  = id => { const el = document.getElementById(id); return el ? el.value : '0'; };
     const gc  = id => { const el = document.getElementById(id); return el ? el.checked : true; };
+    const quickScanLimit = parseInt(gv('maxQuickScansPerWeek'), 10);
     const body = {
       max_uploads_per_user:                 parseInt(gv('maxUploads'))    || 0,
       max_ai_scans_per_user:                parseInt(gv('maxAiScans'))    || 0,
+      max_quick_scans_per_week:             Number.isNaN(quickScanLimit) ? 3 : Math.max(0, quickScanLimit),
       max_document_detections_per_student:  parseInt(gv('maxDocumentDetectionsPerStudent')) || 3,
       max_file_size_mb:                     parseInt(gv('maxFileSizeMb')) || 20,
       ai_scanning_enabled:                  gc('aiEnabled'),

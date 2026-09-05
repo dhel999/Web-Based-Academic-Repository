@@ -212,6 +212,7 @@ async function updateAdminSettings(req, res) {
     const {
       max_uploads_per_user,
       max_ai_scans_per_user,
+      max_quick_scans_per_week,
       max_document_detections_per_student,
       ai_scanning_enabled,
       max_file_size_mb,
@@ -220,12 +221,17 @@ async function updateAdminSettings(req, res) {
       allow_txt
     } = req.body;
 
+    const quickScanLimit = Number.isFinite(Number(max_quick_scans_per_week))
+      ? Math.max(0, parseInt(max_quick_scans_per_week, 10))
+      : 3;
+
     const { error } = await supabase
       .from('system_settings')
       .upsert({
         id: 1,
         max_uploads_per_user:                 Math.max(0, parseInt(max_uploads_per_user)  || 0),
         max_ai_scans_per_user:                Math.max(0, parseInt(max_ai_scans_per_user) || 0),
+        max_quick_scans_per_week:             quickScanLimit,
         max_document_detections_per_student:  Math.max(0, parseInt(max_document_detections_per_student) || 3),
         ai_scanning_enabled:                  Boolean(ai_scanning_enabled),
         max_file_size_mb:                     Math.max(1, parseInt(max_file_size_mb) || 20),

@@ -37,13 +37,15 @@ const upload = multer({
 });
 
 const { requireAuth } = require('../middleware/auth');
-const { quickScan, quickScanAI, quickScanInternet } = require('../controllers/quickScanController');
+const { quickScan, quickScanAI, quickScanInternet, getQuickScanUsage } = require('../controllers/quickScanController');
+const { optionalAuth } = require('../middleware/auth');
 
 // POST /api/upload
 router.post('/upload', requireAuth, upload.single('file'), uploadDocument);
 
 // POST /api/quick-scan (no auth required)
-router.post('/quick-scan', upload.single('file'), quickScan);
+router.get('/quick-scan-usage', optionalAuth, getQuickScanUsage);
+router.post('/quick-scan', optionalAuth, upload.single('file'), quickScan);
 router.post('/quick-scan-ai', express.json({ limit: '2mb' }), quickScanAI);
 router.post('/quick-scan-internet', express.json({ limit: '2mb' }), quickScanInternet);
 

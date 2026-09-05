@@ -21,6 +21,30 @@ const qsDocPaper     = document.getElementById('qsDocPaper');
 
 let selectedFile = null;
 let currentQuickScanData = null;
+let quickScansRemaining = null;
+
+function authHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function loadQuickScanUsage() {
+  const usageNote = document.getElementById('qsUsageNote');
+  if (!usageNote) return;
+  try {
+    const res = await fetch(`${API}/quick-scan-usage`, { headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unable to load usage');
+    const usage = data.usage || {};
+    quickScansRemaining = usage.remaining_count;
+    usageNote.innerHTML = `<i class="fas fa-calendar-check"></i> ${usage.remaining_count ?? 'Unlimited'} of ${usage.maximum_allowed || 'unlimited'} weekly scans remaining`;
+    usageNote.classList.toggle('is-depleted', usage.maximum_allowed > 0 && usage.remaining_count <= 0);
+  } catch {
+    usageNote.innerHTML = '<i class="fas fa-circle-info"></i> Weekly scan allowance: 3 documents';
+  }
+}
+
+loadQuickScanUsage();
 
 // ── File handling ────────────────────────────────────────────
 dropZone.addEventListener('click', () => fileInput.click());
@@ -62,7 +86,7 @@ function setFile(file) {
   fileName.textContent = file.name;
   filePreview.classList.remove('hidden');
   dropZone.classList.add('hidden');
-  btnScan.disabled = false;
+  btnScan.disabled = quickScansRemaining === 0;
 }
 
 // ── Scan ─────────────────────────────────────────────────────
@@ -121,6 +145,7 @@ async function runQuickScan() {
 
     const res = await fetch(`${API}/quick-scan`, {
       method: 'POST',
+      headers: authHeaders(),
       body: formData
     });
 
@@ -134,6 +159,12 @@ async function runQuickScan() {
         : `Unexpected server response (HTTP ${res.status}).` };
     }
     if (!res.ok) throw new Error(data.error || `Scan failed (HTTP ${res.status})`);
+
+    if (data.usage) {
+      quickScansRemaining = data.usage.remaining_count;
+      const usageNote = document.getElementById('qsUsageNote');
+      if (usageNote) usageNote.innerHTML = `<i class="fas fa-calendar-check"></i> ${data.usage.remaining_count ?? 'Unlimited'} weekly scans remaining`;
+    }
 
     updateScanProgress(68, 'Comparing');
     const step2 = document.getElementById('pstep2');
@@ -152,7 +183,8 @@ async function runQuickScan() {
   } catch (err) {
     scanProgress.classList.add('hidden');
     uploadSection.classList.remove('hidden');
-    alert('Scan failed: ' + err.message);
+    alert(err.message);
+    loadQuickScanUsage();
   }
 }
 
@@ -175,7 +207,7 @@ async function runOptionalQuickScanChecks(useAI, useInternet) {
     try {
       const res = await fetch(`${API}/quick-scan-ai`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ paragraphs })
       });
       const raw = await res.text();
@@ -203,7 +235,7 @@ async function runOptionalQuickScanChecks(useAI, useInternet) {
     try {
       const res = await fetch(`${API}/quick-scan-internet`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ paragraphs })
       });
       const raw = await res.text();

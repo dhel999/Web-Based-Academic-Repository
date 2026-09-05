@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
   id                                    INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   max_uploads_per_user                  INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
   max_ai_scans_per_user                 INTEGER NOT NULL DEFAULT 0,   -- 0 = unlimited
+  max_quick_scans_per_week              INTEGER NOT NULL DEFAULT 3,
   max_document_detections_per_student   INTEGER NOT NULL DEFAULT 3,
   ai_scanning_enabled                   BOOLEAN NOT NULL DEFAULT TRUE,
   max_file_size_mb                      INTEGER NOT NULL DEFAULT 20,
@@ -91,10 +92,63 @@ CREATE TABLE IF NOT EXISTS system_settings (
   allow_txt                             BOOLEAN NOT NULL DEFAULT TRUE,
   updated_at                            TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS max_quick_scans_per_week INTEGER NOT NULL DEFAULT 3;
+
 -- Insert default settings row
-INSERT INTO system_settings (id, max_document_detections_per_student)
-VALUES (1, 3)
-ON CONFLICT (id) DO UPDATE SET max_document_detections_per_student = EXCLUDED.max_document_detections_per_student;
+INSERT INTO system_settings (id, max_quick_scans_per_week, max_document_detections_per_student)
+VALUES (1, 3, 3)
+ON CONFLICT (id) DO UPDATE SET
+  max_quick_scans_per_week = COALESCE(system_settings.max_quick_scans_per_week, EXCLUDED.max_quick_scans_per_week),
+  max_document_detections_per_student = EXCLUDED.max_document_detections_per_student;
+
+CREATE TABLE IF NOT EXISTS quick_scan_usage (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subject_key      TEXT NOT NULL,
+  week_start       DATE NOT NULL,
+  used_count       INTEGER NOT NULL DEFAULT 0,
+  updated_at       TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (subject_key, week_start)
+);
+
+CREATE INDEX IF NOT EXISTS idx_quick_scan_usage_week ON quick_scan_usage(week_start);
+
+CREATE OR REPLACE FUNCTION consume_quick_scan(
+  p_subject_key TEXT,
+  p_week_start DATE,
+  p_maximum_allowed INTEGER
+)
+RETURNS TABLE(allowed BOOLEAN, used_count INTEGER, remaining_count INTEGER)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  current_count INTEGER;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_subject_key || ':' || p_week_start::TEXT, 0));
+
+  SELECT quick_scan_usage.used_count
+    INTO current_count
+    FROM quick_scan_usage
+   WHERE subject_key = p_subject_key AND week_start = p_week_start
+   FOR UPDATE;
+
+  IF current_count IS NULL THEN
+    INSERT INTO quick_scan_usage (subject_key, week_start, used_count)
+    VALUES (p_subject_key, p_week_start, 1);
+    RETURN QUERY SELECT TRUE, 1, CASE WHEN p_maximum_allowed > 0 THEN p_maximum_allowed - 1 ELSE NULL END;
+  ELSIF p_maximum_allowed > 0 AND current_count >= p_maximum_allowed THEN
+    RETURN QUERY SELECT FALSE, current_count, 0;
+  ELSE
+    UPDATE quick_scan_usage
+       SET used_count = current_count + 1, updated_at = NOW()
+     WHERE subject_key = p_subject_key AND week_start = p_week_start;
+    RETURN QUERY SELECT TRUE, current_count + 1,
+      CASE WHEN p_maximum_allowed > 0 THEN GREATEST(p_maximum_allowed - current_count - 1, 0) ELSE NULL END;
+  END IF;
+END;
+$$;
 
 CREATE TABLE IF NOT EXISTS student_detection_usage (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),

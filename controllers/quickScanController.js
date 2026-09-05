@@ -3,6 +3,7 @@ const { extractText, splitIntoParagraphs, splitIntoDisplayParagraphs, deleteFile
 const { compareDocuments, compareParagraphs } = require('../utils/tfidf');
 const { analyzeWithOpenAI } = require('../services/openaiService');
 const { searchInternetPlagiarism } = require('../services/internetSearchService');
+const { getQuickScanUsage, consumeQuickScan } = require('../utils/quickScanUsage');
 
 function normalizeAiResult(aiResult, paragraphs) {
   if (!aiResult || aiResult.error) return aiResult;
@@ -34,6 +35,15 @@ async function quickScan(req, res) {
     if (!extractedText || extractedText.length < 20) {
       deleteFile(filePath);
       return res.status(422).json({ error: 'Could not extract meaningful text from file' });
+    }
+
+    const usage = await consumeQuickScan(req);
+    if (!usage.allowed) {
+      deleteFile(filePath);
+      return res.status(429).json({
+        error: 'Weekly quick-scan limit reached. You can scan up to 3 documents per week.',
+        usage
+      });
     }
 
     const paragraphs = splitIntoParagraphs(extractedText);
@@ -127,13 +137,23 @@ async function quickScan(req, res) {
       internet_check: {
         matches: [],
         total_found: 0
-      }
+      },
+      usage
     });
 
   } catch (err) {
     deleteFile(filePath);
     console.error('Quick scan error:', err);
     return res.status(500).json({ error: err.message });
+  }
+}
+
+async function getQuickScanUsageStatus(req, res) {
+  try {
+    return res.json({ usage: await getQuickScanUsage(req) });
+  } catch (err) {
+    console.error('Quick scan usage error:', err);
+    return res.status(500).json({ error: 'Unable to load quick-scan usage' });
   }
 }
 
@@ -172,4 +192,4 @@ async function quickScanInternet(req, res) {
   }
 }
 
-module.exports = { quickScan, quickScanAI, quickScanInternet };
+module.exports = { quickScan, quickScanAI, quickScanInternet, getQuickScanUsage: getQuickScanUsageStatus };
