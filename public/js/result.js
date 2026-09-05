@@ -245,9 +245,6 @@ function renderResultsFromDB(results, aiSummary) {
   let overallScore = Math.max(localScore, aiScore, internetScore);
   overallScore = parseFloat(Math.min(overallScore, 100).toFixed(1));
 
-  renderGauge(overallScore);
-  renderScorePills(localResults.length, aiResults.length, internetResults.length, overallScore);
-
   // Deduplicate document-level matches: keep highest score per matched title
   const docLevelRaw = localResults.filter(r => !r.matched_paragraph);
   const seenTitles = new Map();
@@ -257,7 +254,14 @@ function renderResultsFromDB(results, aiSummary) {
       seenTitles.set(key, r);
     }
   }
-  renderLocalMatches([...seenTitles.values()].sort((a, b) => b.similarity_score - a.similarity_score));
+  const uniqueDocMatches = [...seenTitles.values()].sort((a, b) => b.similarity_score - a.similarity_score);
+
+  renderGauge(overallScore);
+  // "local matches" pill = unique matched documents, not the raw row count
+  // (which also includes one row per flagged paragraph and would double-count).
+  renderScorePills(uniqueDocMatches.length, aiResults.length, internetResults.length, overallScore);
+
+  renderLocalMatches(uniqueDocMatches);
 
   // Build local match map
   localMatchMap = new Map();
@@ -455,6 +459,11 @@ function renderPaperView() {
       ? fullExtractedText.split(/\n\s*\n/).map(b => b.trim()).filter(b => b.length > 0)
       : currentParagraphs);
 
+  // Build a lookup index once per render instead of rescanning currentParagraphs
+  // for every block (that was O(blocks × paragraphs) and could freeze the tab
+  // on long documents with many matches).
+  buildParagraphLookup();
+
   // For each text block, check if it matches any tracked paragraph
   let html = '';
 
@@ -464,7 +473,7 @@ function renderPaperView() {
     const isShort = wordCount < 8 || block.length < 40;
 
     // Try to match this block against our paragraph list
-    const matchIdx = (!isShort && findParagraphIndex(block) >= 0) ? findParagraphIndex(block) : -1;
+    const matchIdx = isShort ? -1 : findParagraphIndex(block);
 
     const local = matchIdx >= 0 ? localMatchMap.get(matchIdx) : null;
     let ai = matchIdx >= 0 ? aiMatchMap.get(matchIdx) : null;
@@ -532,14 +541,35 @@ function renderPaperView() {
   paragraphMatchList.innerHTML = html;
 }
 
+// Cache of normalized paragraph prefixes for findParagraphIndex, rebuilt
+// whenever currentParagraphs changes (see buildParagraphLookup).
+let _paragraphLookupCache = [];
+let _paragraphLookupSourceLength = -1;
+
+/**
+ * (Re)build the normalized-prefix lookup used by findParagraphIndex.
+ * Cheap to call repeatedly — skips rebuilding if currentParagraphs hasn't changed size.
+ */
+function buildParagraphLookup() {
+  if (_paragraphLookupSourceLength === currentParagraphs.length) return;
+  _paragraphLookupCache = currentParagraphs.map(p =>
+    p.replace(/\s+/g, ' ').trim().slice(0, 80).toLowerCase()
+  );
+  _paragraphLookupSourceLength = currentParagraphs.length;
+}
+
 /**
  * Find the index of a text block in the currentParagraphs array.
- * Uses fuzzy matching: compares the first 80 chars.
+ * Uses fuzzy matching: compares the first 80 chars against a precomputed
+ * lookup table (built by buildParagraphLookup) instead of re-normalizing
+ * every paragraph on every call — avoids O(blocks × paragraphs) blowup on
+ * large documents.
  */
 function findParagraphIndex(block) {
+  if (_paragraphLookupSourceLength !== currentParagraphs.length) buildParagraphLookup();
   const blockClean = block.replace(/\s+/g, ' ').trim().slice(0, 80).toLowerCase();
-  for (let i = 0; i < currentParagraphs.length; i++) {
-    const paraClean = currentParagraphs[i].replace(/\s+/g, ' ').trim().slice(0, 80).toLowerCase();
+  for (let i = 0; i < _paragraphLookupCache.length; i++) {
+    const paraClean = _paragraphLookupCache[i];
     if (blockClean === paraClean || blockClean.includes(paraClean) || paraClean.includes(blockClean)) {
       return i;
     }

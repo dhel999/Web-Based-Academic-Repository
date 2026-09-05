@@ -1,4 +1,5 @@
 const supabase = require('../utils/supabase');
+const { computeOverallScore } = require('../utils/overallScore');
 
 /**
  * GET /api/admin/documents — list all documents with uploader info
@@ -12,23 +13,35 @@ async function listAllDocuments(req, res) {
 
     if (error) throw new Error(error.message);
 
-    // Fetch plagiarism scores for each document
+    // Fetch plagiarism scores for each document — same combined formula used
+    // on the report page and the document card, so the number an admin sees
+    // in this list matches what the document's own report shows.
     const docIds = (data || []).map(d => d.id);
     let scoresMap = {};
     if (docIds.length > 0) {
-      const { data: results } = await supabase
-        .from('plagiarism_results')
-        .select('document_id, similarity_score, source')
-        .in('document_id', docIds)
-        .eq('source', 'local')
-        .is('matched_paragraph', null);
+      const [{ data: results }, { data: paraCounts }] = await Promise.all([
+        supabase
+          .from('plagiarism_results')
+          .select('document_id, similarity_score, source, matched_paragraph')
+          .in('document_id', docIds),
+        supabase
+          .from('paragraphs')
+          .select('document_id')
+          .in('document_id', docIds)
+      ]);
 
-      if (results) {
-        for (const r of results) {
-          if (!scoresMap[r.document_id] || r.similarity_score > scoresMap[r.document_id]) {
-            scoresMap[r.document_id] = r.similarity_score;
-          }
-        }
+      const paragraphCountMap = {};
+      for (const p of (paraCounts || [])) {
+        paragraphCountMap[p.document_id] = (paragraphCountMap[p.document_id] || 0) + 1;
+      }
+
+      const resultsByDoc = {};
+      for (const r of (results || [])) {
+        if (!resultsByDoc[r.document_id]) resultsByDoc[r.document_id] = [];
+        resultsByDoc[r.document_id].push(r);
+      }
+      for (const docId of Object.keys(resultsByDoc)) {
+        scoresMap[docId] = computeOverallScore(resultsByDoc[docId], paragraphCountMap[docId] || 0);
       }
     }
 

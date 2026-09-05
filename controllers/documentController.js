@@ -1,5 +1,6 @@
 const supabase = require('../utils/supabase');
 const { splitIntoDisplayParagraphs } = require('../services/fileService');
+const { computeOverallScore } = require('../utils/overallScore');
 
 /**
  * GET /api/documents
@@ -33,19 +34,31 @@ async function listDocuments(req, res) {
     let usersMap = {};
 
     if (docIds.length > 0) {
-      const { data: results } = await supabase
-        .from('plagiarism_results')
-        .select('document_id, similarity_score')
-        .in('document_id', docIds)
-        .eq('source', 'local')
-        .is('matched_paragraph', null);
+      const [{ data: results }, { data: paraCounts }] = await Promise.all([
+        supabase
+          .from('plagiarism_results')
+          .select('document_id, similarity_score, source, matched_paragraph')
+          .in('document_id', docIds),
+        supabase
+          .from('paragraphs')
+          .select('document_id')
+          .in('document_id', docIds)
+      ]);
 
-      if (results) {
-        for (const r of results) {
-          if (!scoresMap[r.document_id] || r.similarity_score > scoresMap[r.document_id]) {
-            scoresMap[r.document_id] = r.similarity_score;
-          }
-        }
+      // Count paragraphs per document (used by the shared scoring formula)
+      const paragraphCountMap = {};
+      for (const p of (paraCounts || [])) {
+        paragraphCountMap[p.document_id] = (paragraphCountMap[p.document_id] || 0) + 1;
+      }
+
+      // Group results per document, then apply the same formula used everywhere else
+      const resultsByDoc = {};
+      for (const r of (results || [])) {
+        if (!resultsByDoc[r.document_id]) resultsByDoc[r.document_id] = [];
+        resultsByDoc[r.document_id].push(r);
+      }
+      for (const docId of Object.keys(resultsByDoc)) {
+        scoresMap[docId] = computeOverallScore(resultsByDoc[docId], paragraphCountMap[docId] || 0);
       }
     }
 
@@ -111,18 +124,21 @@ async function getDocument(req, res) {
       if (user) uploaderName = user.full_name;
     }
 
-    // Fetch similarity score
-    const { data: simResults } = await supabase
-      .from('plagiarism_results')
-      .select('similarity_score')
-      .eq('document_id', id)
-      .eq('source', 'local')
-      .is('matched_paragraph', null);
+    // Fetch similarity score using the same formula the report page uses,
+    // so a document doesn't show one percentage on its card and another
+    // once you open its full report.
+    const [{ data: simResults }, { count: paragraphCount }] = await Promise.all([
+      supabase
+        .from('plagiarism_results')
+        .select('similarity_score, source, matched_paragraph')
+        .eq('document_id', id),
+      supabase
+        .from('paragraphs')
+        .select('id', { count: 'exact', head: true })
+        .eq('document_id', id)
+    ]);
 
-    let similarityScore = 0;
-    if (simResults && simResults.length > 0) {
-      similarityScore = Math.max(...simResults.map(r => r.similarity_score));
-    }
+    const similarityScore = computeOverallScore(simResults || [], paragraphCount || 0);
 
     // Only the document OWNER or ADMIN sees full analysis
     const isAdmin = isAuthenticated && req.user.role === 'admin';
