@@ -216,13 +216,20 @@ async function checkPlagiarism(req, res) {
           error: 'AI scanning is currently disabled by the administrator.',
           disabled: true
         };
-      } else if (aiSettings.max_ai_scans_per_user > 0 && req.user) {
-        const { count } = await supabase
-          .from('ai_scan_log')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', req.user.id);
-        const used = count || 0;
-        if (used >= aiSettings.max_ai_scans_per_user) {
+      } else {
+        // max_ai_scans_per_user of 0 means unlimited — only enforce the quota when > 0
+        let limitReached = false;
+        let used = 0;
+        if (aiSettings.max_ai_scans_per_user > 0 && req.user) {
+          const { count } = await supabase
+            .from('ai_scan_log')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', req.user.id);
+          used = count || 0;
+          limitReached = used >= aiSettings.max_ai_scans_per_user;
+        }
+
+        if (limitReached) {
           response.openai_check = {
             error: `AI scan limit reached. You have used ${used} of ${aiSettings.max_ai_scans_per_user} allowed AI scans. Contact your administrator.`,
             limit_reached: true,
