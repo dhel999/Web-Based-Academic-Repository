@@ -257,7 +257,8 @@ async function updateAdminSettings(req, res) {
     if (error) throw new Error(error.message);
     res.json({ message: 'Settings saved successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to save settings' });
+    console.error('Save settings error:', err.message);
+    res.status(500).json({ error: `Failed to save settings: ${err.message}` });
   }
 }
 
