@@ -150,22 +150,60 @@ async function checkPlagiarism(req, res) {
     const paragraphs = (paragraphRows || []).map(p => p.paragraph_text);
 
     console.log(`Running new similarity detection for document ${doc.id}`);
-    const localResult = await runLocalPlagiarismCheck(doc.id, doc.extracted_text, paragraphs);
 
-    // Save plagiarism results to database for each match
-    const savePromises = [];
+    // Decide up front whether the AI call should actually run, so it can
+    // start at the same time as the local TF-IDF check instead of waiting
+    // for it to finish first — the AI request (a real network call to
+    // OpenAI) is the single slowest step, and it doesn't depend on the
+    // local check's results, so there's no reason to run them one after
+    // the other.
+    let aiSettings = null;
+    let aiGate = null; // set to a { error, ... } object when AI should NOT actually be called
+    if (use_openai) {
+      aiSettings = await getSettings();
+      if (!aiSettings.ai_scanning_enabled) {
+        aiGate = { error: 'AI scanning is currently disabled by the administrator.', disabled: true };
+      } else if (aiSettings.max_ai_scans_per_user > 0 && req.user) {
+        const { count } = await supabase
+          .from('ai_scan_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', req.user.id);
+        const used = count || 0;
+        if (used >= aiSettings.max_ai_scans_per_user) {
+          aiGate = {
+            error: `AI scan limit reached. You have used ${used} of ${aiSettings.max_ai_scans_per_user} allowed AI scans. Contact your administrator.`,
+            limit_reached: true,
+            used,
+            limit: aiSettings.max_ai_scans_per_user
+          };
+        }
+      }
+    }
+
+    const [localResult, aiOutcome] = await Promise.all([
+      runLocalPlagiarismCheck(doc.id, doc.extracted_text, paragraphs),
+      (use_openai && !aiGate)
+        ? analyzeWithOpenAI(doc.id, paragraphs).then(
+            aiResult => ({ aiResult }),
+            aiErr => ({ aiErr })
+          )
+        : Promise.resolve(null)
+    ]);
+
+    // Save plagiarism results to database for each match — batched into a
+    // single insert instead of one HTTP round-trip per match (previously up
+    // to ~35 parallel requests for a document with many matches).
+    const resultRows = [];
     if (localResult.documentMatches && localResult.documentMatches.length > 0) {
       for (const match of localResult.documentMatches.slice(0, 15)) {
         if (match.similarity_score > 5) {
-          savePromises.push(
-            supabase.from('plagiarism_results').insert({
-              document_id: doc.id,
-              matched_document_id: match.document_id,
-              similarity_score: match.similarity_score,
-              matched_paragraph: null,
-              source: 'local'
-            })
-          );
+          resultRows.push({
+            document_id: doc.id,
+            matched_document_id: match.document_id,
+            similarity_score: match.similarity_score,
+            matched_paragraph: null,
+            source: 'local'
+          });
         }
       }
     }
@@ -174,23 +212,21 @@ async function checkPlagiarism(req, res) {
     if (localResult.paragraphMatches && localResult.paragraphMatches.length > 0) {
       for (const pmatch of localResult.paragraphMatches.slice(0, 20)) {
         if (pmatch.matched_score > 10) {
-          savePromises.push(
-            supabase.from('plagiarism_results').insert({
-              document_id: doc.id,
-              matched_document_id: pmatch.matched_doc_id || null,
-              similarity_score: pmatch.matched_score,
-              matched_paragraph: pmatch.matched_text?.substring(0, 500) || null,
-              source: 'local'
-            })
-          );
+          resultRows.push({
+            document_id: doc.id,
+            matched_document_id: pmatch.matched_doc_id || null,
+            similarity_score: pmatch.matched_score,
+            matched_paragraph: pmatch.matched_text?.substring(0, 500) || null,
+            source: 'local'
+          });
         }
       }
     }
 
-    // Execute all saves in parallel
-    if (savePromises.length > 0) {
-      await Promise.allSettled(savePromises);
-      console.log(`Saved ${savePromises.length} plagiarism result records`);
+    if (resultRows.length > 0) {
+      const { error: insertErr } = await supabase.from('plagiarism_results').insert(resultRows);
+      if (insertErr) console.error('Failed to save plagiarism results:', insertErr.message);
+      else console.log(`Saved ${resultRows.length} plagiarism result records`);
     }
 
     const response = {
@@ -209,95 +245,37 @@ async function checkPlagiarism(req, res) {
     };
 
     if (use_openai) {
-      const aiSettings = await getSettings();
-
-      if (!aiSettings.ai_scanning_enabled) {
-        response.openai_check = {
-          error: 'AI scanning is currently disabled by the administrator.',
-          disabled: true
-        };
-      } else {
-        // max_ai_scans_per_user of 0 means unlimited — only enforce the quota when > 0
-        let limitReached = false;
-        let used = 0;
-        if (aiSettings.max_ai_scans_per_user > 0 && req.user) {
-          const { count } = await supabase
-            .from('ai_scan_log')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', req.user.id);
-          used = count || 0;
-          limitReached = used >= aiSettings.max_ai_scans_per_user;
+      if (aiGate) {
+        // Quota/settings blocked the call before it started — nothing to await here.
+        response.openai_check = aiGate;
+      } else if (aiOutcome?.aiErr) {
+        response.openai_check = { error: aiOutcome.aiErr.message };
+      } else if (aiOutcome?.aiResult) {
+        const aiResult = aiOutcome.aiResult;
+        if (aiResult.flaggedParagraphs) {
+          aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
+            ...fp,
+            text: paragraphs[fp.paragraph_index] || '',
+            score: fp.confidence || (fp.risk === 'high' ? 82 : fp.risk === 'medium' ? 58 : 28)
+          }));
         }
-
-        if (limitReached) {
-          response.openai_check = {
-            error: `AI scan limit reached. You have used ${used} of ${aiSettings.max_ai_scans_per_user} allowed AI scans. Contact your administrator.`,
-            limit_reached: true,
-            used,
-            limit: aiSettings.max_ai_scans_per_user
-          };
-        } else {
-          try {
-            const aiResult = await analyzeWithOpenAI(doc.id, paragraphs);
-            if (aiResult.flaggedParagraphs) {
-              aiResult.flaggedParagraphs = aiResult.flaggedParagraphs.map(fp => ({
-                ...fp,
-                text: paragraphs[fp.paragraph_index] || '',
-                score: fp.confidence || (fp.risk === 'high' ? 82 : fp.risk === 'medium' ? 58 : 28)
-              }));
-            }
-            response.openai_check = aiResult;
-            if (req.user) {
-              supabase.from('ai_scan_log').insert({ user_id: req.user.id, document_id: doc.id }).then(() => {}).catch(() => {});
-            }
-          } catch (aiErr) {
-            response.openai_check = { error: aiErr.message };
-          }
+        response.openai_check = aiResult;
+        if (req.user) {
+          supabase.from('ai_scan_log').insert({ user_id: req.user.id, document_id: doc.id }).then(() => {}).catch(() => {});
         }
       }
     }
 
-    if (use_internet) {
-      try {
-        const internetMatches = await searchInternetPlagiarism(paragraphs, 12);
-
-        // Save each internet match to plagiarism_results (same shape as /api/check-internet)
-        const internetSavePromises = internetMatches.map(match =>
-          supabase.from('plagiarism_results').insert({
-            document_id: doc.id,
-            matched_document_id: null,
-            similarity_score: match.similarity_score,
-            matched_paragraph: JSON.stringify({
-              new_paragraph: match.paragraph_text,
-              matched_text: match.matched_snippet,
-              source_url: match.source_url,
-              source_domain: match.source_domain,
-              all_sources: match.all_sources
-            }),
-            source: 'internet'
-          })
-        );
-        if (internetSavePromises.length > 0) {
-          await Promise.allSettled(internetSavePromises);
-          console.log(`Saved ${internetSavePromises.length} internet plagiarism result records`);
-        }
-
-        response.internet_check = {
-          matches: internetMatches,
-          total_checked: Math.min(paragraphs.length, 12),
-          total_found: internetMatches.length
-        };
-      } catch (netErr) {
-        console.error('Internet check error during upload analysis:', netErr.message);
-        response.internet_check = { error: netErr.message };
-      }
-    }
-
-    // Consume detection credit and mark as completed
+    // Consume detection credit and mark as completed with local + AI results.
+    // Internet search runs AFTER the response is sent (see below) — it's the
+    // slowest single step (live web requests, one per paragraph, with a
+    // throttling delay between each) and was previously making every upload
+    // wait several extra seconds. Similarity and AI results are already
+    // saved and shown immediately; internet matches appear a few seconds
+    // later once the report page is opened/refreshed.
     const usage = await consumeDetectionCredit(studentId);
     const apiProviderParts = ['local'];
     if (use_openai && response.openai_check && !response.openai_check.error) apiProviderParts.push('openai');
-    if (use_internet && response.internet_check && !response.internet_check.error) apiProviderParts.push('internet');
     await markDetectionCompleted(
       studentId,
       doc.id,
@@ -310,7 +288,7 @@ async function checkPlagiarism(req, res) {
 
     console.log(`Detection completed for document ${doc.id}. Credit consumed: ${usage.used_count}/${usage.maximum_allowed}`);
 
-    return res.json({
+    res.json({
       ...response,
       usage,
       detection_limit: {
@@ -318,8 +296,59 @@ async function checkPlagiarism(req, res) {
         remaining_count: usage.remaining_count,
         maximum_allowed: usage.maximum_allowed
       },
-      message: 'Similarity detection completed successfully. Results saved to database.'
+      internet_check: use_internet ? { pending: true } : null,
+      message: use_internet
+        ? 'Similarity and AI detection completed. Internet search is running in the background and will appear shortly.'
+        : 'Similarity detection completed successfully. Results saved to database.'
     });
+
+    // ── Internet search runs after the response has already been sent ──
+    if (use_internet) {
+      console.log(`Starting background internet search for document ${doc.id} (${paragraphs.length} paragraphs)`);
+      searchInternetPlagiarism(paragraphs, 12)
+        .then(async (internetMatches) => {
+          console.log(`Background internet search finished for document ${doc.id}: ${internetMatches.length} match(es) found`);
+          if (internetMatches.length > 0) {
+            const internetRows = internetMatches.map(match => ({
+              document_id: doc.id,
+              matched_document_id: null,
+              similarity_score: match.similarity_score,
+              matched_paragraph: JSON.stringify({
+                new_paragraph: match.paragraph_text,
+                matched_text: match.matched_snippet,
+                source_url: match.source_url,
+                source_domain: match.source_domain,
+                all_sources: match.all_sources
+              }),
+              source: 'internet'
+            }));
+            const { error: internetInsertErr } = await supabase.from('plagiarism_results').insert(internetRows);
+            if (internetInsertErr) console.error('Failed to save internet results:', internetInsertErr.message);
+            else console.log(`Saved ${internetRows.length} internet plagiarism result records for document ${doc.id} (background)`);
+          }
+
+          // Patch the cached result_data so a later cache hit includes internet results too.
+          const internetCheck = {
+            matches: internetMatches,
+            total_checked: Math.min(paragraphs.length, 12),
+            total_found: internetMatches.length
+          };
+          await markDetectionCompleted(
+            studentId,
+            doc.id,
+            documentHash,
+            { ...response, internet_check: internetCheck },
+            response.openai_check?.ai_score || null,
+            response.local_check.overall_score,
+            [...apiProviderParts, 'internet'].join('+')
+          );
+        })
+        .catch(netErr => {
+          console.error(`Background internet check failed for document ${doc.id}:`, netErr.message);
+        });
+    }
+
+    return;
 
   } catch (err) {
     console.error('Plagiarism check error:', err);
@@ -466,9 +495,10 @@ async function checkInternet(req, res) {
 
     const internetMatches = await searchInternetPlagiarism(paragraphs, 12);
 
-    // Save internet results to plagiarism_results
-    for (const match of internetMatches) {
-      await supabase.from('plagiarism_results').insert({
+    // Save internet results to plagiarism_results in one batched insert
+    // instead of one sequential round-trip per match.
+    if (internetMatches.length > 0) {
+      const internetRows = internetMatches.map(match => ({
         document_id: document_id,
         matched_document_id: null,
         similarity_score: match.similarity_score,
@@ -480,7 +510,9 @@ async function checkInternet(req, res) {
           all_sources: match.all_sources
         }),
         source: 'internet'
-      });
+      }));
+      const { error: insertErr } = await supabase.from('plagiarism_results').insert(internetRows);
+      if (insertErr) console.error('Failed to save internet results:', insertErr.message);
     }
 
     return res.json({

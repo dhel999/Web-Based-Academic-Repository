@@ -167,107 +167,147 @@ async function getResultsByDocument(documentId) {
 
   if (error) throw new Error(`Failed to fetch results: ${error.message}`);
 
-  // Resolve matched document titles
-  const results = [];
-  for (const row of data || []) {
-    let matchedTitle = 'Unknown';
-    if (row.matched_document_id) {
-      const { data: matchedDoc } = await supabase
-        .from('documents')
-        .select('title')
-        .eq('id', row.matched_document_id)
-        .single();
-      if (matchedDoc) matchedTitle = matchedDoc.title;
-    }
-    results.push({ ...row, matched_document_title: matchedTitle });
+  // Resolve matched document titles in one batched query instead of one
+  // SELECT per result row (a document with 50 matches used to mean 50
+  // sequential round-trips just to open its report page).
+  const rows = data || [];
+  const matchedIds = [...new Set(rows.map(r => r.matched_document_id).filter(Boolean))];
+
+  let titleMap = new Map();
+  if (matchedIds.length > 0) {
+    const { data: matchedDocs } = await supabase
+      .from('documents')
+      .select('id, title')
+      .in('id', matchedIds);
+    titleMap = new Map((matchedDocs || []).map(d => [d.id, d.title]));
   }
 
-  return results;
+  return rows.map(row => ({
+    ...row,
+    matched_document_title: row.matched_document_id ? (titleMap.get(row.matched_document_id) || 'Unknown') : 'Unknown'
+  }));
 }
 
 /**
  * Reverse update: for each existing document that matched with the new doc,
  * compute that existing document's score against the new doc and upsert results.
  * This ensures the first-uploaded document gets updated scores when new docs arrive.
+ *
+ * Performance note: this used to do 2+ sequential DB round-trips per existing
+ * document (a select, then an insert/update, then another select for that
+ * document's paragraphs, then one insert per matched paragraph) — with N
+ * documents in the repo that was easily dozens to hundreds of round-trips,
+ * one at a time, on every single upload. It's rewritten here to do a small,
+ * fixed number of batched queries regardless of how many documents exist:
+ *   1. one query for ALL existing reverse-results for this new doc
+ *   2. one query for ALL paragraphs across ALL existing docs (that have any)
+ *   3. all matching happens in memory (cheap CPU work, no network)
+ *   4. all writes go out as a handful of batched insert/update calls
  */
 async function updateReverseScores(newDocumentId, newText, newParagraphs, existingDocs) {
   try {
     if (!existingDocs || existingDocs.length === 0) return;
 
+    const existingDocIds = existingDocs.map(d => d.id);
+
     // The new document as a "corpus" entry for comparison
     const newDocAsCorpus = [{ id: newDocumentId, title: '', extracted_text: newText }];
+    const newParasAsCorpus = newParagraphs.map((text, i) => ({
+      id: `new-${i}`,
+      document_id: newDocumentId,
+      paragraph_text: text
+    }));
+
+    // Batch-fetch everything this function needs up front, in parallel,
+    // instead of one query per existing document inside a loop.
+    const [existingResultsRes, existingParasRes] = await Promise.all([
+      supabase
+        .from('plagiarism_results')
+        .select('id, document_id, similarity_score')
+        .in('document_id', existingDocIds)
+        .eq('matched_document_id', newDocumentId)
+        .is('matched_paragraph', null)
+        .eq('source', 'local'),
+      newParasAsCorpus.length > 0
+        ? supabase
+            .from('paragraphs')
+            .select('id, document_id, paragraph_text')
+            .in('document_id', existingDocIds)
+        : Promise.resolve({ data: [] })
+    ]);
+
+    const existingResultByDocId = new Map();
+    for (const r of (existingResultsRes.data || [])) {
+      existingResultByDocId.set(r.document_id, r);
+    }
+
+    const parasByDocId = new Map();
+    for (const p of (existingParasRes.data || [])) {
+      if (!parasByDocId.has(p.document_id)) parasByDocId.set(p.document_id, []);
+      parasByDocId.get(p.document_id).push(p);
+    }
+
+    // Compute all document-level and paragraph-level matches in memory first.
+    const docLevelInserts = [];
+    const docLevelUpdates = []; // { id, similarity_score }
+    const paragraphInserts = [];
 
     for (const existingDoc of existingDocs) {
-      // Document-level: compare existing doc text against [newDoc]
       const docMatches = compareDocuments(existingDoc.extracted_text, newDocAsCorpus);
       const topMatch = docMatches.length > 0 ? docMatches[0] : null;
 
-      if (!topMatch || topMatch.similarity_score <= 5) continue;
-
-      // Check if a result already exists for this pair
-      const { data: existing } = await supabase
-        .from('plagiarism_results')
-        .select('id, similarity_score')
-        .eq('document_id', existingDoc.id)
-        .eq('matched_document_id', newDocumentId)
-        .is('matched_paragraph', null)
-        .eq('source', 'local')
-        .maybeSingle();
-
-      if (existing) {
-        // Update only if the new score is higher
-        if (topMatch.similarity_score > existing.similarity_score) {
-          await supabase
-            .from('plagiarism_results')
-            .update({ similarity_score: topMatch.similarity_score })
-            .eq('id', existing.id);
-        }
-      } else {
-        // Insert new reverse result
-        await supabase
-          .from('plagiarism_results')
-          .insert({
+      if (topMatch && topMatch.similarity_score > 5) {
+        const existing = existingResultByDocId.get(existingDoc.id);
+        if (existing) {
+          if (topMatch.similarity_score > existing.similarity_score) {
+            docLevelUpdates.push({ id: existing.id, similarity_score: topMatch.similarity_score });
+          }
+        } else {
+          docLevelInserts.push({
             document_id: existingDoc.id,
             matched_document_id: newDocumentId,
             similarity_score: topMatch.similarity_score,
             matched_paragraph: null,
             source: 'local'
           });
+        }
       }
 
-      // Paragraph-level reverse: compare existing doc's paragraphs against new doc's paragraphs
-      const { data: existingParas } = await supabase
-        .from('paragraphs')
-        .select('id, document_id, paragraph_text')
-        .eq('document_id', existingDoc.id);
-
+      const existingParas = parasByDocId.get(existingDoc.id);
       if (existingParas && existingParas.length > 0) {
-        // Build the new doc's paragraphs as the corpus
-        const newParasAsCorpus = newParagraphs.map((text, i) => ({
-          id: `new-${i}`,
-          document_id: newDocumentId,
-          paragraph_text: text
-        }));
-
         for (const ePara of existingParas) {
           const matches = compareParagraphs(ePara.paragraph_text, newParasAsCorpus);
           if (matches.length > 0 && matches[0].similarity_score >= 10) {
-            await supabase
-              .from('plagiarism_results')
-              .insert({
-                document_id: existingDoc.id,
-                matched_document_id: newDocumentId,
-                similarity_score: matches[0].similarity_score,
-                matched_paragraph: JSON.stringify({
-                  new_paragraph: ePara.paragraph_text,
-                  matched_text: matches[0].paragraph_text,
-                  matched_title: 'Newly uploaded document'
-                }),
-                source: 'local'
-              });
+            paragraphInserts.push({
+              document_id: existingDoc.id,
+              matched_document_id: newDocumentId,
+              similarity_score: matches[0].similarity_score,
+              matched_paragraph: JSON.stringify({
+                new_paragraph: ePara.paragraph_text,
+                matched_text: matches[0].paragraph_text,
+                matched_title: 'Newly uploaded document'
+              }),
+              source: 'local'
+            });
           }
         }
       }
+    }
+
+    // Fire off all writes together instead of one at a time.
+    const writePromises = [];
+    if (docLevelInserts.length + paragraphInserts.length > 0) {
+      writePromises.push(
+        supabase.from('plagiarism_results').insert([...docLevelInserts, ...paragraphInserts])
+      );
+    }
+    for (const u of docLevelUpdates) {
+      writePromises.push(
+        supabase.from('plagiarism_results').update({ similarity_score: u.similarity_score }).eq('id', u.id)
+      );
+    }
+    if (writePromises.length > 0) {
+      await Promise.allSettled(writePromises);
     }
   } catch (err) {
     console.error('Reverse score update error:', err.message);

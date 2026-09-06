@@ -203,10 +203,12 @@ uploadForm.addEventListener('submit', async (e) => {
 
     updateProgress(45, 'Running TF-IDF similarity analysis…');
 
-    // Step 2: Run full detection — similarity, AI, and internet checks together
+    // Step 2: Run similarity + AI detection (fast, returned immediately).
+    // Internet search keeps running in the background after this responds —
+    // it's the slowest check, so it no longer holds up the upload.
     const checkHeaders = { 'Content-Type': 'application/json' };
     if (token) checkHeaders['Authorization'] = `Bearer ${token}`;
-    updateProgress(65, 'Scanning for AI-generated text and internet matches…');
+    updateProgress(65, 'Scanning for AI-generated text…');
     const checkRes = await fetch(`${API}/check-plagiarism`, {
       method: 'POST',
       headers: checkHeaders,
@@ -215,7 +217,7 @@ uploadForm.addEventListener('submit', async (e) => {
     const checkData = await checkRes.json();
     if (!checkRes.ok) throw new Error(checkData.error || 'Plagiarism check failed');
 
-    updateProgress(100, 'Analysis complete! Results saved.');
+    updateProgress(100, 'Analysis complete! Internet search continues in the background.');
 
     // Show results preview
     renderResultsPreview(checkData, documentId);
@@ -263,7 +265,8 @@ function renderResultsPreview(data, documentId) {
       <span class="pill">${paraCount} flagged paragraph${paraCount !== 1 ? 's' : ''}</span>
       ${data.openai_check && !data.openai_check.error ? `<span class="pill"><i class="fas fa-robot"></i> AI: ${data.openai_check.plagiarismPercentage}%</span>` : ''}
       ${data.openai_check?.error ? `<span class="pill" style="border-color:var(--red);color:var(--red);"><i class="fas fa-triangle-exclamation"></i> AI Error: ${escapeHtml(data.openai_check.error)}</span>` : ''}
-      ${data.internet_check && !data.internet_check.error ? `<span class="pill"><i class="fas fa-globe"></i> Internet: ${internetCount} match${internetCount !== 1 ? 'es' : ''}</span>` : ''}
+      ${data.internet_check?.pending ? `<span class="pill"><i class="fas fa-spinner fa-spin"></i> Internet: scanning in background…</span>` : ''}
+      ${data.internet_check && !data.internet_check.pending && !data.internet_check.error ? `<span class="pill"><i class="fas fa-globe"></i> Internet: ${internetCount} match${internetCount !== 1 ? 'es' : ''}</span>` : ''}
       ${data.internet_check?.error ? `<span class="pill" style="border-color:var(--red);color:var(--red);"><i class="fas fa-triangle-exclamation"></i> Internet Error: ${escapeHtml(data.internet_check.error)}</span>` : ''}
     </div>
   `;

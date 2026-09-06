@@ -659,7 +659,13 @@ async function runAnalysis(useAI) {
     const score       = localCheck.overall_score || 0;
 
     // Merge internet results (if requested) into the internet match map before rendering
-    if (useAI && data.internet_check && !data.internet_check.error) {
+    if (useAI && data.internet_check?.pending) {
+      internetMatchList.innerHTML = `
+        <div class="internet-placeholder">
+          <i class="fas fa-spinner fa-spin fa-2x" style="color:var(--indigo-mid);"></i>
+          <p>Internet search is running in the background — refresh this page in a moment to see results.</p>
+        </div>`;
+    } else if (useAI && data.internet_check && !data.internet_check.error) {
       for (const m of (data.internet_check.matches || [])) {
         const idx = m.paragraph_index;
         if (idx != null && (!internetMatchMap.has(idx) || m.similarity_score > internetMatchMap.get(idx).score)) {
