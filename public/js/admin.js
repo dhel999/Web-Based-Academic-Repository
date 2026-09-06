@@ -92,16 +92,26 @@ async function loadStats() {
   try {
     const res  = await authFetch(`${API}/admin/stats`);
     const data = await res.json();
-    const total = data.total_documents || 0;
-    const users = data.total_users     || 0;
-    const paras = data.total_paragraphs|| 0;
+    const total   = data.total_documents          || 0;
+    const users   = data.total_users              || 0;
+    const paras   = data.total_paragraphs         || 0;
+    const reports = data.total_reports_generated  || 0;
+    const avgPara = data.avg_paragraphs_per_doc   || 0;
+    const uptimeSeconds = data.server_uptime_seconds || 0;
 
     document.getElementById('kpiDocs').textContent  = total;
     document.getElementById('kpiUsers').textContent = users;
-    
-    // New KPIs
-    document.getElementById('kpiReports').textContent = total; // Same as documents for now
-    document.getElementById('kpiCacheHit').textContent = '85%'; // Mock data for now
+
+    // Real "documents actually scanned" count, not a copy of total documents
+    document.getElementById('kpiReports').textContent = reports;
+    // Cache hit rate is filled in by loadSystemHealth() below (real data from /admin/cache-stats)
+
+    // Real average paragraphs per document
+    document.getElementById('qsAvgPara').textContent = avgPara;
+
+    // Real server uptime (resets on each deploy/restart, which is correct —
+    // that's what "uptime" means)
+    document.getElementById('healthUptime').textContent = formatUptime(uptimeSeconds);
 
     // System tab mirrors
     document.getElementById('sysStatDocs').textContent  = total;
@@ -111,10 +121,19 @@ async function loadStats() {
     // Sidebar badges
     document.getElementById('sidebarDocCount').textContent  = total;
     document.getElementById('sidebarUserCount').textContent = users;
-    
+
     // Load system health
     await loadSystemHealth();
   } catch { /* ignore */ }
+}
+
+function formatUptime(totalSeconds) {
+  const days  = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const mins  = Math.floor((totalSeconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
 }
 
 /* ─────────────────────────────────────────────
@@ -142,22 +161,18 @@ async function loadSystemHealth() {
     const totalCreditsUsed = creditsData.total_credits_used || 0;
     const totalStudents = creditsData.total_students || 0;
     
-    document.getElementById('healthCredits').textContent = 
+    document.getElementById('healthCredits').textContent =
       `${totalCreditsUsed} (${totalStudents} students)`;
-    
-    // Calculate uptime (mock for now - would need server start time)
-    const uptimeHours = Math.floor(Math.random() * 100) + 50;
-    document.getElementById('healthUptime').textContent = 
-      uptimeHours > 72 ? `${Math.floor(uptimeHours/24)}d ${uptimeHours%24}h` : `${uptimeHours}h`;
-    
-    // Update KPI cache hit rate
+
+    // Update KPI cache hit rate (real uptime is set separately in loadStats
+    // from the /admin/stats response, since it comes from the server process
+    // rather than the cache table)
     document.getElementById('kpiCacheHit').textContent = cacheHitRate + '%';
-    
+
   } catch (err) {
     // Fallback to default values
     document.getElementById('healthCache').textContent = 'N/A';
     document.getElementById('healthCredits').textContent = 'N/A';
-    document.getElementById('healthUptime').textContent = 'N/A';
   }
 }
 
@@ -211,22 +226,193 @@ function updateDocStats() {
   document.getElementById('countMed').textContent  = med;
   document.getElementById('countHigh').textContent = high;
   document.getElementById('sysStatClean').textContent = low;
-  
-  // Calculate average paragraphs per document (using a mock value for now)
-  document.getElementById('qsAvgPara').textContent = total ? Math.round(150 + Math.random() * 50) : 0;
+  // qsAvgPara is set from the real value in loadStats() (total_paragraphs / total_documents)
+
+  // Real average similarity score across the whole repository
+  const avgSim = total
+    ? Math.round(allDocuments.reduce((sum, d) => sum + (d.similarity_score || 0), 0) / total)
+    : 0;
+  document.getElementById('kpiAvgSim').textContent = total ? avgSim + '%' : '—';
 
   // Animate bars (after paint)
   requestAnimationFrame(() => {
     document.getElementById('barLow').style.width  = total ? (low/total*100)+'%'  : '0%';
     document.getElementById('barMed').style.width  = total ? (med/total*100)+'%'  : '0%';
     document.getElementById('barHigh').style.width = total ? (high/total*100)+'%' : '0%';
+
+    // Donut chart — each segment's arc length is its share of the circle
+    // (circumference = 2*pi*r, r=50 -> ~314.16), offset so segments stack
+    // instead of overlapping.
+    document.getElementById('distDonutTotal').textContent = total;
+    const lowLen  = total ? (low  / total) * DONUT_CIRCUMFERENCE : 0;
+    const medLen  = total ? (med  / total) * DONUT_CIRCUMFERENCE : 0;
+    const highLen = total ? (high / total) * DONUT_CIRCUMFERENCE : 0;
+
+    const donutLow  = document.getElementById('donutLow');
+    const donutMed  = document.getElementById('donutMed');
+    const donutHigh = document.getElementById('donutHigh');
+
+    // A zero-length segment still paints a small rounded dot (stroke-linecap:
+    // round applies its cap even to a 0-length dash), so hide segments with
+    // nothing to show instead of just giving them a 0 dasharray.
+    setDonutSegment(donutLow,  lowLen,  0);
+    setDonutSegment(donutMed,  medLen,  lowLen);
+    setDonutSegment(donutHigh, highLen, lowLen + medLen);
   });
+
+  renderWeeklyTrends();
+  renderActivityChart();
+  renderTopUploaders();
+}
+
+const DONUT_CIRCUMFERENCE = 314.16; // 2*pi*r, r=50
+
+function setDonutSegment(el, length, offset) {
+  if (length <= 0) {
+    el.style.strokeDasharray = `0 ${DONUT_CIRCUMFERENCE}`;
+    el.style.opacity = '0';
+    return;
+  }
+  el.style.opacity = '1';
+  el.style.strokeDasharray = `${length} ${DONUT_CIRCUMFERENCE}`;
+  el.style.strokeDashoffset = `${-offset}`;
 }
 
 function updateUserStats() {
   const admins = allUsers.filter(u=>u.role==='admin').length;
   document.getElementById('qsAdmins').textContent    = admins;
   document.getElementById('sysStatAdmins').textContent = admins;
+  renderWeeklyTrends();
+}
+
+/* ─────────────────────────────────────────────
+   REAL WEEK-OVER-WEEK TRENDS (documents + users)
+───────────────────────────────────────────── */
+function renderWeeklyTrends() {
+  setTrend('trendDocs',  countInLastNDays(allDocuments, 7), countInPriorNDays(allDocuments, 7, 14));
+  setTrend('trendUsers', countInLastNDays(allUsers, 7),     countInPriorNDays(allUsers, 7, 14));
+}
+
+function countInLastNDays(items, days) {
+  const cutoff = Date.now() - days * 86400000;
+  return items.filter(i => new Date(i.created_at).getTime() >= cutoff).length;
+}
+function countInPriorNDays(items, startDaysAgo, endDaysAgo) {
+  const now = Date.now();
+  const start = now - endDaysAgo * 86400000;
+  const end   = now - startDaysAgo * 86400000;
+  return items.filter(i => {
+    const t = new Date(i.created_at).getTime();
+    return t >= start && t < end;
+  }).length;
+}
+function setTrend(elId, thisWeek, lastWeek) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (thisWeek === 0 && lastWeek === 0) {
+    el.className = 'kpi-trend neu';
+    el.innerHTML = '<i class="fas fa-minus"></i>';
+    el.title = 'No activity in the last 14 days';
+    return;
+  }
+  if (thisWeek > lastWeek) {
+    el.className = 'kpi-trend up';
+    el.innerHTML = `<i class="fas fa-arrow-up"></i> +${thisWeek}`;
+  } else if (thisWeek < lastWeek) {
+    el.className = 'kpi-trend down';
+    el.innerHTML = `<i class="fas fa-arrow-down"></i> ${thisWeek}`;
+  } else {
+    el.className = 'kpi-trend neu';
+    el.innerHTML = `<i class="fas fa-equals"></i> ${thisWeek}`;
+  }
+  el.title = `${thisWeek} in the last 7 days vs ${lastWeek} in the 7 days before that`;
+}
+
+/* ─────────────────────────────────────────────
+   WEEKLY ACTIVITY BAR CHART (real upload counts by day)
+───────────────────────────────────────────── */
+function renderActivityChart() {
+  const container = document.getElementById('activityChart');
+  if (!container) return;
+
+  const days = [];
+  const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+
+  const counts = days.map(day => {
+    const dayStart = day.getTime();
+    const dayEnd = dayStart + 86400000;
+    return allDocuments.filter(doc => {
+      const t = new Date(doc.created_at).getTime();
+      return t >= dayStart && t < dayEnd;
+    }).length;
+  });
+
+  const maxCount = Math.max(...counts, 1);
+  const weekTotal = counts.reduce((a, b) => a + b, 0);
+  document.getElementById('weekTotalBadge').textContent = `${weekTotal} upload${weekTotal !== 1 ? 's' : ''}`;
+
+  container.innerHTML = days.map((day, i) => {
+    const isToday = i === days.length - 1;
+    const heightPct = Math.round((counts[i] / maxCount) * 100);
+    return `
+      <div class="activity-bar-col">
+        <div class="activity-bar-track">
+          <div class="activity-bar${isToday ? ' today' : ''}" style="height:0%" data-target="${heightPct}">
+            ${counts[i] > 0 ? `<span class="activity-bar-count">${counts[i]}</span>` : ''}
+          </div>
+        </div>
+        <span class="activity-bar-day">${dayLabels[day.getDay()]}</span>
+      </div>
+    `;
+  }).join('');
+
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.activity-bar').forEach(bar => {
+      bar.style.height = bar.dataset.target + '%';
+    });
+  });
+}
+
+/* ─────────────────────────────────────────────
+   TOP UPLOADERS LEADERBOARD (real document counts per user)
+───────────────────────────────────────────── */
+function renderTopUploaders() {
+  const container = document.getElementById('topUploadersList');
+  if (!container) return;
+
+  const countByUploader = new Map(); // name -> count
+  for (const doc of allDocuments) {
+    const name = doc.uploader ? doc.uploader.full_name : 'Unknown';
+    countByUploader.set(name, (countByUploader.get(name) || 0) + 1);
+  }
+
+  const ranked = [...countByUploader.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  if (!ranked.length) {
+    container.innerHTML = `<div class="recent-empty"><i class="fas fa-inbox"></i> No uploads yet</div>`;
+    return;
+  }
+
+  const rankClasses = ['gold', 'silver', 'bronze'];
+  container.innerHTML = ranked.map(([name, count], idx) => `
+    <div class="recent-item">
+      <div class="uploader-rank ${rankClasses[idx] || ''}">${idx + 1}</div>
+      <div class="recent-meta">
+        <div class="recent-title">${escapeHtml(name)}</div>
+        <div class="recent-sub">${count} document${count !== 1 ? 's' : ''} uploaded</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 /* ─────────────────────────────────────────────

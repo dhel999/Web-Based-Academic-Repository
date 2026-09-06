@@ -194,6 +194,7 @@
 
     /* ── KPI Grid ─────────────────────────────────────────────── */
     .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.4rem; }
+    .kpi-grid-5 { grid-template-columns: repeat(5, 1fr); }
     .kpi-card {
       background: #fff; border-radius: 13px; padding: 1.2rem 1.3rem;
       box-shadow: 0 2px 8px rgba(80,171,231,.08); border: 1px solid #C8DFF0;
@@ -201,20 +202,35 @@
     }
     .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(80,171,231,.18); }
     .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi-card::after {
+      content: ''; position: absolute; top: -30%; right: -20%; width: 90px; height: 90px;
+      border-radius: 50%; opacity: .08; pointer-events: none;
+    }
     .kpi-card.blue::before   { background: linear-gradient(90deg,#1A6FA5,#50ABE7); }
     .kpi-card.teal::before   { background: linear-gradient(90deg,#0891B2,#22D3EE); }
     .kpi-card.green::before  { background: linear-gradient(90deg,#059669,#34D399); }
     .kpi-card.amber::before  { background: linear-gradient(90deg,#D97706,#FBBF24); }
-    .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .7rem; }
+    .kpi-card.violet::before { background: linear-gradient(90deg,#7C3AED,#C084FC); }
+    .kpi-card.blue::after   { background: #1A6FA5; }
+    .kpi-card.teal::after   { background: #0891B2; }
+    .kpi-card.green::after  { background: #059669; }
+    .kpi-card.amber::after  { background: #D97706; }
+    .kpi-card.violet::after { background: #7C3AED; }
+    .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .7rem; position: relative; z-index: 1; }
     .kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
     .kpi-card.blue   .kpi-icon { background:#BAE0F3; color:#1A6FA5; }
     .kpi-card.teal   .kpi-icon { background:#ECFEFF; color:#0891B2; }
     .kpi-card.green  .kpi-icon { background:#F0FDF4; color:#059669; }
     .kpi-card.amber  .kpi-icon { background:#FFFBEB; color:#D97706; }
+    .kpi-card.violet .kpi-icon { background:#F5F3FF; color:#7C3AED; }
     .kpi-trend { font-size: .67rem; font-weight: 700; padding: .13rem .4rem; border-radius: 5px; display: flex; align-items: center; gap: .2rem; }
     .kpi-trend.neu  { background:#EDF2FB; color:#6B8FA8; }
-    .kpi-value { font-family:'Poppins',sans-serif; font-size: 1.75rem; font-weight: 800; color: #0D2D4A; line-height:1; margin-bottom:.25rem; }
-    .kpi-label { font-size: .72rem; color: #6B8FA8; font-weight: 500; }
+    .kpi-trend.up   { background:#F0FDF4; color:#059669; }
+    .kpi-trend.down { background:#FEF2F2; color:#DC2626; }
+    .kpi-value { font-family:'Poppins',sans-serif; font-size: 1.75rem; font-weight: 800; color: #0D2D4A; line-height:1; margin-bottom:.25rem; position: relative; z-index: 1; }
+    .kpi-label { font-size: .72rem; color: #6B8FA8; font-weight: 500; position: relative; z-index: 1; }
+    @media (max-width:1300px) { .kpi-grid-5 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width:640px)  { .kpi-grid-5 { grid-template-columns: repeat(2, 1fr); } }
 
     /* ── Overview Grid ────────────────────────────────────────── */
     .overview-grid { display: grid; gap: 1.1rem; margin-bottom: 1.25rem; }
@@ -223,14 +239,27 @@
       background: #fff; border: 1px solid #C8DFF0; border-radius: 13px;
       padding: 1.25rem 1.4rem; box-shadow: 0 2px 8px rgba(80,171,231,.06);
     }
+    .panel-vivid { background: linear-gradient(165deg, #fff 0%, #F7FBFF 100%); }
     .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
     .panel-title { font-size: .88rem; font-weight: 700; color: #0D2D4A; display: flex; align-items: center; gap: .4rem; font-family:'Poppins',sans-serif; }
     .panel-title i { color:#1A6FA5; font-size: .82rem; }
     .panel-badge { font-size:.68rem; font-weight:700; padding:.18rem .5rem; border-radius:6px; background:#BAE0F3; color:#1A6FA5; border:1px solid #87CEE8; }
 
-    /* Distribution chart */
-    .dist-chart { display:flex; flex-direction:column; gap:.8rem; }
-    .dist-row { display:flex; align-items:center; gap:.7rem; }
+    /* Distribution donut + chart */
+    .dist-donut-wrap { display: flex; align-items: center; gap: 1.75rem; flex-wrap: wrap; }
+    .dist-donut { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+    .dist-donut-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .donut-track { fill: none; stroke: #EDF2FB; stroke-width: 14; }
+    .donut-seg { fill: none; stroke-width: 14; stroke-linecap: round; stroke-dasharray: 0 314; transition: stroke-dasharray .9s cubic-bezier(.22,1,.36,1), stroke-dashoffset .9s cubic-bezier(.22,1,.36,1); }
+    .donut-low  { stroke: #10B981; }
+    .donut-med  { stroke: #F59E0B; }
+    .donut-high { stroke: #EF4444; }
+    .dist-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .dist-donut-num { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 800; color: #0D2D4A; line-height: 1; }
+    .dist-donut-lbl { font-size: .68rem; color: #9BBDD1; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .dist-chart { display:flex; flex-direction:column; gap:.8rem; flex: 1; min-width: 220px; }
+    .dist-row { display:flex; align-items:center; gap:.55rem; }
+    .dist-row .dist-dot { flex-shrink: 0; }
     .dist-label { width:96px; font-size:.72rem; color:#374151; font-weight:600; flex-shrink:0; }
     .dist-bar-wrap { flex:1; background:#BAE0F3; border-radius:99px; height:9px; overflow:hidden; }
     .dist-bar { height:100%; border-radius:99px; transition:width .9s cubic-bezier(.22,1,.36,1); width:0%; }
@@ -265,6 +294,21 @@
     .recent-score.medium { background:#FFFBEB; color:#D97706; }
     .recent-score.high   { background:#FEF2F2; color:#DC2626; }
     .recent-empty { text-align:center; padding:1.5rem; color:#9CA3AF; font-size:.82rem; }
+
+    /* Weekly activity bar chart */
+    .activity-chart { display:flex; align-items:flex-end; justify-content:space-between; gap:.6rem; height:150px; padding-top:.5rem; }
+    .activity-bar-col { display:flex; flex-direction:column; align-items:center; gap:.4rem; flex:1; height:100%; justify-content:flex-end; }
+    .activity-bar-track { width:100%; max-width:34px; height:100%; display:flex; align-items:flex-end; }
+    .activity-bar { width:100%; border-radius:7px 7px 3px 3px; background:linear-gradient(180deg,#50ABE7,#1A6FA5); min-height:4px; height:0%; transition:height .8s cubic-bezier(.22,1,.36,1); position:relative; }
+    .activity-bar.today { background:linear-gradient(180deg,#FBBF24,#D97706); }
+    .activity-bar-count { position:absolute; top:-1.3rem; left:50%; transform:translateX(-50%); font-size:.7rem; font-weight:800; color:#0D2D4A; white-space:nowrap; }
+    .activity-bar-day { font-size:.68rem; color:#6B8FA8; font-weight:600; }
+
+    /* Uploader leaderboard */
+    .uploader-rank { width:22px; height:22px; border-radius:50%; background:#EDF2FB; color:#6B8FA8; font-size:.68rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .uploader-rank.gold   { background:linear-gradient(135deg,#FBBF24,#D97706); color:#fff; }
+    .uploader-rank.silver { background:linear-gradient(135deg,#CBD5E1,#94A3B8); color:#fff; }
+    .uploader-rank.bronze { background:linear-gradient(135deg,#D97706,#92400E); color:#fff; }
 
     /* ── Table Layout ─────────────────────────────────────────── */
     .table-toolbar { display:flex; align-items:center; gap:.65rem; margin-bottom:.9rem; flex-wrap:wrap; }
@@ -454,39 +498,52 @@
             <h2><i class="fas fa-gauge-high"></i> Dashboard Overview</h2>
             <p>System-wide statistics and recent activity at a glance</p>
           </div>
-          <div class="kpi-grid">
+          <div class="kpi-grid kpi-grid-5">
             <div class="kpi-card blue">
-              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-file-lines"></i></div><span class="kpi-trend neu"><i class="fas fa-minus"></i></span></div>
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-file-lines"></i></div><span class="kpi-trend" id="trendDocs"><i class="fas fa-minus"></i></span></div>
               <div class="kpi-value" id="kpiDocs">—</div><div class="kpi-label">Total Documents</div>
             </div>
             <div class="kpi-card teal">
-              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-users"></i></div><span class="kpi-trend neu"><i class="fas fa-minus"></i></span></div>
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-users"></i></div><span class="kpi-trend" id="trendUsers"><i class="fas fa-minus"></i></span></div>
               <div class="kpi-value" id="kpiUsers">—</div><div class="kpi-label">Registered Users</div>
             </div>
             <div class="kpi-card green">
-              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-clipboard-check"></i></div><span class="kpi-trend neu"><i class="fas fa-minus"></i></span></div>
-              <div class="kpi-value" id="kpiReports">—</div><div class="kpi-label">Total Reports Generated</div>
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-clipboard-check"></i></div><span class="kpi-trend neu" title="Documents that have been scanned at least once"><i class="fas fa-magnifying-glass"></i></span></div>
+              <div class="kpi-value" id="kpiReports">—</div><div class="kpi-label">Documents Scanned</div>
             </div>
             <div class="kpi-card amber">
               <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-bolt"></i></div><span class="kpi-trend neu"><i class="fas fa-check-circle"></i></span></div>
               <div class="kpi-value" id="kpiCacheHit">—</div><div class="kpi-label">Cache Hit Rate</div>
             </div>
+            <div class="kpi-card violet">
+              <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-gauge"></i></div><span class="kpi-trend neu" id="trendSim"><i class="fas fa-minus"></i></span></div>
+              <div class="kpi-value" id="kpiAvgSim">—</div><div class="kpi-label">Avg Similarity Score</div>
+            </div>
           </div>
 
           <div class="overview-grid col-2" style="margin-bottom:1.1rem;">
-            <div class="panel">
+            <div class="panel panel-vivid">
               <div class="panel-header">
-                <span class="panel-title"><i class="fas fa-chart-bar"></i> Similarity Distribution</span>
+                <span class="panel-title"><i class="fas fa-chart-pie"></i> Similarity Distribution</span>
                 <span class="panel-badge" id="distTotal">0 docs</span>
               </div>
-              <div class="dist-chart">
-                <div class="dist-row"><span class="dist-label">Low (0–30%)</span><div class="dist-bar-wrap"><div class="dist-bar low" id="barLow"></div></div><span class="dist-count" id="countLow">0</span></div>
-                <div class="dist-row"><span class="dist-label">Med (30–60%)</span><div class="dist-bar-wrap"><div class="dist-bar medium" id="barMed"></div></div><span class="dist-count" id="countMed">0</span></div>
-                <div class="dist-row"><span class="dist-label">High (60–100%)</span><div class="dist-bar-wrap"><div class="dist-bar high" id="barHigh"></div></div><span class="dist-count" id="countHigh">0</span></div>
-                <div class="dist-legend">
-                  <span class="dist-legend-item"><span class="dist-dot low"></span> Low Risk</span>
-                  <span class="dist-legend-item"><span class="dist-dot medium"></span> Medium Risk</span>
-                  <span class="dist-legend-item"><span class="dist-dot high"></span> High Risk</span>
+              <div class="dist-donut-wrap">
+                <div class="dist-donut" id="distDonut">
+                  <svg viewBox="0 0 120 120" class="dist-donut-svg">
+                    <circle cx="60" cy="60" r="50" class="donut-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="donut-seg donut-low"  id="donutLow"></circle>
+                    <circle cx="60" cy="60" r="50" class="donut-seg donut-med"  id="donutMed"></circle>
+                    <circle cx="60" cy="60" r="50" class="donut-seg donut-high" id="donutHigh"></circle>
+                  </svg>
+                  <div class="dist-donut-center">
+                    <span class="dist-donut-num" id="distDonutTotal">0</span>
+                    <span class="dist-donut-lbl">docs</span>
+                  </div>
+                </div>
+                <div class="dist-chart">
+                  <div class="dist-row"><span class="dist-dot low"></span><span class="dist-label">Low (0–30%)</span><div class="dist-bar-wrap"><div class="dist-bar low" id="barLow"></div></div><span class="dist-count" id="countLow">0</span></div>
+                  <div class="dist-row"><span class="dist-dot medium"></span><span class="dist-label">Med (30–60%)</span><div class="dist-bar-wrap"><div class="dist-bar medium" id="barMed"></div></div><span class="dist-count" id="countMed">0</span></div>
+                  <div class="dist-row"><span class="dist-dot high"></span><span class="dist-label">High (60–100%)</span><div class="dist-bar-wrap"><div class="dist-bar high" id="barHigh"></div></div><span class="dist-count" id="countHigh">0</span></div>
                 </div>
               </div>
             </div>
@@ -513,7 +570,7 @@
             </div>
           </div>
 
-          <div class="overview-grid col-2">
+          <div class="overview-grid col-2" style="margin-bottom:1.1rem;">
             <div class="panel">
               <div class="panel-header">
                 <span class="panel-title"><i class="fas fa-clock-rotate-left"></i> Recent Uploads</span>
@@ -525,7 +582,16 @@
             </div>
             <div class="panel">
               <div class="panel-header">
-                <span class="panel-title"><i class="fas fa-heart-pulse"></i> System Health</span>
+                <span class="panel-title"><i class="fas fa-chart-column"></i> Uploads This Week</span>
+                <span class="panel-badge" id="weekTotalBadge">0 uploads</span>
+              </div>
+              <div class="activity-chart" id="activityChart"></div>
+            </div>
+          </div>
+
+          <div class="overview-grid col-2">
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title"><i class="fas fa-heart-pulse"></i> System Health</span>
                 <span class="panel-badge" style="background:#F0FDF4;color:#059669;border-color:#BBF7D0;" id="healthBadge">All Systems Online</span>
               </div>
               <div class="quick-stats">
@@ -542,9 +608,15 @@
                   <span class="qs-value" id="healthCredits">—</span>
                 </div>
                 <div class="quick-stat-row">
-                  <div class="qs-left"><div class="qs-icon" style="background:#F5F3FF;color:#7C3AED;"><i class="fas fa-clock"></i></div><span class="qs-label">Uptime</span></div>
+                  <div class="qs-left"><div class="qs-icon" style="background:#F5F3FF;color:#7C3AED;"><i class="fas fa-clock"></i></div><span class="qs-label">Server Uptime</span></div>
                   <span class="qs-value" id="healthUptime" style="font-size:.75rem;">—</span>
                 </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><span class="panel-title"><i class="fas fa-trophy"></i> Most Active Uploaders</span></div>
+              <div class="recent-list" id="topUploadersList">
+                <div class="recent-empty"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
               </div>
             </div>
           </div>

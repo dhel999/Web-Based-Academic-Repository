@@ -145,21 +145,39 @@ async function deleteUser(req, res) {
   }
 }
 
+// Recorded once when this Node process starts — used to report genuine
+// server uptime instead of a random placeholder number.
+const SERVER_START_TIME = Date.now();
+
 /**
  * GET /api/admin/stats — dashboard statistics
  */
 async function getStats(req, res) {
   try {
-    const [docCount, userCount, paraCount] = await Promise.all([
+    const [docCount, userCount, paraCount, scannedDocsRes] = await Promise.all([
       supabase.from('documents').select('id', { count: 'exact', head: true }),
       supabase.from('users').select('id', { count: 'exact', head: true }),
-      supabase.from('paragraphs').select('id', { count: 'exact', head: true })
+      supabase.from('paragraphs').select('id', { count: 'exact', head: true }),
+      // "Reports generated" = distinct documents that have actually been
+      // scanned at least once (have a plagiarism_results row) — a real,
+      // separate metric from the total document count, not a copy of it.
+      supabase.from('plagiarism_results').select('document_id')
     ]);
 
+    const totalDocuments  = docCount.count || 0;
+    const totalUsers      = userCount.count || 0;
+    const totalParagraphs = paraCount.count || 0;
+    const scannedDocumentIds = new Set((scannedDocsRes.data || []).map(r => r.document_id));
+
+    const uptimeSeconds = Math.floor((Date.now() - SERVER_START_TIME) / 1000);
+
     res.json({
-      total_documents: docCount.count || 0,
-      total_users: userCount.count || 0,
-      total_paragraphs: paraCount.count || 0
+      total_documents: totalDocuments,
+      total_users: totalUsers,
+      total_paragraphs: totalParagraphs,
+      total_reports_generated: scannedDocumentIds.size,
+      avg_paragraphs_per_doc: totalDocuments > 0 ? Math.round(totalParagraphs / totalDocuments) : 0,
+      server_uptime_seconds: uptimeSeconds
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stats' });
