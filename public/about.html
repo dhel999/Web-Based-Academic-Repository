@@ -42,18 +42,21 @@
         <h2>Academic repository and integrity management system</h2>
       </div>
 
-      <div class="about-article-card">
-        <p>
-          <strong>AcadRepo</strong> is a web-based academic repository designed to store, organize, manage, and preserve students’ thesis, research papers, capstone projects, and other academic documentation. The system provides a centralized platform where students can securely submit their academic documents, while authorized administrators and advisers can review, manage, and monitor submitted research.
-        </p>
+      <div class="about-article-card about-article-split">
+        <div class="about-article-text">
+          <p>
+            <strong>AcadRepo</strong> is a web-based academic repository designed to store, organize, manage, and preserve students’ thesis, research papers, capstone projects, and other academic documentation. The system provides a centralized platform where students can securely submit their academic documents, while authorized administrators and advisers can review, manage, and monitor submitted research.
+          </p>
 
-        <p>
-          It includes document metadata, search and filtering, document archiving, and similarity detection using <strong>TF-IDF and cosine similarity</strong> to identify potential similarities between newly submitted documents and previously stored academic works. The system can also maintain detection results so that the same document does not need to be analyzed repeatedly, helping reduce unnecessary API or AI usage.
-        </p>
+          <p>
+            It includes document metadata, search and filtering, document archiving, and similarity detection using <strong>TF-IDF and cosine similarity</strong> to identify potential similarities between newly submitted documents and previously stored academic works. The system can also maintain detection results so that the same document does not need to be analyzed repeatedly, helping reduce unnecessary API or AI usage.
+          </p>
 
-        <p>
-          Through AcadRepo, academic documents can be systematically preserved and made easier to search, review, and reference, while maintaining appropriate access and privacy controls for student research.
-        </p>
+          <p>
+            Through AcadRepo, academic documents can be systematically preserved and made easier to search, review, and reference, while maintaining appropriate access and privacy controls for student research.
+          </p>
+        </div>
+        <img src="img/Coverphoto.jpg" alt="Searching and reviewing academic documents" class="about-article-img" />
       </div>
 
       <div class="about-grid">
@@ -84,18 +87,61 @@
       </div>
 
       <div class="hiw-layout">
-       
 
-        <div class="hiw-feature-panel">
-          <h3>Purpose of the System</h3>
-          <p>AcadRepo is built to support academic integrity, improve document organization, and provide a structured environment for preserving research outputs while reducing unnecessary repeated analysis.</p>
+        <div class="hiw-header-col">
+          <img src="img/scan.jpg" alt="Automated document scanning" class="hiw-visual" />
+          <h3 class="hiw-title">Purpose of the <span class="hiw-title-accent">System</span></h3>
+          <p class="hiw-subtitle">AcadRepo is built to support academic integrity, improve document organization, and provide a structured environment for preserving research outputs while reducing unnecessary repeated analysis.</p>
+          <a href="index.html#browseSection" class="hiw-cta-btn"><i class="fas fa-book-open"></i> Browse the Repository</a>
+        </div>
 
-          <ul class="feature-list">
-            <li><i class="fas fa-check-circle"></i> Centralized archive for thesis and research documents</li>
-            <li><i class="fas fa-check-circle"></i> Searchable metadata and academic record management</li>
-            <li><i class="fas fa-check-circle"></i> Similarity checking for originality review</li>
-            <li><i class="fas fa-check-circle"></i> Reduced duplicate analysis and better system efficiency</li>
-          </ul>
+        <div class="hiw-steps-col">
+          <div class="hiw-step">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">1</div>
+              <div class="hiw-step-line"></div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-database"></i></div>
+              <h4>Centralized archive</h4>
+              <p>Every thesis, research paper, and academic project is stored in one repository for long-term access and organization.</p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">2</div>
+              <div class="hiw-step-line"></div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-magnifying-glass"></i></div>
+              <h4>Searchable metadata</h4>
+              <p>Titles, authors, courses, and years are indexed so documents are easy to find and reference later.</p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">3</div>
+              <div class="hiw-step-line"></div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-fingerprint"></i></div>
+              <h4>Similarity checking</h4>
+              <p>TF-IDF and cosine similarity compare new submissions against the archive to flag overlapping content for originality review.</p>
+            </div>
+          </div>
+
+          <div class="hiw-step hiw-step-last">
+            <div class="hiw-step-left">
+              <div class="hiw-step-num">4</div>
+            </div>
+            <div class="hiw-step-body">
+              <div class="hiw-step-icon"><i class="fas fa-gauge-high"></i></div>
+              <h4>Efficient re-checks</h4>
+              <p>Detection results are cached per document, so the same file is never re-analyzed unnecessarily, saving both time and API usage.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
