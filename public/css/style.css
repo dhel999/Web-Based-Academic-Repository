@@ -3396,3 +3396,81 @@ body:has(.scan-upload-card) .container {
   .qs-card-header { align-items: flex-start; }
   .qs-drop-zone { min-height: 205px; padding: 1.25rem; }
 }
+
+/* ================================================================
+   HERO — two-column layout with product visual
+   ================================================================ */
+.hero-inner-grid {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  align-items: center;
+  gap: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.hero-inner-grid .hero-content { text-align: left; }
+.hero-inner-grid .hero-content .hero-badge,
+.hero-inner-grid .hero-content .hero-feature-pills,
+.hero-inner-grid .hero-content .hero-actions { justify-content: flex-start; }
+.hero-inner-grid .hero-content .hero-desc { margin-left: 0; margin-right: 0; }
+.hero-inner-grid .hero-content .hero-title { align-items: flex-start; }
+.hero-inner-grid .hero-content .hero-stats-bar { justify-content: flex-start; }
+
+.hero-visual-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInDown .7s ease-out .3s both;
+}
+
+.hero-visual-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 30px 70px rgba(3,22,47,.45), 0 0 0 1px rgba(255,255,255,.08);
+  transform: rotate(1.5deg);
+  transition: transform .4s cubic-bezier(.22,1,.36,1);
+}
+.hero-visual-card:hover { transform: rotate(0deg) scale(1.015); }
+
+.hero-visual-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero-visual-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  background: rgba(255,255,255,.96);
+  color: #0D3D6B;
+  padding: .55rem 1rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(3,22,47,.28);
+  animation: pillBounceIn .6s ease-out both;
+}
+.hero-visual-badge i { color: #10B981; }
+.hero-visual-badge-1 { top: 8%; left: -8%; animation-delay: .8s; }
+.hero-visual-badge-2 { bottom: 10%; right: -6%; animation-delay: 1s; }
+
+@media (max-width: 980px) {
+  .hero-inner-grid { grid-template-columns: 1fr; gap: 2.25rem; text-align: center; }
+  .hero-inner-grid .hero-content { text-align: center; }
+  .hero-inner-grid .hero-content .hero-badge,
+  .hero-inner-grid .hero-content .hero-feature-pills,
+  .hero-inner-grid .hero-content .hero-actions,
+  .hero-inner-grid .hero-content .hero-stats-bar { justify-content: center; }
+  .hero-inner-grid .hero-content .hero-title { align-items: center; }
+  .hero-visual-card { max-width: 340px; }
+  .hero-visual-badge { display: none; }
+}
