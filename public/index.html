@@ -1,270 +1,158 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Academic Repository — Browse Documents</title>
-  <link rel="stylesheet" href="css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Access Locked</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f6f8;
+            color: #222;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 45px 35px;
+            text-align: center;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        .lock {
+            width: 85px;
+            height: 85px;
+            margin: 0 auto 25px;
+            border-radius: 50%;
+            background: #f1f3f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+        }
+
+        h1 {
+            font-size: 27px;
+            margin-bottom: 15px;
+            color: #222;
+        }
+
+        .message {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .notice {
+            background: #f8f8f8;
+            border-left: 4px solid #333;
+            padding: 15px;
+            text-align: left;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .notice strong {
+            color: #222;
+        }
+
+        .contact-btn {
+            display: inline-block;
+            text-decoration: none;
+            background: #222;
+            color: white;
+            padding: 13px 25px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .contact-btn:hover {
+            background: #444;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            margin-top: 28px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .developer {
+            margin-top: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 35px 22px;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            .message {
+                font-size: 15px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-  <!-- ===== NAVBAR ===== -->
-  <nav class="navbar">
-    <div class="nav-brand">
-      <img src="img/SSC_logo.png" alt="Sulu State University" />
-      <span>AcadRepo</span>
+    <div class="container">
+
+        <div class="lock">
+            🔒
+        </div>
+
+        <h1>System Access Temporarily Locked</h1>
+
+        <p class="message">
+            Thank you for using our system. 
+            Access to this system is currently unavailable because 
+            the development fee has not yet been settled.
+        </p>
+
+        <div class="notice">
+            <strong>Want to continue using the system?</strong><br>
+            Please contact the developer to arrange the payment 
+            and activation of your system.
+        </div>
+
+        <a href="mailto:your@email.com" class="contact-btn">
+            Contact Developer
+        </a>
+
+        <div class="footer">
+            We appreciate your understanding and support.
+            <div class="developer">
+                System Developer
+            </div>
+        </div>
+
     </div>
-    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-      <i class="fas fa-bars"></i>
-    </button>
-    <ul class="nav-links" id="navLinks">
-      <li><a href="index.html" class="active"><i class="fas fa-home"></i> Home</a></li>
-      <li><a href="about.html"><i class="fas fa-circle-info"></i> About System</a></li>
-      <li id="navAuthLinks"></li>
-    </ul>
-  </nav>
-
-  <!-- ===== HERO ===== -->
-  <header class="hero hero-enhanced">
-    <canvas id="heroCanvas"></canvas>
-    <div class="hero-orb hero-orb-1"></div>
-    <div class="hero-orb hero-orb-2"></div>
-    <div class="hero-orb hero-orb-3"></div>
-    <div class="hero-inner-grid">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <span class="hero-eyebrow-dot"></span>
-          <span>Web-Based Academic Repository</span>
-          <span class="hero-eyebrow-dot"></span>
-        </div>
-        <h1 class="hero-title">
-          <span class="hero-title-line">Academic</span>
-          <span class="hero-title-line hero-title-accent">Repository</span>
-        </h1>
-        <p class="hero-desc">Algorithmic Plagiarism Detection using <strong>TF-IDF</strong> &amp; <strong>Cosine Similarity</strong> &mdash; analyze, compare, and verify academic documents with AI precision.</p>
-        <div class="hero-feature-pills">
-          <span class="hero-pill"><i class="fas fa-fingerprint"></i> Similarity Analysis</span>
-          <span class="hero-pill"><i class="fas fa-book-open"></i> Academic Archive</span>
-          <span class="hero-pill"><i class="fas fa-shield-halved"></i> Verified Reports</span>
-        </div>
-        <div class="hero-actions">
-          <a href="login.html" class="btn hero-btn-primary btn-glow" id="heroUploadBtn">
-            <i class="fas fa-upload"></i> Upload File
-          </a>
-          <a href="quick-scan.html" class="btn hero-btn-secondary">
-            <i class="fas fa-bolt"></i> Quick Scan
-          </a>
-          <a href="#browseSection" class="btn hero-btn-ghost">
-            <i class="fas fa-book-open"></i> Browse Papers
-          </a>
-        </div>
-        <div class="hero-stats-bar">
-          <div class="hero-stat-item" id="heroStatDocs">
-            <i class="fas fa-file-alt"></i>
-            <span class="hero-stat-num-sm">&mdash;</span>
-            <span class="hero-stat-lbl">Documents</span>
-          </div>
-          <div class="hero-stat-sep"></div>
-          <div class="hero-stat-item">
-            <i class="fas fa-magnifying-glass"></i>
-            <span class="hero-stat-lbl">Smart Search</span>
-          </div>
-          <div class="hero-stat-sep"></div>
-          <div class="hero-stat-item">
-            <i class="fas fa-shield-halved"></i>
-            <span class="hero-stat-lbl">Trusted Review</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-visual-wrap">
-        <div class="hero-visual-card">
-          <img src="img/photo3.jpg" alt="Reviewing academic documents across devices" class="hero-visual-img" />
-        </div>
-        <div class="hero-visual-badge hero-visual-badge-1"><i class="fas fa-circle-check"></i> Similarity checked</div>
-        <div class="hero-visual-badge hero-visual-badge-2"><i class="fas fa-shield-halved"></i> AI verified</div>
-      </div>
-    </div>
-  </header>
-
-  <!-- ===== MAIN CONTENT ===== -->
-  <main class="container" style="max-width:1200px;" id="browseSection">
-
-    <section class="feature-strip" aria-label="Platform highlights">
-      <div class="feature-card">
-        <div class="feature-icon"><i class="fas fa-fingerprint"></i></div>
-        <h3>Similarity Check</h3>
-        <p>Scans academic documents for text overlap using TF-IDF and cosine similarity.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><i class="fas fa-file-lines"></i></div>
-        <h3>Document Archive</h3>
-        <p>Browse verified research papers and maintain a clean academic repository.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
-        <h3>Secure Review</h3>
-        <p>Generate clear reports while keeping sensitive analysis private to the owner.</p>
-      </div>
-    </section>
-
-    <!-- Section Header -->
-    <div class="section-header">
-      <h2><i class="fas fa-book"></i> Repository Documents</h2>
-      
-    </div>
-
-    <!-- Search -->
-    <section class="search-bar-enhanced">
-      <i class="fas fa-search search-icon-lg"></i>
-      <input type="text" id="searchInput" placeholder="Search by title, author, or keyword…" />
-      <span class="search-shortcut">Ctrl+K</span>
-    </section>
-
-    <!-- Document Grid -->
-    <section class="doc-grid" id="docGrid">
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
-        <p>Loading documents…</p>
-      </div>
-    </section>
-
-    <!-- Empty State -->
-    <section class="card empty-state hidden" id="emptyState">
-      <div class="empty-icon-wrap">
-        <i class="fas fa-folder-open fa-3x"></i>
-      </div>
-      <h3>No Documents Available</h3>
-      <p class="text-muted">There are no approved documents in the repository yet.</p>
-    </section>
-
-  </main>
-
-  <footer class="footer footer-enhanced">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <i class="fas fa-graduation-cap"></i> AcadRepo
-      </div>
-      <p>&copy; 2026 AcadRepo — Web-Based Academic Repository with TF-IDF &amp; Cosine Similarity Plagiarism Detection</p>
-      <div class="footer-links">
-        <span><i class="fas fa-code"></i> Built with Node.js</span>
-        <span><i class="fas fa-database"></i> Supabase</span>
-      </div>
-    </div>
-  </footer>
-
-  <script src="js/nav-auth.js"></script>
-  <script src="js/client-browse.js"></script>
-
-  <script>
-  // ── Neural Particle Canvas ─────────────────────────────────────────────────
-  (function () {
-    var canvas = document.getElementById('heroCanvas');
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var particles = [];
-    var MAX = 55;
-
-    function resize() {
-      var h = canvas.parentElement;
-      canvas.width  = h.offsetWidth;
-      canvas.height = h.offsetHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    function rand(a, b) { return Math.random() * (b - a) + a; }
-
-    function Particle() {
-      this.x  = rand(0, canvas.width);
-      this.y  = rand(0, canvas.height);
-      this.vx = rand(-.35, .35);
-      this.vy = rand(-.35, .35);
-      this.r  = rand(1.5, 3);
-      this.a  = rand(.3, .8);
-    }
-    Particle.prototype.update = function () {
-      this.x += this.vx;
-      this.y += this.vy;
-      if (this.x < 0) this.x = canvas.width;
-      if (this.x > canvas.width) this.x = 0;
-      if (this.y < 0) this.y = canvas.height;
-      if (this.y > canvas.height) this.y = 0;
-    };
-
-    for (var i = 0; i < MAX; i++) particles.push(new Particle());
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // connections
-      for (var i = 0; i < particles.length; i++) {
-        for (var j = i + 1; j < particles.length; j++) {
-          var dx = particles[i].x - particles[j].x;
-          var dy = particles[i].y - particles[j].y;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 130) {
-            ctx.beginPath();
-            ctx.strokeStyle = 'rgba(16,185,129,' + ((1 - dist / 130) * .35) + ')';
-            ctx.lineWidth = 0.8;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-      // dots
-      particles.forEach(function (p) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(52,211,153,' + p.a + ')';
-        ctx.shadowColor = '#34D399';
-        ctx.shadowBlur = 6;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        p.update();
-      });
-      requestAnimationFrame(draw);
-    }
-    draw();
-  })();
-
-  // ── Scroll-Reveal ──────────────────────────────────────────────────────────
-  (function () {
-    var els = document.querySelectorAll('.about-card, .step-card, .doc-card-enhanced, .section-header');
-    els.forEach(function (el) { el.classList.add('scroll-reveal'); });
-    var obs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
-      });
-    }, { threshold: 0.1 });
-    els.forEach(function (el) { obs.observe(el); });
-  })();
-
-  // ── Typewriter for hero-desc ───────────────────────────────────────────────
-  (function () {
-    var desc = document.querySelector('.hero-desc');
-    if (!desc) return;
-    var original = desc.innerHTML;
-    // Only run once on load
-    desc.style.opacity = '0';
-    setTimeout(function () {
-      desc.style.transition = 'opacity .4s';
-      desc.style.opacity = '1';
-      desc.innerHTML = original;
-    }, 800);
-  })();
-
-  // ── Stat counter animate ─────────────────────────────────────────────────
-  // (handled by client-browse.js, this just adds glow on update)
-  var _origSet = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
-  </script>
 
 </body>
 </html>
-
-
